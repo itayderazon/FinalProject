@@ -1,0 +1,137 @@
+.navigation {
+    background: white;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    border-bottom: 1px solid #e5e7eb;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+  }
+  
+  .nav-container {
+    max-width: 1200px;
+    margin: 0 auto;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    height: 64px;
+    padding: 0 20px;
+  }
+  
+  .nav-logo {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    text-decoration: none;
+    color: #111827;
+  }
+  
+  .nav-logo-icon {
+    width: 32px;
+    height: 32px;
+    color: #16a34a;
+  }
+  
+  .nav-logo-text {
+    font-size: 1.25rem;
+    font-weight: bold;
+  }
+  
+  .nav-links {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+  }
+  
+  .nav-link {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    padding: 8px 12px;
+    border-radius: 6px;
+    text-decoration: none;
+    color: #374151;
+    font-weight: 500;
+    font-size: 0.875rem;
+    transition: all 0.2s ease;
+  }
+  
+  .nav-link:hover {
+    color: #16a34a;
+    background: #f9fafb;
+  }
+  
+  .nav-link.active {
+    background: #dcfce7;
+    color: #15803d;
+  }
+  
+  .nav-user {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+  }
+  
+  .nav-user-info {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  
+  .nav-user-name {
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: #374151;
+  }
+  
+  .nav-logout {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    color: #374151;
+    background: none;
+    border: none;
+    padding: 8px 12px;
+    border-radius: 6px;
+    font-size: 0.875rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease;
+  }
+  
+  .nav-logout:hover {
+    color: #dc2626;
+  }
+  
+  .nav-auth-buttons {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+  }
+  
+  .nav-login {
+    color: #374151;
+    text-decoration: none;
+    padding: 8px 12px;
+    border-radius: 6px;
+    font-weight: 500;
+    transition: color 0.2s ease;
+  }
+  
+  .nav-login:hover {
+    color: #16a34a;
+  }
+  
+  .nav-signup {
+    background: #16a34a;
+    color: white;
+    text-decoration: none;
+    padding: 8px 16px;
+    border-radius: 6px;
+    font-weight: 500;
+    transition: background 0.2s ease;
+  }
+  
+  .nav-signup:hover {
+    background: #15803d;
+  }
+  

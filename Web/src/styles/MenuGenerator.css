@@ -1,0 +1,1115 @@
+/* ====================
+   src/styles/MenuGenerator.css - Enhanced Complete Version
+   ==================== */
+
+   .menu-generator {
+    min-height: 100vh;
+    background: #f9fafb;
+    padding: 32px 0;
+  }
+  
+  .menu-container {
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 0 20px;
+  }
+  
+  .menu-header {
+    margin-bottom: 32px;
+    text-align: center;
+  }
+  
+  .menu-title {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    font-size: 2.5rem;
+    font-weight: bold;
+    color: #111827;
+    margin-bottom: 8px;
+  }
+  
+  .menu-description {
+    color: #6b7280;
+    font-size: 1.125rem;
+    max-width: 600px;
+    margin: 0 auto;
+  }
+  
+  /* ====================
+     Tabs
+     ==================== */
+  
+  .menu-tabs {
+    display: flex;
+    justify-content: center;
+    gap: 8px;
+    margin-bottom: 32px;
+    background: white;
+    padding: 8px;
+    border-radius: 12px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    border: 1px solid #e5e7eb;
+    max-width: 400px;
+    margin-left: auto;
+    margin-right: auto;
+    margin-bottom: 32px;
+  }
+  
+  .tab-button {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 12px 24px;
+    border: none;
+    background: transparent;
+    border-radius: 8px;
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: #6b7280;
+    cursor: pointer;
+    transition: all 0.2s ease;
+  }
+  
+  .tab-button:hover {
+    color: #16a34a;
+    background: #f0fdf4;
+  }
+  
+  .tab-button.active {
+    background: #16a34a;
+    color: white;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 8px rgba(22, 163, 74, 0.3);
+  }
+  
+  /* ====================
+     Layout
+     ==================== */
+  
+  .menu-layout {
+    display: grid;
+    grid-template-columns: 400px 1fr;
+    gap: 32px;
+    align-items: start;
+  }
+  
+  .menu-form {
+    background: white;
+    border-radius: 16px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+    border: 1px solid #e5e7eb;
+    padding: 24px;
+    position: sticky;
+    top: 100px;
+    max-height: calc(100vh - 120px);
+    overflow-y: auto;
+  }
+  
+  .form-title {
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: #111827;
+    margin-bottom: 24px;
+    text-align: center;
+  }
+  
+  /* ====================
+     Presets Section
+     ==================== */
+  
+  .presets-section {
+    margin-bottom: 24px;
+    padding-bottom: 24px;
+    border-bottom: 1px solid #e5e7eb;
+  }
+  
+  .presets-title {
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: #374151;
+    margin-bottom: 12px;
+  }
+  
+  .presets-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+  }
+  
+  .preset-button {
+    padding: 8px 12px;
+    border: 1px solid #d1d5db;
+    background: white;
+    border-radius: 8px;
+    font-size: 0.75rem;
+    font-weight: 500;
+    color: #374151;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+  }
+  
+  .preset-button:hover {
+    border-color: #16a34a;
+    color: #16a34a;
+    background: #f0fdf4;
+    transform: translateY(-1px);
+  }
+  
+  /* ====================
+     Form Elements
+     ==================== */
+  
+  .form-group {
+    margin-bottom: 20px;
+  }
+  
+  .form-label {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: #374151;
+    margin-bottom: 8px;
+  }
+  
+  .form-input,
+  .form-select {
+    width: 100%;
+    padding: 12px;
+    border: 1px solid #d1d5db;
+    border-radius: 8px;
+    font-size: 1rem;
+    transition: all 0.2s ease;
+    background: white;
+  }
+  
+  .form-input:focus,
+  .form-select:focus {
+    outline: none;
+    border-color: #16a34a;
+    box-shadow: 0 0 0 3px rgba(22, 163, 74, 0.1);
+  }
+  
+  .form-range {
+    width: 100%;
+    margin: 8px 0;
+    accent-color: #16a34a;
+  }
+  
+  .range-value {
+    text-align: center;
+    font-size: 0.875rem;
+    color: #6b7280;
+    font-weight: 500;
+  }
+  
+  .macro-inputs {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+  
+  /* ====================
+     Macro Visualization
+     ==================== */
+  
+  .macro-chart {
+    background: #f9fafb;
+    padding: 16px;
+    border-radius: 8px;
+    margin: 20px 0;
+  }
+  
+  .chart-title {
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: #374151;
+    margin-bottom: 12px;
+    text-align: center;
+  }
+  
+  .macro-bar {
+    display: flex;
+    height: 8px;
+    border-radius: 4px;
+    overflow: hidden;
+    background: #e5e7eb;
+    margin-bottom: 12px;
+  }
+  
+  .macro-segment {
+    transition: all 0.3s ease;
+  }
+  
+  .macro-segment.protein {
+    background: #3b82f6;
+  }
+  
+  .macro-segment.carbs {
+    background: #16a34a;
+  }
+  
+  .macro-segment.fat {
+    background: #8b5cf6;
+  }
+  
+  .macro-legend {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+  
+  .legend-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 0.75rem;
+    color: #6b7280;
+  }
+  
+  .legend-color {
+    width: 12px;
+    height: 12px;
+    border-radius: 2px;
+  }
+  
+  .legend-color.protein {
+    background: #3b82f6;
+  }
+  
+  .legend-color.carbs {
+    background: #16a34a;
+  }
+  
+  .legend-color.fat {
+    background: #8b5cf6;
+  }
+  
+  /* ====================
+     Generate Actions
+     ==================== */
+  
+  .generate-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    margin-top: 24px;
+  }
+  
+  .generate-btn {
+    width: 100%;
+    padding: 14px;
+    border: none;
+    border-radius: 8px;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+  }
+  
+  .generate-btn.primary {
+    background: #16a34a;
+    color: white;
+  }
+  
+  .generate-btn.primary:hover:not(:disabled) {
+    background: #15803d;
+    transform: translateY(-2px);
+    box-shadow: 0 8px 16px rgba(22, 163, 74, 0.3);
+  }
+  
+  .generate-btn.secondary {
+    background: #f3f4f6;
+    color: #374151;
+    border: 1px solid #d1d5db;
+  }
+  
+  .generate-btn.secondary:hover {
+    background: #e5e7eb;
+    transform: translateY(-1px);
+  }
+  
+  .generate-btn:disabled {
+    background: #9ca3af;
+    cursor: not-allowed;
+    transform: none;
+    box-shadow: none;
+  }
+  
+  .loading-spinner {
+    animation: spin 1s linear infinite;
+  }
+  
+  /* ====================
+     Results Section
+     ==================== */
+  
+  .menu-results {
+    min-height: 400px;
+  }
+  
+  .loading-state {
+    background: white;
+    border-radius: 16px;
+    padding: 64px 32px;
+    text-align: center;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+    border: 1px solid #e5e7eb;
+  }
+  
+  .loading-animation {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 16px;
+    margin-bottom: 24px;
+    font-size: 3rem;
+  }
+  
+  .cooking-pot {
+    animation: bounce 2s infinite;
+  }
+  
+  .steam {
+    animation: float 3s ease-in-out infinite;
+  }
+  
+  @keyframes bounce {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-10px); }
+  }
+  
+  @keyframes float {
+    0%, 100% { transform: translateY(0) rotate(0deg); }
+    50% { transform: translateY(-5px) rotate(5deg); }
+  }
+  
+  .loading-title {
+    font-size: 1.5rem;
+    font-weight: 600;
+    color: #111827;
+    margin-bottom: 8px;
+  }
+  
+  .loading-description {
+    color: #6b7280;
+    margin-bottom: 24px;
+  }
+  
+  .loading-progress {
+    width: 200px;
+    height: 4px;
+    background: #e5e7eb;
+    border-radius: 2px;
+    margin: 0 auto;
+    overflow: hidden;
+  }
+  
+  .progress-bar {
+    height: 100%;
+    background: linear-gradient(90deg, #16a34a, #22c55e);
+    border-radius: 2px;
+    animation: progress 2s ease-in-out infinite;
+  }
+  
+  @keyframes progress {
+    0% { width: 0%; }
+    50% { width: 70%; }
+    100% { width: 100%; }
+  }
+  
+  /* ====================
+     Empty State
+     ==================== */
+  
+  .empty-state {
+    background: white;
+    border-radius: 16px;
+    padding: 64px 32px;
+    text-align: center;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+    border: 1px solid #e5e7eb;
+  }
+  
+  .empty-animation {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 16px;
+    margin-bottom: 24px;
+    font-size: 4rem;
+  }
+  
+  .chef-hat {
+    animation: wiggle 3s ease-in-out infinite;
+  }
+  
+  .sparkles {
+    animation: sparkle 2s ease-in-out infinite;
+  }
+  
+  @keyframes wiggle {
+    0%, 100% { transform: rotate(0deg); }
+    25% { transform: rotate(-5deg); }
+    75% { transform: rotate(5deg); }
+  }
+  
+  @keyframes sparkle {
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50% { opacity: 0.5; transform: scale(1.2); }
+  }
+  
+  .empty-title {
+    font-size: 1.5rem;
+    font-weight: 600;
+    color: #111827;
+    margin-bottom: 8px;
+  }
+  
+  .empty-description {
+    color: #6b7280;
+    margin-bottom: 24px;
+  }
+  
+  .empty-tips {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    max-width: 400px;
+    margin: 0 auto;
+  }
+  
+  .tip {
+    padding: 8px 12px;
+    background: #f0fdf4;
+    color: #16a34a;
+    border-radius: 6px;
+    font-size: 0.875rem;
+    text-align: left;
+  }
+  
+  .empty-action-btn {
+    background: #16a34a;
+    color: white;
+    padding: 12px 24px;
+    border: none;
+    border-radius: 8px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    margin-top: 16px;
+  }
+  
+  .empty-action-btn:hover {
+    background: #15803d;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(22, 163, 74, 0.3);
+  }
+  
+  /* ====================
+     Results Header
+     ==================== */
+  
+  .results-section {
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+  }
+  
+  .results-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: white;
+    padding: 20px 24px;
+    border-radius: 12px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+    border: 1px solid #e5e7eb;
+  }
+  
+  .results-title {
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: #111827;
+  }
+  
+  .results-actions {
+    display: flex;
+    gap: 12px;
+  }
+  
+  .action-btn {
+    padding: 8px 16px;
+    border: 1px solid #d1d5db;
+    background: white;
+    border-radius: 6px;
+    font-size: 0.875rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+  }
+  
+  .action-btn.refresh:hover {
+    border-color: #16a34a;
+    color: #16a34a;
+    background: #f0fdf4;
+  }
+  
+  .action-btn.save {
+    background: #16a34a;
+    color: white;
+    border-color: #16a34a;
+  }
+  
+  .action-btn.save:hover {
+    background: #15803d;
+    transform: translateY(-1px);
+  }
+  
+  /* ====================
+     Menu Cards
+     ==================== */
+  
+  .menus-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+  }
+  
+  .menu-card {
+    background: white;
+    border-radius: 16px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+    border: 1px solid #e5e7eb;
+    overflow: hidden;
+    transition: all 0.3s ease;
+  }
+  
+  .menu-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 12px 24px rgba(0, 0, 0, 0.1);
+  }
+  
+  .menu-header-card {
+    background: linear-gradient(135deg, #f0fdf4, #dcfce7);
+    padding: 24px;
+    border-bottom: 1px solid #e5e7eb;
+  }
+  
+  .menu-header-content {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+  }
+  
+  .menu-info {
+    flex: 1;
+  }
+  
+  .menu-title-card {
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: #111827;
+    margin-bottom: 8px;
+  }
+  
+  .menu-score {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+  
+  .score-label {
+    font-size: 0.75rem;
+    color: #6b7280;
+    font-weight: 500;
+  }
+  
+  .score-value {
+    font-size: 1rem;
+    color: #16a34a;
+    font-weight: 600;
+  }
+  
+  .score-bar {
+    width: 120px;
+    height: 4px;
+    background: #e5e7eb;
+    border-radius: 2px;
+    overflow: hidden;
+  }
+  
+  .score-fill {
+    height: 100%;
+    background: linear-gradient(90deg, #16a34a, #22c55e);
+    border-radius: 2px;
+    transition: width 0.5s ease;
+  }
+  
+  .menu-actions {
+    display: flex;
+    gap: 8px;
+  }
+  
+  /* ====================
+     Nutrition Summary
+     ==================== */
+  
+  .nutrition-summary {
+    padding: 24px;
+    background: #f9fafb;
+    border-bottom: 1px solid #e5e7eb;
+  }
+  
+  .nutrition-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 16px;
+  }
+  
+  .nutrition-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    background: white;
+    padding: 16px;
+    border-radius: 8px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+  }
+  
+  .nutrition-icon {
+    width: 32px;
+    height: 32px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 16px;
+  }
+  
+  .nutrition-icon.calories {
+    background: #fef3c7;
+    color: #f59e0b;
+  }
+  
+  .nutrition-icon.protein {
+    background: #dbeafe;
+    color: #3b82f6;
+  }
+  
+  .nutrition-icon.carbs {
+    background: #dcfce7;
+    color: #16a34a;
+  }
+  
+  .nutrition-icon.fat {
+    background: #e9d5ff;
+    color: #8b5cf6;
+  }
+  
+  .nutrition-info {
+    flex: 1;
+  }
+  
+  .nutrition-label {
+    font-size: 0.75rem;
+    color: #6b7280;
+    margin-bottom: 2px;
+    font-weight: 500;
+  }
+  
+  .nutrition-value {
+    font-size: 1.125rem;
+    font-weight: 600;
+    color: #111827;
+  }
+  
+  /* ====================
+     Food Items
+     ==================== */
+  
+  .food-items {
+    padding: 24px;
+  }
+  
+  .items-title {
+    font-weight: 600;
+    color: #111827;
+    margin-bottom: 16px;
+    font-size: 1rem;
+  }
+  
+  .items-list {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+  
+  .food-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 16px;
+    background: #f9fafb;
+    border-radius: 8px;
+    transition: all 0.2s ease;
+    border: 1px solid #f3f4f6;
+  }
+  
+  .food-item:hover {
+    background: #f3f4f6;
+    transform: translateX(4px);
+    border-color: #e5e7eb;
+  }
+  
+  .food-info {
+    flex: 1;
+  }
+  
+  .food-name {
+    font-weight: 600;
+    color: #111827;
+    margin-bottom: 4px;
+    font-size: 0.875rem;
+  }
+  
+  .food-details {
+    font-size: 0.75rem;
+    color: #6b7280;
+  }
+  
+  .food-nutrition {
+    text-align: right;
+  }
+  
+  .food-calories {
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: #111827;
+    margin-bottom: 2px;
+  }
+  
+  .food-macros {
+    font-size: 0.75rem;
+    color: #6b7280;
+  }
+  
+  /* ====================
+     Save Dialog
+     ==================== */
+  
+  .save-dialog-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+    animation: fadeIn 0.2s ease;
+  }
+  
+  .save-dialog {
+    background: white;
+    border-radius: 12px;
+    padding: 24px;
+    max-width: 400px;
+    width: 90%;
+    box-shadow: 0 20px 25px rgba(0, 0, 0, 0.1);
+    animation: slideUp 0.3s ease;
+  }
+  
+  @keyframes slideUp {
+    from {
+      opacity: 0;
+      transform: translateY(20px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+  
+  .dialog-title {
+    font-size: 1.125rem;
+    font-weight: 600;
+    color: #111827;
+    margin-bottom: 16px;
+  }
+  
+  .dialog-field {
+    margin-bottom: 20px;
+  }
+  
+  .dialog-label {
+    display: block;
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: #374151;
+    margin-bottom: 6px;
+  }
+  
+  .dialog-input {
+    width: 100%;
+    padding: 10px 12px;
+    border: 1px solid #d1d5db;
+    border-radius: 6px;
+    font-size: 0.875rem;
+    transition: border-color 0.2s ease;
+  }
+  
+  .dialog-input:focus {
+    outline: none;
+    border-color: #16a34a;
+    box-shadow: 0 0 0 3px rgba(22, 163, 74, 0.1);
+  }
+  
+  .dialog-actions {
+    display: flex;
+    gap: 12px;
+    justify-content: flex-end;
+  }
+  
+  .dialog-btn {
+    padding: 8px 16px;
+    border: 1px solid #d1d5db;
+    border-radius: 6px;
+    font-size: 0.875rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease;
+  }
+  
+  .dialog-btn.cancel {
+    background: white;
+    color: #374151;
+  }
+  
+  .dialog-btn.cancel:hover {
+    background: #f9fafb;
+  }
+  
+  .dialog-btn.save {
+    background: #16a34a;
+    color: white;
+    border-color: #16a34a;
+  }
+  
+  .dialog-btn.save:hover {
+    background: #15803d;
+  }
+  
+  /* ====================
+     Saved Menus Section
+     ==================== */
+  
+  .saved-menus-section {
+    min-height: 400px;
+  }
+  
+  .saved-menus-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 24px;
+  }
+  
+  .saved-menu-card {
+    background: white;
+    border-radius: 12px;
+    padding: 20px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+    border: 1px solid #e5e7eb;
+    transition: all 0.2s ease;
+  }
+  
+  .saved-menu-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
+  }
+  
+  .saved-menu-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 12px;
+  }
+  
+  .saved-menu-title {
+    font-size: 1rem;
+    font-weight: 600;
+    color: #111827;
+    flex: 1;
+  }
+  
+  .saved-menu-actions {
+    display: flex;
+    gap: 8px;
+  }
+  
+  .delete-btn {
+    background: none;
+    border: none;
+    color: #dc2626;
+    cursor: pointer;
+    padding: 4px;
+    border-radius: 4px;
+    transition: all 0.2s ease;
+  }
+  
+  .delete-btn:hover {
+    background: #fee2e2;
+  }
+  
+  .saved-menu-date {
+    font-size: 0.75rem;
+    color: #6b7280;
+    margin-bottom: 16px;
+  }
+  
+  .saved-nutrition-summary {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+    margin-bottom: 12px;
+  }
+  
+  .saved-nutrition-item {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.75rem;
+  }
+  
+  .saved-nutrition-item .label {
+    color: #6b7280;
+  }
+  
+  .saved-nutrition-item .value {
+    color: #111827;
+    font-weight: 500;
+  }
+  
+  .saved-items-count {
+    font-size: 0.75rem;
+    color: #16a34a;
+    font-weight: 500;
+    text-align: center;
+    padding: 6px 12px;
+    background: #f0fdf4;
+    border-radius: 4px;
+  }
+  
+  /* ====================
+     Notifications
+     ==================== */
+  
+  .notification {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    padding: 12px 16px;
+    border-radius: 8px;
+    color: white;
+    font-weight: 500;
+    z-index: 1000;
+    animation: slideInRight 0.3s ease;
+  }
+  
+  @keyframes slideInRight {
+    from {
+      opacity: 0;
+      transform: translateX(100%);
+    }
+    to {
+      opacity: 1;
+      transform: translateX(0);
+    }
+  }
+  
+  .notification-success {
+    background: #16a34a;
+  }
+  
+  .notification-error {
+    background: #dc2626;
+  }
+  
+  .notification-info {
+    background: #3b82f6;
+  }
+  
+  /* ====================
+     Responsive Design
+     ==================== */
+  
+  @media (max-width: 1024px) {
+    .menu-layout {
+      grid-template-columns: 1fr;
+      gap: 24px;
+    }
+    
+    .menu-form {
+      position: static;
+      max-height: none;
+    }
+    
+    .nutrition-grid {
+      grid-template-columns: repeat(2, 1fr);
+    }
+  }
+  
+  @media (max-width: 768px) {
+    .menu-container {
+      padding: 0 16px;
+    }
+    
+    .menu-title {
+      font-size: 2rem;
+    }
+    
+    .presets-grid {
+      grid-template-columns: 1fr;
+    }
+    
+    .nutrition-grid {
+      grid-template-columns: 1fr;
+    }
+    
+    .results-header {
+      flex-direction: column;
+      gap: 16px;
+      align-items: stretch;
+    }
+    
+    .saved-menus-grid {
+      grid-template-columns: 1fr;
+    }
+    
+    .menu-tabs {
+      flex-direction: column;
+      max-width: none;
+    }
+    
+    .tab-button {
+      justify-content: center;
+    }
+  }

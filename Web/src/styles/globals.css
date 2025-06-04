@@ -1,0 +1,469 @@
+/* ====================
+   QUICK CONTAINER WIDTH FIX - Add this to the top of your globals.css
+   ==================== */
+
+/* Force full width on all main containers */
+.homepage,
+.dashboard,
+.menu-generator,
+.auth-page {
+  width: 100vw !important;
+  max-width: 100vw !important;
+  margin: 0 !important;
+  box-sizing: border-box !important;
+}
+
+.homepage-container,
+.dashboard-container,
+.menu-container,
+.nav-container {
+  width: 100% !important;
+  max-width: 100% !important;
+  margin: 0 !important;
+  box-sizing: border-box !important;
+}
+
+/* Ensure proper padding instead of restricting width */
+.homepage-hero {
+  width: 100% !important;
+  padding-left: 5% !important;
+  padding-right: 5% !important;
+}
+
+.homepage-features {
+  width: 100% !important;
+  padding-left: 5% !important;
+  padding-right: 5% !important;
+}
+
+.features-container {
+  width: 100% !important;
+  max-width: 1400px !important;
+  margin: 0 auto !important;
+}
+
+/* Navigation full width */
+.navigation {
+  width: 100vw !important;
+  max-width: 100vw !important;
+}
+
+.nav-container {
+  padding-left: 5% !important;
+  padding-right: 5% !important;
+}
+
+/* Dashboard full width */
+.dashboard-container {
+  padding-left: 5% !important;
+  padding-right: 5% !important;
+}
+
+/* Menu generator full width */
+.menu-container {
+  padding-left: 5% !important;
+  padding-right: 5% !important;
+}
+
+/* Responsive padding adjustments */
+@media (max-width: 768px) {
+  .homepage-hero,
+  .homepage-features,
+  .nav-container,
+  .dashboard-container,
+  .menu-container {
+    padding-left: 4% !important;
+    padding-right: 4% !important;
+  }
+}
+
+@media (max-width: 480px) {
+  .homepage-hero,
+  .homepage-features,
+  .nav-container,
+  .dashboard-container,
+  .menu-container {
+    padding-left: 3% !important;
+    padding-right: 3% !important;
+  }
+}
+
+/* Fix any overflow issues */
+body {
+  overflow-x: hidden;
+}
+
+html {
+  overflow-x: hidden;
+  width: 100%;
+}
+
+#root {
+  width: 100%;
+  overflow-x: hidden;
+}
+
+/* Reset and base styles */
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html, body {
+  height: 100%;
+  width: 100%;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', sans-serif;
+  line-height: 1.6;
+  color: #333;
+  background-color: #f9fafb;
+}
+
+#root {
+  height: 100%;
+  width: 100%;
+}
+
+/* ====================
+   FIXED HOMEPAGE STYLES
+   ==================== */
+
+.homepage {
+  min-height: 100vh;
+  width: 100%;
+  background: linear-gradient(135deg, #16a34a, #15803d);
+  color: white;
+}
+
+.homepage-container {
+  max-width: 100%;
+  width: 100%;
+  margin: 0;
+  padding: 0 40px;
+}
+
+.homepage-hero {
+  text-align: center;
+  padding: 120px 40px;
+  width: 100%;
+}
+
+.homepage-title {
+  font-size: 4rem;
+  font-weight: bold;
+  margin-bottom: 24px;
+  line-height: 1.1;
+}
+
+.homepage-subtitle {
+  color: #dcfce7;
+  display: block;
+  margin-top: 16px;
+}
+
+.homepage-description {
+  font-size: 1.25rem;
+  color: #bbf7d0;
+  margin-bottom: 32px;
+  max-width: 800px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.homepage-features {
+  background: #f9fafb;
+  color: #333;
+  padding: 100px 40px;
+  width: 100%;
+}
+
+.features-container {
+  max-width: 1400px;
+  margin: 0 auto;
+  text-align: center;
+  width: 100%;
+}
+
+/* ====================
+   FIXED NAVIGATION STYLES
+   ==================== */
+
+.navigation {
+  background: white;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  border-bottom: 1px solid #e5e7eb;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  width: 100%;
+}
+
+.nav-container {
+  max-width: 100%;
+  width: 100%;
+  margin: 0;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  height: 64px;
+  padding: 0 40px;
+}
+
+/* ====================
+   FIXED DASHBOARD STYLES
+   ==================== */
+
+.dashboard {
+  min-height: 100vh;
+  width: 100%;
+  background: #f9fafb;
+  padding: 32px 0;
+}
+
+.dashboard-container {
+  max-width: 100%;
+  width: 100%;
+  margin: 0;
+  padding: 0 40px;
+}
+
+.dashboard-grid {
+  display: grid;
+  grid-template-columns: 350px 1fr;
+  gap: 32px;
+  align-items: start;
+  width: 100%;
+}
+
+/* ====================
+   FIXED MENU GENERATOR STYLES
+   ==================== */
+
+.menu-generator {
+  min-height: 100vh;
+  width: 100%;
+  background: #f9fafb;
+  padding: 32px 0;
+}
+
+.menu-container {
+  max-width: 100%;
+  width: 100%;
+  margin: 0;
+  padding: 0 40px;
+}
+
+.menu-layout {
+  display: grid;
+  grid-template-columns: 400px 1fr;
+  gap: 32px;
+  align-items: start;
+  width: 100%;
+}
+
+/* ====================
+   FIXED AUTH PAGES STYLES
+   ==================== */
+
+.auth-page {
+  min-height: 100vh;
+  width: 100%;
+  background: #f9fafb;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: 48px 40px;
+}
+
+/* ====================
+   RESPONSIVE FIXES
+   ==================== */
+
+@media (max-width: 1200px) {
+  .homepage-container,
+  .nav-container,
+  .dashboard-container,
+  .menu-container {
+    padding: 0 32px;
+  }
+  
+  .homepage-hero {
+    padding: 100px 32px;
+  }
+  
+  .homepage-features {
+    padding: 80px 32px;
+  }
+}
+
+@media (max-width: 768px) {
+  .homepage-container,
+  .nav-container,
+  .dashboard-container,
+  .menu-container {
+    padding: 0 20px;
+  }
+  
+  .homepage-hero {
+    padding: 80px 20px;
+  }
+  
+  .homepage-features {
+    padding: 60px 20px;
+  }
+  
+  .auth-page {
+    padding: 24px 20px;
+  }
+  
+  .dashboard-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .menu-layout {
+    grid-template-columns: 1fr;
+  }
+  
+  .homepage-title {
+    font-size: 2.5rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .homepage-container,
+  .nav-container,
+  .dashboard-container,
+  .menu-container {
+    padding: 0 16px;
+  }
+  
+  .homepage-hero {
+    padding: 60px 16px;
+  }
+  
+  .homepage-features {
+    padding: 40px 16px;
+  }
+  
+  .auth-page {
+    padding: 24px 16px;
+  }
+  
+  .homepage-title {
+    font-size: 2rem;
+  }
+}
+
+/* ====================
+   ADDITIONAL FIXES FOR SPECIFIC COMPONENTS
+   ==================== */
+
+/* Stats grid full width */
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 24px;
+  margin-bottom: 32px;
+  width: 100%;
+}
+
+/* Features grid full width */
+.features-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 32px;
+  margin-top: 64px;
+  width: 100%;
+}
+
+/* Menu tabs full width */
+.menu-tabs {
+  display: flex;
+  justify-content: center;
+  gap: 8px;
+  margin-bottom: 32px;
+  background: white;
+  padding: 8px;
+  border-radius: 12px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  border: 1px solid #e5e7eb;
+  max-width: 400px;
+  margin-left: auto;
+  margin-right: auto;
+  width: 100%;
+}
+
+/* Ensure all main containers take full width */
+.main-content,
+.sidebar-card,
+.menu-form,
+.menu-results {
+  width: 100%;
+}
+
+/* Make sure buttons and forms don't overflow */
+.homepage-buttons {
+  display: flex;
+  gap: 16px;
+  justify-content: center;
+  flex-wrap: wrap;
+  width: 100%;
+}
+
+.btn-primary,
+.btn-outline {
+  background: white;
+  color: #16a34a;
+  padding: 12px 32px;
+  border-radius: 8px;
+  text-decoration: none;
+  font-weight: 600;
+  transition: all 0.3s ease;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  border: 2px solid transparent;
+}
+
+.btn-outline {
+  border: 2px solid white;
+  color: white;
+  background: transparent;
+}
+
+.btn-primary:hover {
+  background: #f3f4f6;
+  transform: translateY(-2px);
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+}
+
+.btn-outline:hover {
+  background: white;
+  color: #16a34a;
+}
+
+/* Ensure cards and content areas fill available space */
+.stat-card,
+.sidebar-card,
+.main-content,
+.menu-card {
+  width: 100%;
+  box-sizing: border-box;
+}
+
+/* Fix for very small screens */
+@media (max-width: 320px) {
+  .homepage-title {
+    font-size: 1.5rem;
+  }
+  
+  .homepage-description {
+    font-size: 1rem;
+  }
+  
+  .btn-primary,
+  .btn-outline {
+    padding: 10px 20px;
+    font-size: 0.875rem;
+  }
+}

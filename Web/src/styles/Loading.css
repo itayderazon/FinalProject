@@ -1,0 +1,91 @@
+.loading-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 32px;
+  }
+  
+  .loading-spinner {
+    width: 48px;
+    height: 48px;
+    color: #16a34a;
+    animation: spin 1s linear infinite;
+    margin-bottom: 16px;
+  }
+  
+  @keyframes spin {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+  }
+  
+  .loading-text {
+    color: #6b7280;
+    font-size: 0.875rem;
+    font-weight: 500;
+  }
+  
+  .loading-fullscreen {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(255, 255, 255, 0.9);
+    backdrop-filter: blur(4px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+  }
+  
+  /* ====================
+     Responsive Design
+     ==================== */
+  
+  @media (max-width: 768px) {
+    .homepage-title {
+      font-size: 2.5rem;
+    }
+    
+    .homepage-buttons {
+      flex-direction: column;
+      align-items: center;
+    }
+    
+    .features-grid {
+      grid-template-columns: 1fr;
+    }
+    
+    .dashboard-grid {
+      grid-template-columns: 1fr;
+    }
+    
+    .menu-layout {
+      grid-template-columns: 1fr;
+    }
+    
+    .menu-form {
+      position: static;
+    }
+    
+    .stats-grid {
+      grid-template-columns: 1fr;
+    }
+    
+    .nutrition-grid {
+      grid-template-columns: repeat(2, 1fr);
+    }
+    
+    .nav-links {
+      display: none;
+    }
+    
+    .nav-user {
+      gap: 8px;
+    }
+    
+    .nav-user-name {
+      display: none;
+    }
+  }

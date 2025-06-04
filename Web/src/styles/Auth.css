@@ -1,0 +1,249 @@
+.auth-page {
+    min-height: 100vh;
+    background: #f9fafb;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    padding: 48px 24px;
+  }
+  
+  .auth-header {
+    text-align: center;
+    margin-bottom: 32px;
+    max-width: 400px;
+    margin-left: auto;
+    margin-right: auto;
+  }
+  
+  .auth-logo {
+    display: flex;
+    justify-content: center;
+    margin-bottom: 24px;
+  }
+  
+  .auth-logo-icon {
+    width: 48px;
+    height: 48px;
+    font-size: 48px;
+  }
+  
+  .auth-title {
+    font-size: 2rem;
+    font-weight: bold;
+    color: #111827;
+    margin-bottom: 8px;
+  }
+  
+  .auth-subtitle {
+    color: #6b7280;
+    font-size: 0.875rem;
+  }
+  
+  .auth-link {
+    color: #16a34a;
+    text-decoration: none;
+    font-weight: 500;
+  }
+  
+  .auth-link:hover {
+    color: #15803d;
+    text-decoration: underline;
+  }
+  
+  .auth-form-container {
+    background: white;
+    padding: 32px;
+    border-radius: 8px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    max-width: 400px;
+    margin: 0 auto;
+    width: 100%;
+  }
+  
+  .auth-form {
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+  }
+  
+  .auth-field {
+    display: flex;
+    flex-direction: column;
+  }
+  
+  .auth-label {
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: #374151;
+    margin-bottom: 4px;
+  }
+  
+  .auth-input-wrapper {
+    position: relative;
+  }
+  
+  .auth-input-icon {
+    position: absolute;
+    left: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 20px;
+    height: 20px;
+    color: #9ca3af;
+    pointer-events: none;
+  }
+  
+  .auth-input {
+    width: 100%;
+    padding: 12px 12px 12px 44px;
+    border: 1px solid #d1d5db;
+    border-radius: 6px;
+    font-size: 1rem;
+    transition: all 0.2s ease;
+    background: white;
+    box-sizing: border-box;
+  }
+  
+  .auth-input:focus {
+    outline: none;
+    border-color: #16a34a;
+    box-shadow: 0 0 0 3px rgba(22, 163, 74, 0.1);
+  }
+  
+  .auth-input-icon-right {
+    position: absolute;
+    right: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 20px;
+    height: 20px;
+    color: #9ca3af;
+    cursor: pointer;
+    background: none;
+    border: none;
+  }
+  
+  .auth-input-icon-right:hover {
+    color: #6b7280;
+  }
+  
+  .auth-submit {
+    background: #16a34a;
+    color: white;
+    padding: 12px;
+    border: none;
+    border-radius: 6px;
+    font-size: 1rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+  }
+  
+  .auth-submit:hover:not(:disabled) {
+    background: #15803d;
+  }
+  
+  .auth-submit:disabled {
+    background: #9ca3af;
+    cursor: not-allowed;
+  }
+  
+  .password-requirements {
+    background: #f9fafb;
+    padding: 12px;
+    border-radius: 6px;
+    margin-top: 8px;
+  }
+  
+  .requirements-title {
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: #374151;
+    margin-bottom: 8px;
+  }
+  
+  .requirements-list {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+  
+  .requirement-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 0.875rem;
+  }
+  
+  .requirement-icon {
+    width: 16px;
+    height: 16px;
+    font-size: 16px;
+  }
+  
+  .requirement-valid {
+    color: #15803d;
+  }
+  
+  .requirement-invalid {
+    color: #dc2626;
+  }
+  
+  .auth-options {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin: 16px 0;
+  }
+  
+  .remember-me {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  
+  .remember-checkbox {
+    width: 16px;
+    height: 16px;
+    accent-color: #16a34a;
+  }
+  
+  .forgot-password {
+    color: #16a34a;
+    text-decoration: none;
+    font-size: 0.875rem;
+  }
+  
+  .forgot-password:hover {
+    text-decoration: underline;
+  }
+  
+  .auth-benefits {
+    margin-top: 24px;
+    padding-top: 24px;
+    border-top: 1px solid #e5e7eb;
+  }
+  
+  .benefits-title {
+    text-align: center;
+    font-size: 0.875rem;
+    color: #6b7280;
+    margin-bottom: 16px;
+  }
+  
+  .benefits-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+  
+  .benefit-item {
+    text-align: center;
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: #16a34a;
+  }
