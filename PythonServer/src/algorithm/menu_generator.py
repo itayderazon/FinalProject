@@ -2,10 +2,10 @@
 
 import random
 from .menu_builder import MenuBuilder
-from .enhanced_menu_builder import EnhancedMenuBuilder
 from .menu_validator import MenuValidator
 from .menu_scorer import MenuScorer
 from .food_filter_service import FoodFilterService
+from .improved_menu_builder import ImprovedMenuBuilder
 from ..filters import NutritionalSoundnessFilter, CategoryPreferenceFilter
 from config import Config
 
@@ -41,21 +41,11 @@ class MenuGenerator:
             self.meal_rules_factory
         )
         
-        # Choose menu builder based on configuration
-        if self.use_enhanced:
-            print("🚀 Using Enhanced Menu Builder with AI-like features")
-            self.menu_builder = EnhancedMenuBuilder(
-                self.food_classifier, 
-                self.portion_calculator, 
-                self.config,
-                self.user_id
-            )
-        else:
-            print("📊 Using Standard Menu Builder")
-            self.menu_builder = MenuBuilder(
-                self.food_classifier, 
-                self.portion_calculator, 
-                self.config
+        print("📊 Using Standard Menu Builder")
+        self.menu_builder = MenuBuilder(
+            self.food_classifier, 
+            self.portion_calculator, 
+            self.config
             )
         
         self.menu_validator = MenuValidator(

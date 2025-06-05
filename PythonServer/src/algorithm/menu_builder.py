@@ -1,10 +1,10 @@
-# src/algorithm/menu_builder.py - Core menu construction logic
+# src/algorithm/menu_builder.py - Enhanced version with calorie distribution fix
 
 import random
 from ..models import Menu, MenuItem
 
 class MenuBuilder:
-    """Responsible ONLY for building individual menus (SRP)"""
+    """Enhanced MenuBuilder with better calorie distribution"""
     
     def __init__(self, food_classifier, portion_calculator, config):
         self.food_classifier = food_classifier
@@ -12,34 +12,39 @@ class MenuBuilder:
         self.config = config
     
     def build_menu(self, foods, target_nutrition, meal_type, num_items):
-        """Build a single menu with strategic food selection"""
+        """Build a single menu with improved calorie distribution"""
         menu = Menu()
         used_foods = set()
         remaining_nutrition = target_nutrition
         
+        # Calculate target calories per item for distribution control
+        target_calories_per_item = target_nutrition.calories / num_items
+        max_calories_per_item = target_calories_per_item * 1.8  # Allow some variance but prevent domination
+        
         # Phase 1: Add required items if specified
-        remaining_nutrition = self._add_required_items(menu, foods, used_foods, remaining_nutrition)
+        remaining_nutrition = self._add_required_items(menu, foods, used_foods, remaining_nutrition, max_calories_per_item)
         
-        # Phase 2: Add protein if needed
-        remaining_nutrition = self._add_protein_if_needed(menu, foods, used_foods, remaining_nutrition, num_items)
+        # Phase 2: Add protein if needed (with calorie control)
+        remaining_nutrition = self._add_protein_if_needed(menu, foods, used_foods, remaining_nutrition, num_items, max_calories_per_item)
         
-        # Phase 3: Add carbs if needed
-        remaining_nutrition = self._add_carbs_if_needed(menu, foods, used_foods, remaining_nutrition, num_items)
+        # Phase 3: Add carbs if needed (with calorie control)
+        remaining_nutrition = self._add_carbs_if_needed(menu, foods, used_foods, remaining_nutrition, num_items, max_calories_per_item)
         
-        # Phase 4: Fill remaining slots
-        self._fill_remaining_slots(menu, foods, used_foods, remaining_nutrition, target_nutrition, num_items)
+        # Phase 4: Fill remaining slots (with calorie control)
+        self._fill_remaining_slots(menu, foods, used_foods, remaining_nutrition, target_nutrition, num_items, max_calories_per_item)
         
         return menu
     
-    def _add_required_items(self, menu, foods, used_foods, remaining_nutrition):
-        """Add items specified in REQUIRED_ITEM_CODES"""
+    def _add_required_items(self, menu, foods, used_foods, remaining_nutrition, max_calories_per_item):
+        """Add items specified in REQUIRED_ITEM_CODES with calorie limits"""
         required_item_codes = getattr(self.config, 'REQUIRED_ITEM_CODES', [])
         required_portions = getattr(self.config, 'REQUIRED_ITEM_PORTIONS', {})
         
         for item_code in required_item_codes:
             required_food = self._find_food_by_code(foods, item_code)
             if required_food:
-                portion = self._get_required_portion(required_food, item_code, required_portions, remaining_nutrition)
+                # Calculate portion with calorie limit
+                portion = self._get_required_portion_with_limit(required_food, item_code, required_portions, remaining_nutrition, max_calories_per_item)
                 
                 menu.add_item(MenuItem(required_food, portion))
                 used_foods.add(required_food.item_code)
@@ -50,15 +55,16 @@ class MenuBuilder:
         
         return remaining_nutrition
     
-    def _add_protein_if_needed(self, menu, foods, used_foods, remaining_nutrition, num_items):
-        """Add protein source if not already present"""
+    def _add_protein_if_needed(self, menu, foods, used_foods, remaining_nutrition, num_items, max_calories_per_item):
+        """Add protein source with calorie control"""
         if not any(self.food_classifier.is_protein_source(item.food) for item in menu.items):
             protein_foods = [f for f in foods if f.item_code not in used_foods 
                            and self.food_classifier.is_protein_source(f)]
             
             if protein_foods:
                 selected_protein = self._select_protein_food(protein_foods)
-                portion = self._calculate_protein_portion(selected_protein, remaining_nutrition)
+                # Use calorie-controlled portion calculation
+                portion = self._calculate_controlled_portion(selected_protein, remaining_nutrition, max_calories_per_item, 'protein')
                 
                 menu.add_item(MenuItem(selected_protein, portion))
                 used_foods.add(selected_protein.item_code)
@@ -68,15 +74,16 @@ class MenuBuilder:
         
         return remaining_nutrition
     
-    def _add_carbs_if_needed(self, menu, foods, used_foods, remaining_nutrition, num_items):
-        """Add carb source if not already present"""
+    def _add_carbs_if_needed(self, menu, foods, used_foods, remaining_nutrition, num_items, max_calories_per_item):
+        """Add carb source with calorie control"""
         if not any(self.food_classifier.is_fiber_source(item.food) for item in menu.items):
             carb_foods = [f for f in foods if f.item_code not in used_foods 
                          and self.food_classifier.is_fiber_source(f)]
             
             if carb_foods and len(menu.items) < num_items:
                 selected_carb = self._select_carb_food(carb_foods)
-                portion = self._calculate_carb_portion(selected_carb, remaining_nutrition)
+                # Use calorie-controlled portion calculation
+                portion = self._calculate_controlled_portion(selected_carb, remaining_nutrition, max_calories_per_item, 'carbs')
                 
                 menu.add_item(MenuItem(selected_carb, portion))
                 used_foods.add(selected_carb.item_code)
@@ -86,8 +93,8 @@ class MenuBuilder:
         
         return remaining_nutrition
     
-    def _fill_remaining_slots(self, menu, foods, used_foods, remaining_nutrition, target_nutrition, num_items):
-        """Fill remaining menu slots with balanced foods"""
+    def _fill_remaining_slots(self, menu, foods, used_foods, remaining_nutrition, target_nutrition, num_items, max_calories_per_item):
+        """Fill remaining menu slots with calorie distribution control"""
         from ..filters import BalanceFilter
         
         while len(menu.items) < num_items and remaining_nutrition.calories > 50:
@@ -103,7 +110,12 @@ class MenuBuilder:
             
             # Select food with flexible variety
             selected_food = self._select_balanced_food(available_foods, remaining_nutrition, menu)
-            portion = self._calculate_balanced_portion(selected_food, remaining_nutrition, num_items - len(menu.items))
+            
+            # Calculate remaining slots to distribute calories evenly
+            remaining_slots = num_items - len(menu.items)
+            
+            # Use calorie-controlled portion calculation
+            portion = self._calculate_distributed_portion(selected_food, remaining_nutrition, remaining_slots, max_calories_per_item)
             
             menu.add_item(MenuItem(selected_food, portion))
             used_foods.add(selected_food.item_code)
@@ -111,6 +123,95 @@ class MenuBuilder:
             item_nutrition = selected_food.get_nutrition_for_portion(portion)
             remaining_nutrition = self._subtract_nutrition(remaining_nutrition, item_nutrition)
     
+    def _calculate_controlled_portion(self, food, remaining_nutrition, max_calories_per_item, food_type):
+        """Calculate portion with calorie distribution control"""
+        food_nutrition = food.nutrition_per_100g
+        
+        # Start with macro-based calculation
+        if food_type == 'protein':
+            base_portion = min(400, max(100, (remaining_nutrition.protein * 0.4) / food_nutrition.protein * 100))
+        elif food_type == 'carbs':
+            base_portion = min(300, max(50, remaining_nutrition.carbs / food_nutrition.carbs * 100))
+        else:
+            base_portion = 100
+        
+        # Apply calorie limit
+        if food_nutrition.calories > 0:
+            max_portion_for_calories = (max_calories_per_item / food_nutrition.calories) * 100
+            base_portion = min(base_portion, max_portion_for_calories)
+        
+        return self.portion_calculator.apply_portion_limits(food, base_portion)
+    
+    def _calculate_distributed_portion(self, food, remaining_nutrition, remaining_slots, max_calories_per_item):
+        """Calculate portion with even calorie distribution"""
+        if remaining_slots <= 0:
+            return self.portion_calculator.apply_portion_limits(food, 100)
+        
+        food_nutrition = food.nutrition_per_100g
+        
+        # Target calories for this slot
+        target_calories_for_slot = remaining_nutrition.calories / remaining_slots
+        
+        # Don't exceed the maximum per item
+        target_calories_for_slot = min(target_calories_for_slot, max_calories_per_item)
+        
+        # Calculate portion to hit target calories
+        if food_nutrition.calories > 0:
+            calorie_based_portion = (target_calories_for_slot / food_nutrition.calories) * 100
+        else:
+            calorie_based_portion = 100
+        
+        # Also consider macro needs for balance
+        macro_portions = []
+        
+        if food_nutrition.fat > 0:
+            fat_portion = (remaining_nutrition.fat / remaining_slots) / food_nutrition.fat * 100
+            macro_portions.append(fat_portion * 2)  # Give fat extra weight to prevent excess
+        
+        if food_nutrition.protein > 0:
+            protein_portion = (remaining_nutrition.protein / remaining_slots) / food_nutrition.protein * 100
+            macro_portions.append(protein_portion)
+        
+        if food_nutrition.carbs > 0:
+            carb_portion = (remaining_nutrition.carbs / remaining_slots) / food_nutrition.carbs * 100
+            macro_portions.append(carb_portion)
+        
+        # Use the median of calorie-based and macro-based calculations
+        all_portions = [calorie_based_portion] + macro_portions
+        all_portions.sort()
+        
+        if len(all_portions) % 2 == 0:
+            median_portion = (all_portions[len(all_portions)//2 - 1] + all_portions[len(all_portions)//2]) / 2
+        else:
+            median_portion = all_portions[len(all_portions)//2]
+        
+        # Apply limits
+        final_portion = self.portion_calculator.apply_portion_limits(food, median_portion)
+        
+        # Final check: ensure we don't exceed calorie limit
+        final_calories = food_nutrition.calories * (final_portion / 100)
+        if final_calories > max_calories_per_item * 1.1:  # Small tolerance
+            adjusted_portion = (max_calories_per_item / food_nutrition.calories) * 100
+            final_portion = self.portion_calculator.apply_portion_limits(food, adjusted_portion)
+        
+        return final_portion
+    
+    def _get_required_portion_with_limit(self, food, item_code, required_portions, remaining_nutrition, max_calories_per_item):
+        """Get portion for required item with calorie limit"""
+        if item_code in required_portions:
+            base_portion = required_portions[item_code]
+        else:
+            # Calculate reasonable portion (20% of remaining calories, reduced to prevent domination)
+            base_portion = min(300, max(50, remaining_nutrition.calories * 0.20 / food.nutrition_per_100g.calories * 100))
+        
+        # Apply calorie limit
+        if food.nutrition_per_100g.calories > 0:
+            max_portion_for_calories = (max_calories_per_item / food.nutrition_per_100g.calories) * 100
+            base_portion = min(base_portion, max_portion_for_calories)
+        
+        return self.portion_calculator.apply_portion_limits(food, base_portion)
+    
+    # Keep all the existing selection methods unchanged
     def _select_protein_food(self, protein_foods):
         """Select protein food with variety (flexible top 50%)"""
         protein_foods.sort(key=lambda f: (f.nutrition_per_100g.protein / max(1, f.nutrition_per_100g.fat), 
@@ -151,64 +252,6 @@ class MenuBuilder:
             weights = [0.2 if i < 5 else 0.1 for i in range(len(top_candidates))]
             return random.choices([candidate[0] for candidate in top_candidates], weights=weights)[0]
     
-    def _calculate_protein_portion(self, food, remaining_nutrition):
-        """Calculate portion for protein foods"""
-        protein_portion = min(400, max(100, (remaining_nutrition.protein * 0.4) / food.nutrition_per_100g.protein * 100))
-        return self.portion_calculator.apply_portion_limits(food, protein_portion)
-    
-    def _calculate_carb_portion(self, food, remaining_nutrition):
-        """Calculate portion for carb foods"""
-        carb_portion = min(300, max(50, remaining_nutrition.carbs / food.nutrition_per_100g.carbs * 100))
-        return self.portion_calculator.apply_portion_limits(food, carb_portion)
-    
-    def _calculate_balanced_portion(self, food, remaining_nutrition, remaining_slots):
-        """Calculate portion using multi-macro approach"""
-        if remaining_slots <= 0:
-            return self.portion_calculator.apply_portion_limits(food, 100)
-        
-        food_nutrition = food.nutrition_per_100g
-        portions = []
-        
-        # Calculate portions based on each macro
-        if food_nutrition.calories > 0:
-            cal_portion = (remaining_nutrition.calories / remaining_slots) / food_nutrition.calories * 100
-            portions.append(cal_portion)
-        
-        if food_nutrition.fat > 0:
-            fat_portion = (remaining_nutrition.fat / remaining_slots) / food_nutrition.fat * 100
-            portions.append(fat_portion)
-            portions.append(fat_portion)  # Give fat extra weight
-        
-        if food_nutrition.protein > 0:
-            protein_portion = (remaining_nutrition.protein / remaining_slots) / food_nutrition.protein * 100
-            portions.append(protein_portion)
-        
-        if food_nutrition.carbs > 0:
-            carb_portion = (remaining_nutrition.carbs / remaining_slots) / food_nutrition.carbs * 100
-            portions.append(carb_portion)
-        
-        # Use median to avoid extremes
-        if portions:
-            portions.sort()
-            if len(portions) % 2 == 0:
-                median_portion = (portions[len(portions)//2 - 1] + portions[len(portions)//2]) / 2
-            else:
-                median_portion = portions[len(portions)//2]
-        else:
-            median_portion = 100
-        
-        portion = self.portion_calculator.apply_portion_limits(food, median_portion)
-        
-        # Extra fat control for high-fat foods
-        if food_nutrition.fat > 15:
-            fat_addition = food_nutrition.fat * portion / 100
-            if fat_addition > remaining_nutrition.fat:
-                adjusted_portion = (remaining_nutrition.fat / food_nutrition.fat) * 100
-                portion = min(portion, adjusted_portion)
-                portion = self.portion_calculator.apply_portion_limits(food, portion)
-        
-        return portion
-    
     def _calculate_food_macro_score(self, food, remaining_nutrition, current_menu):
         """Score food based on how well it fits remaining macro needs"""
         remaining_cals = max(1, remaining_nutrition.calories)
@@ -247,15 +290,6 @@ class MenuBuilder:
             if food.item_code == item_code:
                 return food
         return None
-    
-    def _get_required_portion(self, food, item_code, required_portions, remaining_nutrition):
-        """Get portion for required item"""
-        if item_code in required_portions:
-            return required_portions[item_code]
-        else:
-            # Calculate reasonable portion (25% of remaining calories)
-            portion = min(300, max(50, remaining_nutrition.calories * 0.25 / food.nutrition_per_100g.calories * 100))
-            return self.portion_calculator.apply_portion_limits(food, portion)
     
     def _subtract_nutrition(self, target, subtract):
         """Subtract nutrition values, ensuring no negatives"""
