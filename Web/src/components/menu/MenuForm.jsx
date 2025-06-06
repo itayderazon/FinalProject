@@ -181,6 +181,23 @@ const MenuForm = ({
         <div className="range-value">{formData.num_items} items</div>
       </div>
 
+      <div className="form-group">
+        <label className="form-label checkbox-label">
+          <input
+            type="checkbox"
+            name="include_prices"
+            checked={formData.include_prices || false}
+            onChange={handleInputChange}
+            className="form-checkbox"
+          />
+          <span className="checkbox-icon">💰</span>
+          Include Price Comparison
+          <span className="checkbox-description">
+            Compare prices across different supermarkets
+          </span>
+        </label>
+      </div>
+
       <div className="generate-actions">
         <button
           onClick={generateMenu}

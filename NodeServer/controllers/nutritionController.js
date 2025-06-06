@@ -16,7 +16,8 @@ class NutritionController {
         });
       }
   
-      const userId = req.user.userId;
+      // Handle case where authentication is disabled
+      const userId = req.user?.userId || null;
       
       // ✅ Format data EXACTLY as Python expects
       const nutritionData = {
@@ -25,7 +26,8 @@ class NutritionController {
         carbs: parseFloat(req.body.carbs),
         fat: parseFloat(req.body.fat),
         meal_type: req.body.meal_type || null,
-        num_items: req.body.num_items ? parseInt(req.body.num_items) : null
+        num_items: req.body.num_items ? parseInt(req.body.num_items) : null,
+        include_prices: req.body.include_prices === true || req.body.include_prices === 'true'
       };
   
       // Remove null values

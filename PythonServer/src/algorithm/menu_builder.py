@@ -19,7 +19,7 @@ class MenuBuilder:
         
         # Calculate target calories per item for distribution control
         target_calories_per_item = target_nutrition.calories / num_items
-        max_calories_per_item = target_calories_per_item * 1.8  # Allow some variance but prevent domination
+        max_calories_per_item = target_calories_per_item * 1.3 # Allow some variance but prevent domination
         
         # Phase 1: Add required items if specified
         remaining_nutrition = self._add_required_items(menu, foods, used_foods, remaining_nutrition, max_calories_per_item)

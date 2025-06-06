@@ -2,17 +2,17 @@ from fastapi import APIRouter, HTTPException
 from datetime import datetime
 import logging
 
-from api.models.requests import NutritionRequest, UserProfileRequest
-from api.models.responses import MenuGenerationResponse
-from api.services.app_service import app_service
-from api.utils.formatters import format_menu_response, extract_menu_items_for_price_comparison
-from api.utils.calculations import calculate_bmr, calculate_tdee
+from src.api.models.requests import NutritionRequest, UserProfileRequest
+from src.api.models.responses import MenuGenerationResponse
+from src.api.services.app_service import app_service
+from src.api.utils.formatters import format_menu_response, extract_menu_items_for_price_comparison
+from src.api.utils.calculations import calculate_bmr, calculate_tdee
 from src.models.nutrition import NutritionInfo
 
 router = APIRouter()
 logger = logging.getLogger(__name__)
 
-@router.post("/calculate", response_model=MenuGenerationResponse)
+@router.post("/calculate")
 async def calculate_nutrition(request: NutritionRequest):
     if not app_service.menu_generator:
         raise HTTPException(status_code=503, detail="Menu generator not initialized")
@@ -27,7 +27,7 @@ async def calculate_nutrition(request: NutritionRequest):
             float(request.fat)
         )
         
-        logger.info(f"🔄 Generating menu: {target_nutrition.calories}cal")
+        logger.info(f"Generating menu: {target_nutrition.calories}cal")
         
         menus = app_service.menu_generator.generate_menu(
             target_nutrition,
@@ -40,22 +40,56 @@ async def calculate_nutrition(request: NutritionRequest):
         if menus:
             response = format_menu_response(menus, generation_time)
             
+            # Add price comparison for ALL menus if requested
             if request.include_prices and app_service.price_comparison:
                 try:
-                    first_menu = response.menus[0]
-                    menu_items = extract_menu_items_for_price_comparison(first_menu)
-                    price_data = app_service.price_comparison.compare_menu_prices(menu_items)
+                    logger.info(f"Starting price comparison for {len(response.menus)} menus")
                     
-                    return {
+                    # Add price comparison to each menu
+                    enhanced_menus = []
+                    for i, menu_response in enumerate(response.menus):
+                        try:
+                            # Extract menu items for price comparison
+                            menu_items = extract_menu_items_for_price_comparison(menu_response)
+                            
+                            # Get price data for this specific menu
+                            price_data = app_service.price_comparison.compare_menu_prices(menu_items)
+                            
+                            # Create enhanced menu response with prices
+                            enhanced_menu = {
+                                "score": menu_response.score,
+                                "total_nutrition": menu_response.total_nutrition.dict(),
+                                "items": [item.dict() for item in menu_response.items],
+                                "price_comparison": price_data
+                            }
+                            enhanced_menus.append(enhanced_menu)
+                            
+                        except Exception as menu_price_error:
+                            logger.error(f"Price comparison failed for menu {i+1}: {menu_price_error}")
+                            # Add menu without price data if price comparison fails
+                            enhanced_menu = {
+                                "score": menu_response.score,
+                                "total_nutrition": menu_response.total_nutrition.dict(),
+                                "items": [item.dict() for item in menu_response.items],
+                                "price_comparison": {"error": f"Price data unavailable: {str(menu_price_error)}"}
+                            }
+                            enhanced_menus.append(enhanced_menu)
+                    
+                    logger.info(f"Price comparison completed for {len(enhanced_menus)} menus")
+                    
+                    enhanced_response = {
                         "success": True,
-                        "menus": [menu.dict() for menu in response.menus],
-                        "price_comparison": price_data,
+                        "menus": enhanced_menus,
                         "generation_time_ms": generation_time
                     }
+                    
+                    return enhanced_response
+                    
                 except Exception as e:
-                    logger.warning(f"Price comparison failed: {e}")
+                    logger.error(f"Price comparison failed: {e}")
+                    # Fall back to menus without prices
             
-            logger.info(f"✅ Generated {len(response.menus)} menu(s)")
+            logger.info(f"Generated {len(response.menus)} menu(s)")
             return response
         else:
             raise HTTPException(status_code=404, detail="No valid menus could be generated")

@@ -92,6 +92,19 @@ class PythonService {
     return await this.makeRequest('/api/nutrition/analyze-food', foodData);
   }
 
+  // Price comparison methods
+  async comparePrices(menuItems) {
+    return await this.makeRequest('/api/price/compare', { menu_items: menuItems });
+  }
+
+  async getCheapestCombination(menuItems) {
+    return await this.makeRequest('/api/price/cheapest-combination', { menu_items: menuItems });
+  }
+
+  async getSupermarkets() {
+    return await this.makeRequest('/api/price/supermarkets', null, 'GET');
+  }
+
   // Health check for Python service
   async healthCheck() {
     try {

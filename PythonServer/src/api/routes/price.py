@@ -2,9 +2,9 @@ from fastapi import APIRouter, HTTPException
 from datetime import datetime
 import logging
 
-from api.models.requests import PriceComparisonRequest
-from api.models.responses import PriceComparisonResponse
-from api.services.app_service import app_service
+from src.api.models.requests import PriceComparisonRequest
+from src.api.models.responses import PriceComparisonResponse
+from src.api.services.app_service import app_service
 
 router = APIRouter()
 logger = logging.getLogger(__name__)

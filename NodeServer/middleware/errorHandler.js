@@ -1,7 +1,18 @@
 const logger = require('../utils/logger');
 
 const errorHandler = (error, req, res, next) => {
-  logger.error('Error occurred:', error);
+  // Log more detailed error information for debugging
+  logger.error('Error occurred:', {
+    message: error?.message || 'Unknown error',
+    stack: error?.stack,
+    code: error?.code,
+    name: error?.name,
+    url: req?.url,
+    method: req?.method,
+    body: req?.body,
+    headers: req?.headers,
+    errorObject: error
+  });
 
   // Default error response
   let statusCode = 500;

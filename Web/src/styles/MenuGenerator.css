@@ -205,9 +205,9 @@
   
   .range-value {
     text-align: center;
-    font-size: 0.875rem;
     color: #6b7280;
-    font-weight: 500;
+    font-size: 0.875rem;
+    margin-top: 8px;
   }
   
   .macro-inputs {
@@ -1112,4 +1112,309 @@
     .tab-button {
       justify-content: center;
     }
+  }
+
+  /* ====================
+     Price Comparison Section
+     ==================== */
+
+  .price-comparison-section {
+    border-top: 1px solid #e5e7eb;
+    padding: 24px;
+    background: #f9fafb;
+  }
+
+  .price-title {
+    font-size: 1.125rem;
+    font-weight: 600;
+    color: #111827;
+    margin: 0 0 16px 0;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  /* Cheapest Option Highlight */
+  .cheapest-option {
+    background: linear-gradient(135deg, #dcfce7, #bbf7d0);
+    border: 2px solid #16a34a;
+    border-radius: 12px;
+    padding: 16px;
+    margin-bottom: 16px;
+    box-shadow: 0 4px 6px rgba(22, 163, 74, 0.1);
+  }
+
+  .cheapest-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 8px;
+  }
+
+  .cheapest-icon {
+    font-size: 1.25rem;
+  }
+
+  .cheapest-label {
+    font-weight: 600;
+    color: #065f46;
+  }
+
+  .cheapest-supermarket {
+    font-weight: 700;
+    color: #065f46;
+    font-size: 1.125rem;
+  }
+
+  .cheapest-price {
+    font-weight: 700;
+    color: #16a34a;
+    font-size: 1.25rem;
+    margin-left: auto;
+  }
+
+  .cheapest-details {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    font-size: 0.875rem;
+    color: #065f46;
+  }
+
+  .savings {
+    background: #16a34a;
+    color: white;
+    padding: 4px 8px;
+    border-radius: 6px;
+    font-weight: 600;
+    font-size: 0.75rem;
+  }
+
+  /* Supermarket Grid */
+  .supermarket-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 12px;
+    margin-bottom: 16px;
+  }
+
+  .supermarket-card {
+    background: white;
+    border: 1px solid #e5e7eb;
+    border-radius: 8px;
+    padding: 16px;
+    transition: all 0.2s ease;
+  }
+
+  .supermarket-card:hover {
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    transform: translateY(-1px);
+  }
+
+  .supermarket-card.cheapest {
+    border-color: #16a34a;
+    background: #f0fdf4;
+    box-shadow: 0 4px 6px rgba(22, 163, 74, 0.1);
+  }
+
+  .supermarket-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 8px;
+  }
+
+  .supermarket-name {
+    font-size: 1rem;
+    font-weight: 600;
+    color: #111827;
+    margin: 0;
+  }
+
+  .supermarket-card.cheapest .supermarket-name {
+    color: #16a34a;
+  }
+
+  .supermarket-price {
+    font-size: 1.125rem;
+    font-weight: 700;
+    color: #059669;
+    margin: 0;
+  }
+
+  .supermarket-details {
+    font-size: 0.875rem;
+  }
+
+  .availability {
+    color: #6b7280;
+    margin: 0 0 4px 0;
+  }
+
+  .missing-items {
+    color: #ef4444;
+    margin: 0;
+    font-weight: 500;
+  }
+
+  /* Price Breakdown */
+  .price-breakdown {
+    margin-top: 16px;
+  }
+
+  .breakdown-details {
+    border: 1px solid #e5e7eb;
+    border-radius: 8px;
+    background: white;
+  }
+
+  .breakdown-summary {
+    padding: 12px 16px;
+    font-weight: 600;
+    color: #374151;
+    cursor: pointer;
+    list-style: none;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    user-select: none;
+  }
+
+  .breakdown-summary::-webkit-details-marker {
+    display: none;
+  }
+
+  .breakdown-summary::before {
+    content: '▶';
+    transition: transform 0.2s ease;
+    font-size: 0.875rem;
+  }
+
+  .breakdown-details[open] .breakdown-summary::before {
+    transform: rotate(90deg);
+  }
+
+  .breakdown-content {
+    border-top: 1px solid #e5e7eb;
+    padding: 16px;
+  }
+
+  .item-price-row {
+    margin-bottom: 16px;
+    padding-bottom: 16px;
+    border-bottom: 1px solid #f3f4f6;
+  }
+
+  .item-price-row:last-child {
+    margin-bottom: 0;
+    padding-bottom: 0;
+    border-bottom: none;
+  }
+
+  .item-name {
+    font-size: 1rem;
+    font-weight: 600;
+    color: #111827;
+    margin: 0 0 8px 0;
+  }
+
+  .item-prices {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 8px;
+  }
+
+  .supermarket-price-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px 12px;
+    background: #f9fafb;
+    border-radius: 6px;
+    border: 1px solid #e5e7eb;
+  }
+
+  .supermarket-name-small {
+    font-size: 0.875rem;
+    color: #6b7280;
+    font-weight: 500;
+  }
+
+  .price-value {
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: #059669;
+  }
+
+  /* Responsive Design for Price Comparison */
+  @media (max-width: 768px) {
+    .supermarket-grid {
+      grid-template-columns: 1fr;
+    }
+    
+    .cheapest-header {
+      flex-wrap: wrap;
+      gap: 4px;
+    }
+    
+    .cheapest-price {
+      margin-left: 0;
+      width: 100%;
+      text-align: right;
+    }
+    
+    .item-prices {
+      grid-template-columns: 1fr;
+    }
+    
+    .supermarket-price-item {
+      justify-content: space-between;
+    }
+  }
+
+  /* Checkbox Styles */
+  .checkbox-label {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    cursor: pointer;
+    padding: 16px;
+    border: 2px solid #e5e7eb;
+    border-radius: 12px;
+    transition: all 0.2s ease;
+  }
+
+  .checkbox-label:hover {
+    border-color: #16a34a;
+    background: #f0fdf4;
+  }
+
+  .form-checkbox {
+    width: 20px;
+    height: 20px;
+    accent-color: #16a34a;
+    cursor: pointer;
+    margin: 0;
+  }
+
+  .checkbox-icon {
+    font-size: 1.25rem;
+  }
+
+  .checkbox-label .form-label {
+    flex: 1;
+    margin: 0;
+    padding: 0;
+    border: none;
+    background: none;
+    font-weight: 600;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  .checkbox-description {
+    font-size: 0.875rem;
+    color: #6b7280;
+    font-weight: 400;
   }

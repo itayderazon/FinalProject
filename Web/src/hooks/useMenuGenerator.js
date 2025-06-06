@@ -13,7 +13,8 @@ export const useMenuGenerator = () => {
     carbs: 200,
     fat: 65,
     meal_type: '',
-    num_items: 5
+    num_items: 5,
+    include_prices: true
   });
 
   const presets = {
@@ -70,11 +71,14 @@ export const useMenuGenerator = () => {
         protein: formData.protein,
         carbs: formData.carbs,
         fat: formData.fat,
+        include_prices: formData.include_prices,
         ...(formData.meal_type && { meal_type: formData.meal_type }),
         ...(formData.num_items && { num_items: formData.num_items })
       };
 
       console.log('Generating menu with data:', menuData);
+      console.log('Include prices set to:', formData.include_prices);
+      
       const response = await nutritionService.generateMenu(menuData);
       
       // Detailed debugging
@@ -88,6 +92,15 @@ export const useMenuGenerator = () => {
       console.log('menus type:', typeof response?.menus);
       console.log('menus is array:', Array.isArray(response?.menus));
       console.log('menus length:', response?.menus?.length);
+      
+      // Check for price comparison data
+      console.log('=== Price Comparison Debug ===');
+      console.log('response.price_comparison:', response?.price_comparison);
+      console.log('response.data.price_comparison:', response?.data?.price_comparison);
+      if (response?.menus?.[0]) {
+        console.log('First menu has price_comparison:', !!response.menus[0].price_comparison);
+      }
+      console.log('=== End Price Debug ===');
       
       // Check if data is nested
       console.log('=== Checking nested data ===');
@@ -104,6 +117,16 @@ export const useMenuGenerator = () => {
       // More robust validation
       if (responseData && responseData.success === true && responseData.menus && Array.isArray(responseData.menus) && responseData.menus.length > 0) {
         console.log('✅ Validation passed - Setting generated menus:', responseData.menus);
+        
+        // If price comparison data exists at the response level, add it to each menu
+        if (responseData.price_comparison && formData.include_prices) {
+          console.log('📊 Adding price comparison data to menus');
+          responseData.menus = responseData.menus.map(menu => ({
+            ...menu,
+            price_comparison: responseData.price_comparison
+          }));
+        }
+        
         setGeneratedMenus(responseData.menus);
         showNotification(`Successfully generated ${responseData.menus.length} menu options!`, 'success');
       } else {

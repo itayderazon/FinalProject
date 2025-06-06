@@ -11,6 +11,7 @@ const authRoutes = require('./routes/auth');
 const userRoutes = require('./routes/userPostgres');
 const nutritionRoutes = require('./routes/nutrition');
 const productRoutes = require('./routes/products');
+const priceRoutes = require('./routes/price');
 const errorHandler = require('./middleware/errorHandler');
 const logger = require('./utils/logger');
 
@@ -57,6 +58,7 @@ app.use('/api/auth', authRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/nutrition', nutritionRoutes);
 app.use('/api/products', productRoutes);
+app.use('/api/price', priceRoutes);
 
 // Health check with database status
 app.get('/health', async (req, res) => {
@@ -152,6 +154,19 @@ app.use(errorHandler);
 // 404 handler
 app.use('*', (req, res) => {
   res.status(404).json({ error: 'Route not found' });
+});
+
+// Global error handlers for unhandled promises and exceptions
+process.on('unhandledRejection', (reason, promise) => {
+  logger.error('Unhandled Rejection at:', promise, 'reason:', reason);
+});
+
+process.on('uncaughtException', (error) => {
+  logger.error('Uncaught Exception:', error);
+  // Don't exit in development to keep server running
+  if (process.env.NODE_ENV === 'production') {
+    process.exit(1);
+  }
 });
 
 // Start server (no need for database connection function - pool handles it)

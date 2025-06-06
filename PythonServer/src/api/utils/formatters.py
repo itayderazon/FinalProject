@@ -1,5 +1,5 @@
 from fastapi import HTTPException
-from api.models.responses import MenuGenerationResponse, MenuResponse, FoodNutrition, MenuItem
+from src.api.models.responses import MenuGenerationResponse, MenuResponse, FoodNutrition, MenuItem
 import logging
 
 logger = logging.getLogger(__name__)

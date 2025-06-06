@@ -5,7 +5,6 @@ from .menu_builder import MenuBuilder
 from .menu_validator import MenuValidator
 from .menu_scorer import MenuScorer
 from .food_filter_service import FoodFilterService
-from .improved_menu_builder import ImprovedMenuBuilder
 from ..filters import NutritionalSoundnessFilter, CategoryPreferenceFilter
 from config import Config
 
