@@ -244,8 +244,8 @@ class FinalDataSeeder {
             nutritionInfo: {
               calories: this.parseNutritionValue(item.calories),
               protein: this.parseNutritionValue(item.protein),
-              total_carbs: this.parseNutritionValue(item.total_carbs),
-              total_fat: this.parseNutritionValue(item.total_fat),
+              carbs: this.parseNutritionValue(item.carbs),
+              fat: this.parseNutritionValue(item.fat),
               sodium: this.parseNutritionValue(item.sodium),
               serving_size: 100 // Default to 100g
             },

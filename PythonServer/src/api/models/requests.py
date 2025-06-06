@@ -4,11 +4,14 @@ from typing import Optional, List, Dict, Any
 class NutritionRequest(BaseModel):
     calories: float = Field(..., gt=0, le=5000)
     protein: float = Field(..., ge=0, le=500)
-    carbs: float = Field(..., ge=0, le=1000)
-    fat: float = Field(..., ge=0, le=300)
+    carbs: float = Field(..., ge=0, le=1000, alias='carbs')
+    fat: float = Field(..., ge=0, le=300, alias='fat')
     meal_type: Optional[str] = Field(None)
     num_items: Optional[int] = Field(None, gt=0, le=20)
     include_prices: Optional[bool] = Field(False)
+    
+    class Config:
+        populate_by_name = True
     
     @validator('meal_type')
     def validate_meal_type(cls, v):

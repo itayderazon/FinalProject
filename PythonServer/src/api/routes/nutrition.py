@@ -100,33 +100,6 @@ async def calculate_nutrition(request: NutritionRequest):
         logger.error(f"Error in calculate_nutrition: {e}")
         raise HTTPException(status_code=500, detail=f"Internal server error: {str(e)}")
 
-@router.post("/metabolism")
-async def calculate_metabolism(request: UserProfileRequest):
-    try:
-        bmr = calculate_bmr(request.height, request.weight, request.age, request.gender)
-        tdee = calculate_tdee(bmr, request.activity_level)
-        
-        goal_calories = tdee
-        if request.dietary_goal == 'lose':
-            goal_calories = tdee - 500
-        elif request.dietary_goal == 'gain':
-            goal_calories = tdee + 500
-        
-        return {
-            "success": True,
-            "bmr": round(bmr, 1),
-            "tdee": round(tdee, 1),
-            "goal_calories": round(goal_calories, 1),
-            "macro_recommendations": {
-                "protein": round(request.weight * 2.2, 1),
-                "fat": round(goal_calories * 0.25 / 9, 1),
-                "carbs": round((goal_calories - (request.weight * 2.2 * 4) - (goal_calories * 0.25)) / 4, 1)
-            }
-        }
-    except Exception as e:
-        logger.error(f"Error calculating metabolism: {e}")
-        raise HTTPException(status_code=500, detail=f"Failed to calculate metabolism: {str(e)}")
-
 @router.get("/food-categories")
 async def get_food_categories():
     if not app_service.menu_generator:

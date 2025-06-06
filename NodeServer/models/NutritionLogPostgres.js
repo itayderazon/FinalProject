@@ -7,8 +7,8 @@ class NutritionLog {
     this.log_date = data.log_date;
     this.total_calories = data.total_calories;
     this.total_protein = data.total_protein;
-    this.total_carbs = data.total_carbs;
-    this.total_fat = data.total_fat;
+    this.carbs = data.carbs;
+    this.fat = data.fat;
     this.water_intake = data.water_intake;
     this.notes = data.notes;
     this.created_at = data.created_at;
@@ -165,8 +165,8 @@ class NutritionLog {
         SELECT 
           COALESCE(SUM(nli.calories), 0) as total_calories,
           COALESCE(SUM(nli.protein), 0) as total_protein,
-          COALESCE(SUM(nli.carbs), 0) as total_carbs,
-          COALESCE(SUM(nli.fat), 0) as total_fat
+          COALESCE(SUM(nli.carbs), 0) as carbs,
+          COALESCE(SUM(nli.fat), 0) as fat
         FROM nutrition_log_meals nlm
         JOIN nutrition_log_items nli ON nlm.id = nli.meal_id
         WHERE nlm.nutrition_log_id = $1
@@ -179,24 +179,24 @@ class NutritionLog {
         SET 
           total_calories = $1,
           total_protein = $2,
-          total_carbs = $3,
-          total_fat = $4,
+          carbs = $3,
+          fat = $4,
           updated_at = NOW()
         WHERE id = $5
         RETURNING *
       `, [
         Math.round(totals.total_calories),
         Math.round(totals.total_protein * 100) / 100,
-        Math.round(totals.total_carbs * 100) / 100,
-        Math.round(totals.total_fat * 100) / 100,
+        Math.round(totals.carbs * 100) / 100,
+        Math.round(totals.fat * 100) / 100,
         this.id
       ]);
 
       const updated = updateResult.rows[0];
       this.total_calories = updated.total_calories;
       this.total_protein = updated.total_protein;
-      this.total_carbs = updated.total_carbs;
-      this.total_fat = updated.total_fat;
+      this.carbs = updated.carbs;
+      this.fat = updated.fat;
       this.updated_at = updated.updated_at;
 
       return true;
@@ -266,8 +266,8 @@ class NutritionLog {
           COUNT(*) as log_days,
           AVG(total_calories) as avg_calories,
           AVG(total_protein) as avg_protein,
-          AVG(total_carbs) as avg_carbs,
-          AVG(total_fat) as avg_fat,
+          AVG(carbs) as avg_carbs,
+          AVG(fat) as avg_fat,
           AVG(water_intake) as avg_water,
           SUM(total_calories) as total_calories,
           MIN(log_date) as first_date,
@@ -321,8 +321,8 @@ class NutritionLog {
     }
 
     const proteinCalories = this.total_protein * 4;
-    const carbCalories = this.total_carbs * 4;
-    const fatCalories = this.total_fat * 9;
+    const carbCalories = this.carbs * 4;
+    const fatCalories = this.fat * 9;
 
     return {
       protein: Math.round((proteinCalories / this.total_calories) * 100),
@@ -339,8 +339,8 @@ class NutritionLog {
       log_date: this.log_date,
       total_calories: this.total_calories,
       total_protein: this.total_protein,
-      total_carbs: this.total_carbs,
-      total_fat: this.total_fat,
+      carbs: this.carbs,
+      fat: this.fat,
       water_intake: this.water_intake,
       notes: this.notes,
       macro_breakdown: this.getMacroBreakdown(),

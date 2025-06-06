@@ -72,8 +72,8 @@ class SqlFoodProvider:
         # Get nutrition values
         calories = float(nutrition_data.get('calories', 0))
         protein = float(nutrition_data.get('protein', 0))
-        carbs = float(nutrition_data.get('total_carbs', 0))
-        fat = float(nutrition_data.get('total_fat', 0))
+        carbs = float(nutrition_data.get('carbs', 0))
+        fat = float(nutrition_data.get('fat', 0))
         
         # Basic validation
         if calories <= 0:

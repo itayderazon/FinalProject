@@ -69,47 +69,15 @@ export const useMenuGenerator = () => {
       const menuData = {
         calories: formData.calories,
         protein: formData.protein,
-        carbs: formData.carbs,
+        carbs: formData.carbs, 
         fat: formData.fat,
         include_prices: formData.include_prices,
         ...(formData.meal_type && { meal_type: formData.meal_type }),
         ...(formData.num_items && { num_items: formData.num_items })
       };
 
-      console.log('Generating menu with data:', menuData);
-      console.log('Include prices set to:', formData.include_prices);
       
       const response = await nutritionService.generateMenu(menuData);
-      
-      // Detailed debugging
-      console.log('=== API Response Debug ===');
-      console.log('Full response:', response);
-      console.log('Response type:', typeof response);
-      console.log('Response keys:', response ? Object.keys(response) : 'No keys');
-      console.log('success value:', response?.success);
-      console.log('success type:', typeof response?.success);
-      console.log('menus value:', response?.menus);
-      console.log('menus type:', typeof response?.menus);
-      console.log('menus is array:', Array.isArray(response?.menus));
-      console.log('menus length:', response?.menus?.length);
-      
-      // Check for price comparison data
-      console.log('=== Price Comparison Debug ===');
-      console.log('response.price_comparison:', response?.price_comparison);
-      console.log('response.data.price_comparison:', response?.data?.price_comparison);
-      if (response?.menus?.[0]) {
-        console.log('First menu has price_comparison:', !!response.menus[0].price_comparison);
-      }
-      console.log('=== End Price Debug ===');
-      
-      // Check if data is nested
-      console.log('=== Checking nested data ===');
-      console.log('response.data:', response?.data);
-      console.log('response.data.success:', response?.data?.success);
-      console.log('response.data.menus:', response?.data?.menus);
-      console.log('response.data.menus is array:', Array.isArray(response?.data?.menus));
-      console.log('response.data.menus length:', response?.data?.menus?.length);
-      console.log('=== End Debug ===');
       
       // Handle nested response structure
       const responseData = response?.data || response;

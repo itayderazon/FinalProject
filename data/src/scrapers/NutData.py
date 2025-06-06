@@ -144,8 +144,8 @@ def get_nutrition_from_api(item_code):
             'subcategory': item_data.get('group', {}).get('name', ''),
             'calories': None,
             'protein': None,
-            'total_carbs': None,
-            'total_fat': None,
+            'carbs': None,
+            'fat': None,
             'sodium': None,
             'allergens': []
         }
@@ -176,9 +176,9 @@ def get_nutrition_from_api(item_code):
             if 'אנרגיה' in label or 'קלוריות' in label:
                 result['calories'] = value
             elif label == 'שומנים (גרם)':
-                result['total_fat'] = value
+                result['fat'] = value
             elif label == 'סך הפחמימות (גרם)':
-                result['total_carbs'] = value
+                result['carbs'] = value
             elif label == 'חלבונים (גרם)':
                 result['protein'] = value
             elif 'נתרן' in label:
@@ -197,7 +197,7 @@ def get_nutrition_from_api(item_code):
         result['allergens'] = [allergen_map[code] for code in allergen_codes if code in allergen_map]
         
         # Log successful extraction
-        nutrition_count = sum(1 for v in [result['calories'], result['total_fat'], result['total_carbs'], result['protein']] if v is not None)
+        nutrition_count = sum(1 for v in [result['calories'], result['fat'], result['carbs'], result['protein']] if v is not None)
         if nutrition_count > 0:
             print(f"  ✅ SUCCESS for item {item_code}: {result['name'][:40]} - Found {nutrition_count}/4 nutrition values")
         else:
@@ -336,8 +336,8 @@ def print_sample_output(results, count=3):
         print(f"  Subcategory: {item.get('subcategory')}")
         print(f"  Calories: {item.get('calories')}")
         print(f"  Protein: {item.get('protein')}g")
-        print(f"  Carbs: {item.get('total_carbs')}g") 
-        print(f"  Fat: {item.get('total_fat')}g")
+        print(f"  Carbs: {item.get('carbs')}g") 
+        print(f"  Fat: {item.get('fat')}g")
         print(f"  Sodium: {item.get('sodium')}mg")
         print(f"  Allergens: {item.get('allergens')}")
 

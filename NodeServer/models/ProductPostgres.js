@@ -368,8 +368,8 @@ class Product {
     return {
       calories: this.nutrition.calories || 0,
       protein: this.nutrition.protein || 0,
-      total_carbs: this.nutrition.total_carbs || 0,
-      total_fat: this.nutrition.total_fat || 0,
+      carbs: this.nutrition.carbs || 0,
+      fat: this.nutrition.fat || 0,
       sodium: this.nutrition.sodium || 0
     };
   }

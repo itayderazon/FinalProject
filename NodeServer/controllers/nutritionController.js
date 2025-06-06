@@ -243,8 +243,8 @@ class NutritionController {
       
       weeklyData[week].calories.push(log.total_calories);
       weeklyData[week].protein.push(log.total_protein);
-      weeklyData[week].carbs.push(log.total_carbs);
-      weeklyData[week].fat.push(log.total_fat);
+      weeklyData[week].carbs.push(log.carbs);
+      weeklyData[week].fat.push(log.fat);
     });
 
     // Calculate averages for each week

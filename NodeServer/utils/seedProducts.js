@@ -170,8 +170,8 @@ async function seedFromNutritionData() {
           nutritionInfo: {
             calories: rawProduct.calories || null,
             protein: rawProduct.protein || null,
-            total_carbs: rawProduct.total_carbs || null,
-            total_fat: rawProduct.total_fat || null,
+            carbs: rawProduct.carbs || null,
+            fat: rawProduct.fat || null,
             sodium: rawProduct.sodium || null,
             serving_size: 100 // Default to 100g
           },
