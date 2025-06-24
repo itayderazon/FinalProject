@@ -21,7 +21,7 @@ const SavedMenuCard = ({ menu, onDelete }) => {
       
       <div className="saved-nutrition-summary">
         <div className="saved-nutrition-item">
-          <span className="label">Calories:</span>
+          <span className="label">Calories1:</span>
           <span className="value">{menu.total_nutrition.calories.toFixed(0)}</span>
         </div>
         <div className="saved-nutrition-item">

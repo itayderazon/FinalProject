@@ -46,6 +46,32 @@ class MealRules:
             return 0
         else:
             return 1
+    
+    def validate_required_food_types(self, menu, food_classifier):
+        """Validate that menu contains all required food types for this meal"""
+        required_types = self.get_required_food_types()
+        if not required_types:
+            return True, "No food type requirements"
+        
+        menu_food_types = set()
+        for item in menu.items:
+            food_type = food_classifier.get_food_type(item.food)
+            menu_food_types.add(food_type)
+            
+            # Also check specific type checks for each required type
+            for req_type in required_types:
+                if food_classifier.is_food_of_type(item.food, req_type):
+                    menu_food_types.add(req_type)
+        
+        missing_types = []
+        for req_type in required_types:
+            if req_type not in menu_food_types:
+                missing_types.append(req_type)
+        
+        if missing_types:
+            return False, f"Missing required food types for {self.__class__.__name__.replace('Rules', '').lower()}: {', '.join(missing_types)}"
+        
+        return True, "All required food types present"
 
 class BreakfastRules(MealRules):
     """Breakfast-specific rules"""
@@ -117,6 +143,7 @@ class MealRulesFactory:
             'breakfast': BreakfastRules,
             'lunch': LunchRules,
             'dinner': DinnerRules,
+            'snack': SnackRules,  # Support both 'snack' and 'snacks'
             'snacks': SnackRules
         }
         
@@ -128,9 +155,10 @@ class MealRulesFactory:
     @staticmethod
     def get_available_meal_types():
         """Get list of available meal types"""
-        return ['breakfast', 'lunch', 'dinner', 'snacks']
+        return ['breakfast', 'lunch', 'dinner', 'snack']
     
     @staticmethod
     def validate_meal_type(meal_type):
         """Validate that meal type is supported"""
-        return meal_type.lower() in MealRulesFactory.get_available_meal_types()
+        supported_types = ['breakfast', 'lunch', 'dinner', 'snack', 'snacks']
+        return meal_type.lower() in supported_types

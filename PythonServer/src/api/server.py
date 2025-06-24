@@ -14,6 +14,7 @@ if pythonserver_root not in sys.path:
 from src.api.routes.nutrition import nutrition_router
 from src.api.routes.price import price_router
 from src.api.routes.health import health_router
+from src.api.routes.catalog import catalog_router
 from src.api.services.app_service import app_service
 
 logging.basicConfig(level=logging.INFO)
@@ -49,6 +50,7 @@ app.add_middleware(
 app.include_router(health_router, tags=["health"])
 app.include_router(nutrition_router, prefix="/api/nutrition", tags=["nutrition"])
 app.include_router(price_router, prefix="/api/price", tags=["price"])
+app.include_router(catalog_router, prefix="/api/catalog", tags=["catalog"])
 
 if __name__ == "__main__":
     uvicorn.run("src.api.server:app", host="0.0.0.0", port=8000, reload=True)

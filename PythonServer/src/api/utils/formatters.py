@@ -12,9 +12,28 @@ def format_menu_response(menus, generation_time_ms=None):
             generation_time_ms=generation_time_ms
         )
         
-        menu_list = menus if isinstance(menus, list) else [(menus, 0.0)]
+        # Handle both old and new formats
+        if isinstance(menus, list) and len(menus) > 0:
+            # Check if it's the new format (menu objects with validation_score)
+            if hasattr(menus[0], 'validation_score'):
+                menu_list = menus
+            else:
+                # Old format: list of (menu, score) tuples
+                menu_list = menus
+        else:
+            # Single menu
+            menu_list = [menus] if menus else []
         
-        for menu, score in menu_list:
+        for menu_item in menu_list:
+            # Handle both formats
+            if isinstance(menu_item, tuple):
+                # Old format: (menu, score)
+                menu, score = menu_item
+            else:
+                # New format: menu object with validation_score attribute
+                menu = menu_item
+                score = getattr(menu, 'validation_score', 0.0)
+            
             total_nutrition = menu.get_total_nutrition()
             
             menu_data = MenuResponse(

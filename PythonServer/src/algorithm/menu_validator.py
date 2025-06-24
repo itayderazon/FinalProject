@@ -3,9 +3,10 @@
 class MenuValidator:
     """Responsible ONLY for validating menus (SRP)"""
     
-    def __init__(self, config, preference_filter=None):
+    def __init__(self, config, preference_filter=None, food_classifier=None):
         self.config = config
         self.preference_filter = preference_filter
+        self.food_classifier = food_classifier
     
     def is_menu_valid(self, menu, target_nutrition):
         """Check if menu meets basic macro requirements"""
@@ -14,17 +15,17 @@ class MenuValidator:
         
         total_nutrition = menu.get_total_nutrition()
         
-        # Check macro ratios with flexible ranges for variety
+        # Check macro ratios with tighter ranges for better accuracy
         cal_ratio = total_nutrition.calories / target_nutrition.calories
         protein_ratio = total_nutrition.protein / target_nutrition.protein
         carb_ratio = total_nutrition.carbs / target_nutrition.carbs
         fat_ratio = total_nutrition.fat / target_nutrition.fat
         
-        # Very flexible ranges - allow 50% to 150% (±50%)
-        if not (0.5 <= cal_ratio <= 1.5): return False
-        if not (0.5 <= protein_ratio <= 1.5): return False  
-        if not (0.5 <= carb_ratio <= 1.5): return False
-        if not (0.5 <= fat_ratio <= 1.5): return False
+        # Temporarily more flexible ranges for debugging - allow 70% to 130% (±30%)
+        if not (0.7 <= cal_ratio <= 1.3): return False
+        if not (0.7 <= protein_ratio <= 1.3): return False  
+        if not (0.7 <= carb_ratio <= 1.3): return False
+        if not (0.7 <= fat_ratio <= 1.3): return False
         
         return True
     
@@ -50,8 +51,72 @@ class MenuValidator:
         
         return True, "All required items present"
     
-    def is_menu_complete(self, menu, target_nutrition):
-        """Comprehensive menu validation"""
+    def validate_meal_specific_requirements(self, menu, meal_rules):
+        """Validate meal-specific requirements including required food types"""
+        if not meal_rules or not self.food_classifier:
+            return True, "No meal-specific requirements"
+        
+        return meal_rules.validate_required_food_types(menu, self.food_classifier)
+    
+    def validate_meal_specific_requirements_database_based(self, menu, meal_type):
+        """Validate meal-specific requirements using database-based logic instead of filter classes"""
+        if not meal_type:
+            return True, "No meal-specific requirements"
+        
+        # Define meal rules directly (copied from config but as local logic)
+        meal_rules = {
+            'breakfast': {
+                'allowed_categories': ['חלב ביצים וסלטים', 'לחם ומאפים טריים', 'דבש, ריבה וממרחים', 'פירות וירקות', 'משקאות', 'קטניות ודגנים'],
+                'forbidden_categories': ['בשר  ודגים', 'קפואים'],
+                'required_types': ['protein']
+            },
+            'lunch': {
+                'allowed_categories': ['בשר  ודגים', 'קטניות ודגנים', 'חלב ביצים וסלטים', 'פירות וירקות', 'שימורים בישול ואפיה'],
+                'forbidden_categories': ['חטיפים ומתוקים'],
+                'required_types': ['protein', 'fiber']
+            },
+            'dinner': {
+                'allowed_categories': ['בשר  ודגים', 'קפואים', 'קטניות ודגנים', 'חלב ביצים וסלטים', 'שימורים בישול ואפיה'],
+                'forbidden_categories': ['חטיפים ומתוקים'],
+                'required_types': ['protein', 'fiber']
+            },
+            'snacks': {
+                'allowed_categories': ['פירות וירקות', 'דגנים וחטיפי אנרגיה', 'חטיפים ומתוקים', 'חלב ביצים וסלטים', 'משקאות'],
+                'forbidden_categories': [],
+                'required_types': ['fiber']
+            }
+        }
+        
+        if meal_type not in meal_rules:
+            return True, "Unknown meal type"
+        
+        rules = meal_rules[meal_type]
+        menu_categories = [item.food.category for item in menu.items]
+        
+        # Check forbidden categories
+        for category in menu_categories:
+            if category in rules['forbidden_categories']:
+                return False, f"Menu contains forbidden category for {meal_type}: {category}"
+        
+        # Check required nutritional types
+        required_types = rules.get('required_types', [])
+        if 'protein' in required_types:
+            has_protein = any(item.food.nutrition_per_100g.protein >= 10 for item in menu.items)
+            if not has_protein:
+                return False, f"Menu lacks sufficient protein for {meal_type}"
+        
+        if 'fiber' in required_types:
+            # Check for fiber-rich categories or high carb foods
+            fiber_categories = ['פירות וירקות', 'דגנים וחטיפי אנרגיה', 'אורז וקטניות']
+            has_fiber = any(item.food.category in fiber_categories or item.food.nutrition_per_100g.carbs >= 20 
+                          for item in menu.items)
+            if not has_fiber:
+                return False, f"Menu lacks sufficient fiber sources for {meal_type}"
+        
+        return True, "Meal-specific requirements met"
+    
+    def is_menu_complete(self, menu, target_nutrition, meal_rules=None):
+        """Comprehensive menu validation using old filter-based approach"""
         # Basic macro validation
         if not self.is_menu_valid(menu, target_nutrition):
             return False, "Failed macro validation"
@@ -66,4 +131,29 @@ class MenuValidator:
         if not item_valid:
             return False, f"Required items validation failed: {item_msg}"
         
+        # Meal-specific requirements (including required food types)
+        if meal_rules:
+            meal_valid, meal_msg = self.validate_meal_specific_requirements(menu, meal_rules)
+            if not meal_valid:
+                return False, f"Meal requirements validation failed: {meal_msg}"
+        
         return True, "Menu validation passed"
+    
+    def is_menu_complete_database_based(self, menu, target_nutrition, meal_rules=None):
+        """Comprehensive menu validation using database-based approach (no filter classes)"""
+        # Basic macro validation
+        if not self.is_menu_valid(menu, target_nutrition):
+            return False, "Failed macro validation"
+        
+        # Required items validation (this doesn't depend on filters)
+        item_valid, item_msg = self.validate_required_items(menu)
+        if not item_valid:
+            return False, f"Required items validation failed: {item_msg}"
+        
+        # Database-based meal-specific requirements
+        if meal_rules and hasattr(meal_rules, 'meal_type'):
+            meal_valid, meal_msg = self.validate_meal_specific_requirements_database_based(menu, meal_rules.meal_type)
+            if not meal_valid:
+                return False, f"Meal requirements validation failed: {meal_msg}"
+        
+        return True, "Menu validation passed (database-based)"

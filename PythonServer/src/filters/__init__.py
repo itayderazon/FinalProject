@@ -17,9 +17,6 @@ __all__ = [
     'SubcategoryFilter',
     'FoodTypeFilter',
     'BalanceFilter',
-    'DiversityFilter',
-    'AllergenFilter',
-    'HealthScoreFilter',
     'CategoryPreferenceFilter',
     'SmartCategoryFilter'
 ]

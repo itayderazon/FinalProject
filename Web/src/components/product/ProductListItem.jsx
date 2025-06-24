@@ -1,9 +1,41 @@
-import React from 'react';
-import { Eye, ShoppingCart, Heart } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { Eye, ShoppingCart, Heart, Plus } from 'lucide-react';
 import { formatStoreCount } from '../../utils/formatters';
 
-const ProductListItem = ({ product, formatPrice }) => {
+const ProductListItem = ({ product, formatPrice, fetchProductImage, getProductImageUrl, handleImageError, selectMode = false, onSelectProduct, isSelected = false }) => {
+  const [imageError, setImageError] = useState(false);
+  const [imageUrl, setImageUrl] = useState(null);
+  const [imageLoading, setImageLoading] = useState(true);
   const bestPrice = product.priceStats ? product.priceStats.minPrice : null;
+
+  // Fetch image when component mounts
+  useEffect(() => {
+    const loadImage = async () => {
+      setImageLoading(true);
+      const cachedUrl = getProductImageUrl(product);
+      
+      if (cachedUrl) {
+        setImageUrl(cachedUrl);
+        setImageLoading(false);
+      } else {
+        const fetchedUrl = await fetchProductImage(product);
+        setImageUrl(fetchedUrl);
+        setImageLoading(false);
+      }
+    };
+
+    loadImage();
+  }, [product, fetchProductImage, getProductImageUrl]);
+
+  const onImageError = () => {
+    handleImageError(product, setImageError);
+  };
+
+  const handleSelectProduct = () => {
+    if (onSelectProduct) {
+      onSelectProduct(product);
+    }
+  };
 
   return (
     <div style={{ 
@@ -19,6 +51,51 @@ const ProductListItem = ({ product, formatPrice }) => {
         {/* Left Side - Product Info */}
         <div style={{ flex: '1' }}>
           <div style={{ display: 'flex', alignItems: 'flex-start', gap: '1rem', marginBottom: '1rem' }}>
+            {/* Product Image */}
+            <div style={{ 
+              width: '80px', 
+              height: '80px', 
+              backgroundColor: '#f3f4f6', 
+              borderRadius: '0.5rem',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              overflow: 'hidden',
+              flexShrink: '0'
+            }}>
+              {imageLoading ? (
+                <div style={{ 
+                  color: '#9ca3af', 
+                  fontSize: '0.75rem', 
+                  textAlign: 'center',
+                  padding: '0.25rem'
+                }}>
+                  טוען...
+                </div>
+              ) : (!imageError && imageUrl) ? (
+                <img 
+                  src={imageUrl} 
+                  alt={product.name || 'Product Image'}
+                  onError={onImageError}
+                  style={{
+                    width: '100%',
+                    height: '100%',
+                    objectFit: 'cover',
+                    borderRadius: '0.5rem'
+                  }}
+                />
+              ) : (
+                <div style={{ 
+                  color: '#9ca3af', 
+                  fontSize: '0.75rem', 
+                  textAlign: 'center',
+                  padding: '0.25rem'
+                }}>
+                  תמונה לא זמינה
+                </div>
+              )}
+            </div>
+
             <div style={{ flex: '1' }}>
               <h3 style={{ fontSize: '1.125rem', fontWeight: '600', color: '#111827', marginBottom: '0.5rem', lineHeight: '1.4' }}>
                 {product.name}
@@ -78,6 +155,29 @@ const ProductListItem = ({ product, formatPrice }) => {
           )}
 
           <div style={{ display: 'flex', gap: '0.5rem' }}>
+            {selectMode ? (
+              <button 
+                style={{ 
+                  backgroundColor: isSelected ? '#dc2626' : '#16a34a', 
+                  color: 'white', 
+                  padding: '0.5rem 1rem', 
+                  borderRadius: '0.375rem', 
+                  border: 'none', 
+                  cursor: 'pointer',
+                  fontSize: '0.875rem',
+                  fontWeight: '500',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '0.5rem'
+                }}
+                onClick={handleSelectProduct}
+                title={isSelected ? "Remove from selection" : "Select for menu"}
+              >
+                <Plus style={{ width: '1rem', height: '1rem' }} />
+                {isSelected ? "Remove" : "Select"}
+              </button>
+            ) : (
+              <>
             <button style={{ 
               backgroundColor: '#2563eb', 
               color: 'white', 
@@ -103,6 +203,8 @@ const ProductListItem = ({ product, formatPrice }) => {
             }}>
               <ShoppingCart style={{ width: '1rem', height: '1rem' }} />
             </button>
+              </>
+            )}
           </div>
         </div>
       </div>

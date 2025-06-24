@@ -1,6 +1,7 @@
 const NutritionLog = require('../models/NutritionLogPostgres');
 const PythonService = require('../services/pythonService');
 const User = require('../models/UserPostgres');
+const SavedMenu = require('../models/SavedMenuPostgres');
 const { validationResult } = require('express-validator');
 const logger = require('../utils/logger');
 
@@ -25,9 +26,11 @@ class NutritionController {
         protein: parseFloat(req.body.protein), 
         carbs: parseFloat(req.body.carbs),
         fat: parseFloat(req.body.fat),
-        meal_type: req.body.meal_type || null,
+        meal_template: req.body.meal_template || null,
+        subcategories: req.body.subcategories || null,
         num_items: req.body.num_items ? parseInt(req.body.num_items) : null,
-        include_prices: req.body.include_prices === true || req.body.include_prices === 'true'
+        include_prices: req.body.include_prices === true || req.body.include_prices === 'true',
+        requiredProducts: req.body.requiredProducts || null
       };
   
       // Remove null values
@@ -89,22 +92,22 @@ class NutritionController {
         const items = meal.foods.map(food => ({
           product_id: food.product_id || null,
           custom_food_name: food.name,
-          quantity: food.quantity || 100,
+          quantity: parseFloat(food.quantity) || 100,
           unit: food.unit || 'grams',
-          calories: food.calories,
-          protein: food.macros?.protein || 0,
-          carbs: food.macros?.carbs || 0,
-          fat: food.macros?.fat || 0
+          calories: parseFloat(food.calories) || 0,
+          protein: parseFloat(food.macros?.protein) || 0,
+          carbs: parseFloat(food.macros?.carbs) || 0,
+          fat: parseFloat(food.macros?.fat) || 0
         }));
 
         await nutritionLog.addMeal(meal.type, items);
 
         // Update daily totals
         items.forEach(item => {
-          dailyTotals.calories += item.calories;
-          dailyTotals.protein += item.protein;
-          dailyTotals.carbs += item.carbs;
-          dailyTotals.fat += item.fat;
+          dailyTotals.calories += item.calories || 0;
+          dailyTotals.protein += item.protein || 0;
+          dailyTotals.carbs += item.carbs || 0;
+          dailyTotals.fat += item.fat || 0;
         });
       }
 
@@ -243,8 +246,8 @@ class NutritionController {
       
       weeklyData[week].calories.push(log.total_calories);
       weeklyData[week].protein.push(log.total_protein);
-      weeklyData[week].carbs.push(log.carbs);
-      weeklyData[week].fat.push(log.fat);
+      weeklyData[week].carbs.push(log.total_carbs);
+      weeklyData[week].fat.push(log.total_fat);
     });
 
     // Calculate averages for each week
@@ -273,28 +276,155 @@ class NutritionController {
     return Math.round((numbers.reduce((a, b) => a + b, 0) / numbers.length) * 100) / 100;
   }
 
-  // Helper method to calculate goal progress
+  // Get food categories and subcategories from Python server
+  async getFoodCategories(req, res, next) {
+    try {
+      // Get food categories from Python server
+      const categories = await PythonService.getFoodCategories();
+
+      logger.info('Food categories retrieved successfully');
+
+      res.status(200).json({
+        message: 'Food categories retrieved successfully',
+        ...categories
+      });
+    } catch (error) {
+      if (error.code === 'PYTHON_SERVER_ERROR') {
+        return res.status(503).json({ 
+          error: 'Food category service temporarily unavailable' 
+        });
+      }
+      next(error);
+    }
+  }
+
+  // Calculate goal progress helper method
   async calculateGoalProgress(userId, summary) {
     try {
       const user = await User.findById(userId);
-      if (!user?.nutrition_profile?.daily_calorie_goal) {
+      if (!user || !user.nutrition_profile) {
         return null;
       }
 
-      const goal = user.nutrition_profile.daily_calorie_goal;
-      const actual = summary.avg_calories;
-      const progress = Math.round((actual / goal) * 100);
-
+      const goals = user.nutrition_profile;
       return {
-        daily_calorie_goal: goal,
-        avg_daily_calories: actual,
-        goal_achievement_percentage: progress,
-        status: progress >= 90 && progress <= 110 ? 'on_track' : 
-               progress < 90 ? 'under_target' : 'over_target'
+        calories: {
+          current: summary.total_calories,
+          goal: goals.daily_calories,
+          percentage: (summary.total_calories / goals.daily_calories) * 100
+        },
+        protein: {
+          current: summary.total_protein,
+          goal: goals.protein_goal,
+          percentage: (summary.total_protein / goals.protein_goal) * 100
+        },
+        carbs: {
+          current: summary.total_carbs,
+          goal: goals.carbs_goal,
+          percentage: (summary.total_carbs / goals.carbs_goal) * 100
+        },
+        fat: {
+          current: summary.total_fat,
+          goal: goals.fat_goal,
+          percentage: (summary.total_fat / goals.fat_goal) * 100
+        }
       };
     } catch (error) {
       logger.error('Error calculating goal progress:', error);
       return null;
+    }
+  }
+
+  // Get all saved menus for a user
+  async getSavedMenus(req, res, next) {
+    try {
+      const userId = req.user.userId;
+
+      // Get saved menus using the model
+      const savedMenusData = await SavedMenu.getUserMenus(userId);
+      
+      // Format the response to match the frontend expectations
+      const savedMenus = savedMenusData.map(menu => menu.toJSON());
+
+      logger.info(`Retrieved ${savedMenus.length} saved menus for user: ${userId}`);
+
+      res.status(200).json({
+        success: true,
+        message: 'Saved menus retrieved successfully',
+        savedMenus,
+        count: savedMenus.length
+      });
+    } catch (error) {
+      logger.error('Error getting saved menus:', error);
+      next(error);
+    }
+  }
+
+  // Save a new menu
+  async saveMenu(req, res, next) {
+    try {
+      const errors = validationResult(req);
+      if (!errors.isEmpty()) {
+        return res.status(400).json({ 
+          error: 'Validation failed', 
+          details: errors.array() 
+        });
+      }
+
+      const userId = req.user.userId;
+      const { name, description, total_nutrition, items, generation_parameters } = req.body;
+
+      // Create menu using the model
+      const result = await SavedMenu.create(userId, {
+        name,
+        description,
+        total_nutrition,
+        items,
+        generation_parameters
+      });
+
+      logger.info(`Menu saved successfully for user: ${userId}, menu ID: ${result.menuId}`);
+
+      res.status(201).json({
+        success: true,
+        message: 'Menu saved successfully',
+        menuId: result.menuId,
+        createdAt: result.createdAt
+      });
+    } catch (error) {
+      logger.error('Error saving menu:', error);
+      next(error);
+    }
+  }
+
+  // Delete a saved menu
+  async deleteSavedMenu(req, res, next) {
+    try {
+      const userId = req.user.userId;
+      const menuId = req.params.id;
+
+      // Check if menu exists and belongs to user
+      const menuExists = await SavedMenu.existsForUser(menuId, userId);
+      
+      if (!menuExists) {
+        return res.status(404).json({
+          success: false,
+          error: 'Menu not found or not owned by user'
+        });
+      }
+
+      // Delete menu using the model
+      await SavedMenu.deleteByIdAndUser(menuId, userId);
+
+      logger.info(`Menu deleted successfully for user: ${userId}, menu ID: ${menuId}`);
+
+      res.status(200).json({
+        success: true,
+        message: 'Menu deleted successfully'
+      });
+    } catch (error) {
+      logger.error('Error deleting saved menu:', error);
+      next(error);
     }
   }
 }

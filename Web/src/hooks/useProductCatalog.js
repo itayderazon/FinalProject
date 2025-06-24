@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import productService from '../services/productService';
 import { formatPrice } from '../utils/formatters';
+import useProductImages from './useProductImages';
 
 const useProductCatalog = () => {
   const [products, setProducts] = useState([]);
@@ -21,6 +22,9 @@ const useProductCatalog = () => {
     sortOrder: 'asc'
   });
   const [showFilters, setShowFilters] = useState(false);
+  
+  // Use the separated image handling hook
+  const { fetchProductImage, getProductImageUrl } = useProductImages();
 
   // Fetch categories on component mount
   useEffect(() => {
@@ -88,6 +92,11 @@ const useProductCatalog = () => {
     setCurrentPage(1);
   };
 
+  const handleImageError = (product, setImageError) => {
+    console.log('Image error for product:', product.name, 'item_code:', product.item_code);
+    setImageError(true);
+  };
+
   return {
     // Data
     products,
@@ -117,7 +126,12 @@ const useProductCatalog = () => {
     formatPrice,
     
     // Actions
-    fetchProducts
+    fetchProducts,
+    
+    // Image utilities
+    fetchProductImage,
+    getProductImageUrl,
+    handleImageError
   };
 };
 

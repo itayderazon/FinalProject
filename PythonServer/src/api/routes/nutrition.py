@@ -2,11 +2,10 @@ from fastapi import APIRouter, HTTPException
 from datetime import datetime
 import logging
 
-from src.api.models.requests import NutritionRequest, UserProfileRequest
+from src.api.models.requests import NutritionRequest
 from src.api.models.responses import MenuGenerationResponse
 from src.api.services.app_service import app_service
 from src.api.utils.formatters import format_menu_response, extract_menu_items_for_price_comparison
-from src.api.utils.calculations import calculate_bmr, calculate_tdee
 from src.models.nutrition import NutritionInfo
 
 router = APIRouter()
@@ -31,7 +30,7 @@ async def calculate_nutrition(request: NutritionRequest):
         
         menus = app_service.menu_generator.generate_menu(
             target_nutrition,
-            request.meal_type,
+            request.subcategories,
             request.num_items
         )
         

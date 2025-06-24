@@ -6,6 +6,7 @@
 .homepage,
 .dashboard,
 .menu-generator,
+.daily-menu-planner,
 .auth-page {
   width: 100vw !important;
   max-width: 100vw !important;
@@ -16,6 +17,7 @@
 .homepage-container,
 .dashboard-container,
 .menu-container,
+.planner-container,
 .nav-container {
   width: 100% !important;
   max-width: 100% !important;
@@ -65,13 +67,20 @@
   padding-right: 5% !important;
 }
 
+/* Daily menu planner full width */
+.planner-container {
+  padding-left: 5% !important;
+  padding-right: 5% !important;
+}
+
 /* Responsive padding adjustments */
 @media (max-width: 768px) {
   .homepage-hero,
   .homepage-features,
   .nav-container,
   .dashboard-container,
-  .menu-container {
+  .menu-container,
+  .planner-container {
     padding-left: 4% !important;
     padding-right: 4% !important;
   }
@@ -82,7 +91,8 @@
   .homepage-features,
   .nav-container,
   .dashboard-container,
-  .menu-container {
+  .menu-container,
+  .planner-container {
     padding-left: 3% !important;
     padding-right: 3% !important;
   }

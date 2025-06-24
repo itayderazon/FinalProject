@@ -11,26 +11,28 @@ class MenuBuilder:
         self.portion_calculator = portion_calculator
         self.config = config
     
-    def build_menu(self, foods, target_nutrition, meal_type, num_items):
+    def build_menu(self, foods, target_nutrition, num_items ):
         """Build a single menu with improved calorie distribution"""
+        MAX_CALORIE_VARIANCE = 1.3
         menu = Menu()
         used_foods = set()
         remaining_nutrition = target_nutrition
         
         # Calculate target calories per item for distribution control
         target_calories_per_item = target_nutrition.calories / num_items
-        max_calories_per_item = target_calories_per_item * 1.3 # Allow some variance but prevent domination
+        max_calories_per_item = target_calories_per_item * MAX_CALORIE_VARIANCE
         
         # Phase 1: Add required items if specified
         remaining_nutrition = self._add_required_items(menu, foods, used_foods, remaining_nutrition, max_calories_per_item)
+
         
-        # Phase 2: Add protein if needed (with calorie control)
+        # Phase 3: Add protein if needed (with calorie control)
         remaining_nutrition = self._add_protein_if_needed(menu, foods, used_foods, remaining_nutrition, num_items, max_calories_per_item)
         
-        # Phase 3: Add carbs if needed (with calorie control)
+        # Phase 4: Add carbs if needed (with calorie control)
         remaining_nutrition = self._add_carbs_if_needed(menu, foods, used_foods, remaining_nutrition, num_items, max_calories_per_item)
         
-        # Phase 4: Fill remaining slots (with calorie control)
+        # Phase 5: Fill remaining slots (with calorie control)
         self._fill_remaining_slots(menu, foods, used_foods, remaining_nutrition, target_nutrition, num_items, max_calories_per_item)
         
         return menu
@@ -54,6 +56,7 @@ class MenuBuilder:
                 remaining_nutrition = self._subtract_nutrition(remaining_nutrition, item_nutrition)
         
         return remaining_nutrition
+    
     
     def _add_protein_if_needed(self, menu, foods, used_foods, remaining_nutrition, num_items, max_calories_per_item):
         """Add protein source with calorie control"""
@@ -283,7 +286,7 @@ class MenuBuilder:
         health_bonus = (100 - self.food_classifier.get_food_score(food)) / 1000
         
         return -(macro_score + health_bonus + diversity_bonus)  # Negative for higher is better
-    
+    #TODO: refactor this to use the food lookup service
     def _find_food_by_code(self, foods, item_code):
         """Find food by item code"""
         for food in foods:
@@ -300,3 +303,16 @@ class MenuBuilder:
             max(0, target.carbs - subtract.carbs),
             max(0, target.fat - subtract.fat)
         )
+    
+    def _select_food_for_type(self, foods, food_type):
+        """Select best food for a specific food type requirement"""
+        if food_type == 'protein':
+            return self._select_protein_food(foods)
+        elif food_type == 'fiber':
+            return self._select_carb_food(foods)
+        else:
+            # For other types, prefer wholesome and less processed options
+            wholesome_foods = [f for f in foods if self.food_classifier.is_wholesome(f)]
+            if wholesome_foods:
+                return random.choice(wholesome_foods[:3])
+            return random.choice(foods[:5])

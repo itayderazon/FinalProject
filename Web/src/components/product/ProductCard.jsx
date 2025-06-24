@@ -1,11 +1,16 @@
-import React, { useState } from 'react';
-import { ShoppingCart, Heart, Eye } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { ShoppingCart, Heart, Eye, Plus } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import { formatCalories, formatProtein, formatStoreCount } from '../../utils/formatters';
 import Modal from '../ui/Modal';
 import PriceDisplay from '../ui/PriceDisplay';
 
-const ProductCard = ({ product, formatPrice }) => {
+const ProductCard = ({ product, formatPrice, fetchProductImage, getProductImageUrl, handleImageError, selectMode = false, onSelectProduct, isSelected = false }) => {
   const [showPriceModal, setShowPriceModal] = useState(false);
+  const [imageError, setImageError] = useState(false);
+  const [imageUrl, setImageUrl] = useState(null);
+  const [imageLoading, setImageLoading] = useState(true);
+  const navigate = useNavigate();
   
   // Use priceStats from API or calculate from prices array
   const priceStats = product.priceStats || (() => {
@@ -26,10 +31,89 @@ const ProductCard = ({ product, formatPrice }) => {
     setShowPriceModal(true);
   };
 
+  const handleAddToMenu = () => {
+    // Navigate to menu generator with this product's ID
+    navigate(`/menu-generator?requiredProducts=${product.id || product._id}`);
+  };
+
+  const handleSelectProduct = () => {
+    if (onSelectProduct) {
+      onSelectProduct(product);
+    }
+  };
+
+  // Fetch image when component mounts
+  useEffect(() => {
+    const loadImage = async () => {
+      setImageLoading(true);
+      const cachedUrl = getProductImageUrl(product);
+      
+      if (cachedUrl) {
+        setImageUrl(cachedUrl);
+        setImageLoading(false);
+      } else {
+        const fetchedUrl = await fetchProductImage(product);
+        setImageUrl(fetchedUrl);
+        setImageLoading(false);
+      }
+    };
+
+    loadImage();
+  }, [product, fetchProductImage, getProductImageUrl]);
+
+  const onImageError = () => {
+    handleImageError(product, setImageError);
+  };
+
   return (
     <>
       <div className="product-card grid-item">
         <div>
+          {/* Product Image */}
+          <div className="product-image-container" style={{ 
+            width: '100%', 
+            height: '160px', 
+            backgroundColor: '#f3f4f6', 
+            borderRadius: '0.5rem', 
+            marginBottom: '0.75rem',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            overflow: 'hidden'
+          }}>
+            {imageLoading ? (
+              <div style={{ 
+                color: '#9ca3af', 
+                fontSize: '0.875rem', 
+                textAlign: 'center',
+                padding: '1rem'
+              }}>
+                טוען תמונה...
+              </div>
+            ) : (!imageError && imageUrl) ? (
+              <img 
+                src={imageUrl} 
+                alt={product.name || product.product_name || 'Product Image'}
+                onError={onImageError}
+                style={{
+                  width: '100%',
+                  height: '100%',
+                  objectFit: 'cover',
+                  borderRadius: '0.5rem'
+                }}
+              />
+            ) : (
+              <div style={{ 
+                color: '#9ca3af', 
+                fontSize: '0.875rem', 
+                textAlign: 'center',
+                padding: '1rem'
+              }}>
+                תמונה לא זמינה
+              </div>
+            )}
+          </div>
+
           {/* Product Header */}
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '0.75rem' }}>
             <h3 className="product-title" style={{ fontSize: '1rem', fontWeight: '600', color: '#111827', flex: '1', paddingRight: '0.5rem' }}>
@@ -88,18 +172,63 @@ const ProductCard = ({ product, formatPrice }) => {
           </div>
 
           {/* Actions */}
-          <div className="actions-section" style={{ display: 'flex', gap: '0.5rem' }}>
+          <div className="actions-section" style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+            {selectMode ? (
+              // Selection mode - show select button
+              <button 
+                className="btn-primary" 
+                style={{ 
+                  width: '100%',
+                  display: 'flex', 
+                  alignItems: 'center', 
+                  justifyContent: 'center', 
+                  gap: '0.5rem',
+                  backgroundColor: isSelected ? '#dc2626' : '#16a34a',
+                  border: 'none',
+                  fontSize: '0.875rem'
+                }}
+                onClick={handleSelectProduct}
+                title={isSelected ? "Remove from selection" : "Select for menu"}
+              >
+                <Plus style={{ width: '1rem', height: '1rem' }} />
+                {isSelected ? "Remove" : "Select"}
+              </button>
+            ) : (
+              // Normal mode - show all buttons
+              <>
+                <div style={{ display: 'flex', gap: '0.5rem' }}>
+              <button 
+                className="btn-primary" 
+                style={{ flex: '1', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.25rem', fontSize: '0.75rem' }}
+                onClick={handleViewPrices}
+              >
+                <Eye style={{ width: '0.875rem', height: '0.875rem' }} />
+                צפה במחירים
+              </button>
+              <button className="btn-secondary">
+                <ShoppingCart style={{ width: '1rem', height: '1rem' }} />
+              </button>
+            </div>
             <button 
               className="btn-primary" 
-              style={{ flex: '1', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem' }}
-              onClick={handleViewPrices}
+              style={{ 
+                width: '100%',
+                display: 'flex', 
+                alignItems: 'center', 
+                justifyContent: 'center', 
+                gap: '0.5rem',
+                backgroundColor: '#16a34a',
+                border: 'none',
+                fontSize: '0.875rem'
+              }}
+              onClick={handleAddToMenu}
+              title="הוסף למנה"
             >
-              <Eye style={{ width: '1rem', height: '1rem' }} />
-              צפה במחירים
+              <Plus style={{ width: '1rem', height: '1rem' }} />
+              הוסף למנה
             </button>
-            <button className="btn-secondary">
-              <ShoppingCart style={{ width: '1rem', height: '1rem' }} />
-            </button>
+              </>
+            )}
           </div>
         </div>
       </div>

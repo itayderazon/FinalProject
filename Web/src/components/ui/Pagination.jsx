@@ -2,7 +2,9 @@ import React from 'react';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 
 const Pagination = ({ pagination, currentPage, setCurrentPage }) => {
-  const { totalPages } = pagination;
+  const { totalPages = 1, hasNext = false, hasPrev = false } = pagination || {};
+  
+  console.log('Pagination Component Props:', { pagination, currentPage, totalPages, hasNext, hasPrev });
 
   const buttonStyle = {
     padding: '0.5rem 0.75rem',
@@ -12,7 +14,10 @@ const Pagination = ({ pagination, currentPage, setCurrentPage }) => {
     cursor: 'pointer',
     fontSize: '0.875rem',
     fontWeight: '500',
-    transition: 'background-color 0.2s ease'
+    transition: 'background-color 0.2s ease',
+    display: 'flex',
+    alignItems: 'center',
+    gap: '0.25rem'
   };
 
   const activeButtonStyle = {
@@ -65,7 +70,8 @@ const Pagination = ({ pagination, currentPage, setCurrentPage }) => {
     return pages;
   };
 
-  if (totalPages <= 1) return null;
+  // Debug: Force show pagination for testing
+  // if (totalPages <= 1) return null;
 
   return (
     <nav style={{ display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
@@ -75,8 +81,10 @@ const Pagination = ({ pagination, currentPage, setCurrentPage }) => {
           onClick={() => setCurrentPage(currentPage - 1)}
           disabled={currentPage === 1}
           style={currentPage === 1 ? disabledButtonStyle : buttonStyle}
+          title="Previous page"
         >
-          <ChevronRight style={{ width: '1rem', height: '1rem' }} />
+          <ChevronLeft style={{ width: '1rem', height: '1rem' }} />
+          <span>Previous</span>
         </button>
 
         {/* Page numbers */}
@@ -100,8 +108,10 @@ const Pagination = ({ pagination, currentPage, setCurrentPage }) => {
           onClick={() => setCurrentPage(currentPage + 1)}
           disabled={currentPage === totalPages}
           style={currentPage === totalPages ? disabledButtonStyle : buttonStyle}
+          title="Next page"
         >
-          <ChevronLeft style={{ width: '1rem', height: '1rem' }} />
+          <span>Next</span>
+          <ChevronRight style={{ width: '1rem', height: '1rem' }} />
         </button>
       </div>
     </nav>

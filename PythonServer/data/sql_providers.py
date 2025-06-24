@@ -5,7 +5,7 @@ from src.models.food import Food
 from src.models.nutrition import NutritionInfo
 
 class SqlFoodProvider:
-    """Simple PostgreSQL food provider with caching"""
+    """Simple PostgreSQL food provider with caching and database-based filtering"""
     
     def __init__(self, db_manager):
         self.db = db_manager
@@ -136,7 +136,50 @@ class SqlFoodProvider:
         except Exception as e:
             print(f"Error getting food by code {item_code}: {e}")
             return None
-    
+    def get_filtered_foods(self, max_calories_per_100g=600, included_subcategories=None):
+        """Get foods filtered by criteria"""
+        
+        base_query = """
+        SELECT 
+            p.item_code,
+            p.name,
+            c.name_he as category,
+            sc.name_he as subcategory,
+            p.nutrition,
+            COALESCE((p.nutrition->>'sodium')::numeric, 0) as sodium
+        FROM products p
+        LEFT JOIN categories c ON p.category_id = c.id
+        LEFT JOIN subcategories sc ON p.subcategory_id = sc.id
+        WHERE p.can_include_in_menu = true
+        AND p.is_active = true
+        AND (p.nutrition->>'calories')::numeric > 0
+        AND (p.nutrition->>'calories')::numeric <= %s
+        """
+        
+        params = [max_calories_per_100g]
+        
+        # Add subcategory filtering if specified
+        if included_subcategories:
+            placeholders = ','.join(['%s'] * len(included_subcategories))
+            base_query += f" AND sc.name_he IN ({placeholders})"
+            params.extend(included_subcategories)
+        
+        base_query += " ORDER BY p.name"
+        
+        try:
+            rows = self.db.execute_query(base_query, params)
+            foods = []
+            
+            for row in rows:
+                food = self.create_food_from_row(row)
+                if food:
+                    foods.append(food)
+            
+            return foods
+            
+        except Exception as e:
+            print(f"Error getting filtered foods: {e}")
+            return []
     def search_foods(self, query_text, limit=100):
         """Search foods by name"""
         if not query_text or len(query_text.strip()) < 2:
@@ -238,6 +281,193 @@ class SqlFoodProvider:
                 'subcategories': [],
                 'error': str(e)
             }
+
+    
+    def _get_meal_specific_conditions(self, meal_type, params):
+        """Get SQL conditions for meal-specific filtering"""
+        meal_rules = {
+            'breakfast': {
+                'primary': ['חלב ביצים וסלטים', 'לחם ומאפים טריים'],
+                'secondary': ['דבש, ריבה וממרחים', 'פירות וירקות', 'משקאות', 'קטניות ודגנים'],
+                'forbidden': ['בשר  ודגים', 'קפואים']
+            },
+            'lunch': {
+                'primary': ['בשר  ודגים', 'קטניות ודגנים'],
+                'secondary': ['חלב ביצים וסלטים', 'פירות וירקות', 'שימורים בישול ואפיה'],
+                'forbidden': ['חטיפים ומתוקים']
+            },
+            'dinner': {
+                'primary': ['בשר  ודגים', 'קפואים'],
+                'secondary': ['קטניות ודגנים', 'חלב ביצים וסלטים', 'שימורים בישול ואפיה'],
+                'forbidden': ['חטיפים ומתוקים']
+            },
+            'snacks': {
+                'primary': ['פירות וירקות', 'דגנים וחטיפי אנרגיה'],
+                'secondary': ['חטיפים ומתוקים', 'חלב ביצים וסלטים', 'משקאות'],
+                'forbidden': []
+            }
+        }
+        
+        if meal_type not in meal_rules:
+            return ""
+        
+        rules = meal_rules[meal_type]
+        conditions = []
+        
+        # Add allowed categories (primary + secondary)
+        allowed_categories = rules['primary'] + rules['secondary']
+        if allowed_categories:
+            placeholders = ','.join(['%s'] * len(allowed_categories))
+            conditions.append(f"c.name_he IN ({placeholders})")
+            params.extend(allowed_categories)
+        
+        # Add forbidden categories
+        if rules['forbidden']:
+            placeholders = ','.join(['%s'] * len(rules['forbidden']))
+            conditions.append(f"c.name_he NOT IN ({placeholders})")
+            params.extend(rules['forbidden'])
+        
+        if conditions:
+            return " AND " + " AND ".join(conditions)
+        return ""
+    
+    def _passes_nutritional_checks(self, food, max_sugar_percentage, max_processed_percentage):
+        """Additional nutritional checks that are easier to do in Python"""
+        
+        # Check sugar percentage (simplified - would need more sophisticated logic)
+        total_calories = food.nutrition_per_100g.calories
+        if total_calories > 0:
+            # Approximate sugar check - carbs with high calorie density might indicate high sugar
+            carb_calories = food.nutrition_per_100g.carbs * 4
+            sugar_ratio = carb_calories / total_calories
+            if sugar_ratio > max_sugar_percentage * 2:  # Rough approximation
+                return False
+        
+        # Check if food appears to be highly processed based on category
+        processed_categories = ['שימורים', 'נקניקיות ונקניקים', 'אוכל להכנה מהירה']
+        if food.category in processed_categories:
+            # Could implement more sophisticated processing checks here
+            pass
+        
+        return True
+
+    def get_foods_by_categories(self, categories, limit=None):
+        """Get foods filtered by specific categories"""
+        if not categories:
+            return []
+        
+        placeholders = ','.join(['%s'] * len(categories))
+        query = f"""
+        SELECT 
+            p.item_code,
+            p.name,
+            c.name_he as category,
+            sc.name_he as subcategory,
+            p.nutrition,
+            COALESCE((p.nutrition->>'sodium')::numeric, 0) as sodium
+        FROM products p
+        LEFT JOIN categories c ON p.category_id = c.id
+        LEFT JOIN subcategories sc ON p.subcategory_id = sc.id
+        WHERE p.can_include_in_menu = true
+        AND p.is_active = true
+        AND (p.nutrition->>'calories')::numeric > 0
+        AND c.name_he IN ({placeholders})
+        ORDER BY p.name
+        {f'LIMIT {limit}' if limit else ''}
+        """
+        
+        try:
+            rows = self.db.execute_query(query, categories)
+            foods = []
+            
+            for row in rows:
+                food = self.create_food_from_row(row)
+                if food:
+                    foods.append(food)
+            
+            return foods
+            
+        except Exception as e:
+            print(f"Error getting foods by categories: {e}")
+            return []
+
+    def get_foods_with_high_protein(self, min_protein=15, meal_type=None):
+        """Get foods with high protein content using database query"""
+        
+        query = """
+        SELECT 
+            p.item_code,
+            p.name,
+            c.name_he as category,
+            sc.name_he as subcategory,
+            p.nutrition,
+            COALESCE((p.nutrition->>'sodium')::numeric, 0) as sodium
+        FROM products p
+        LEFT JOIN categories c ON p.category_id = c.id
+        LEFT JOIN subcategories sc ON p.subcategory_id = sc.id
+        WHERE p.can_include_in_menu = true
+        AND p.is_active = true
+        AND (p.nutrition->>'calories')::numeric > 0
+        AND (p.nutrition->>'protein')::numeric >= %s
+        ORDER BY (p.nutrition->>'protein')::numeric DESC
+        """
+        
+        try:
+            rows = self.db.execute_query(query, [min_protein])
+            foods = []
+            
+            for row in rows:
+                food = self.create_food_from_row(row)
+                if food:
+                    foods.append(food)
+            
+            # Apply meal-specific filtering if needed
+            if meal_type:
+                foods = self._apply_meal_filtering_to_foods(foods, meal_type)
+            
+            return foods
+            
+        except Exception as e:
+            print(f"Error getting high protein foods: {e}")
+            return []
+    
+    def _apply_meal_filtering_to_foods(self, foods, meal_type):
+        """Apply meal-specific filtering to a list of foods"""
+        meal_rules = {
+            'breakfast': {
+                'allowed': ['חלב ביצים וסלטים', 'לחם ומאפים טריים', 'דבש, ריבה וממרחים', 'פירות וירקות', 'משקאות', 'קטניות ודגנים'],
+                'forbidden': ['בשר  ודגים', 'קפואים']
+            },
+            'lunch': {
+                'allowed': ['בשר  ודגים', 'קטניות ודגנים', 'חלב ביצים וסלטים', 'פירות וירקות', 'שימורים בישול ואפיה'],
+                'forbidden': ['חטיפים ומתוקים']
+            },
+            'dinner': {
+                'allowed': ['בשר  ודגים', 'קפואים', 'קטניות ודגנים', 'חלב ביצים וסלטים', 'שימורים בישול ואפיה'],
+                'forbidden': ['חטיפים ומתוקים']
+            },
+            'snacks': {
+                'allowed': ['פירות וירקות', 'דגנים וחטיפי אנרגיה', 'חטיפים ומתוקים', 'חלב ביצים וסלטים', 'משקאות'],
+                'forbidden': []
+            }
+        }
+        
+        if meal_type not in meal_rules:
+            return foods
+        
+        rules = meal_rules[meal_type]
+        filtered_foods = []
+        
+        for food in foods:
+            # Check if food category is forbidden
+            if food.category in rules['forbidden']:
+                continue
+            
+            # Check if food category is allowed
+            if food.category in rules['allowed']:
+                filtered_foods.append(food)
+        
+        return filtered_foods
 
 class SqlPriceComparison:
     """Simple PostgreSQL-based price comparison service"""

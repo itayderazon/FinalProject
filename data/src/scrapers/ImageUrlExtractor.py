@@ -205,7 +205,7 @@ def get_images_for_rami_levi_items(json_data, checkpoint_path="images_checkpoint
         current_progress = len(processed_item_codes) + i
         if current_progress % 500 == 0:
             print(f"Taking a break after {current_progress} items...")
-            time.sleep(300)  # Sleep for 5 minutes (300 seconds)
+            time.sleep(1200)  # Sleep for 5 minutes (300 seconds)
             print(f"Resuming...")
         if should_exit:
             break
