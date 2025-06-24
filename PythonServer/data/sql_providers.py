@@ -279,15 +279,13 @@ class SqlPriceComparison:
             if not item_codes:
                 return {'error': 'No valid item codes provided'}
             
-            # Get all current prices for these items
+            # Get all current prices for these items (FIXED: removed non-existent columns)
             query = """
             SELECT DISTINCT ON (p.item_code, s.name)
                 p.item_code,
                 p.name as product_name,
                 s.name as supermarket,
-                ph.price,
-                ph.is_on_sale,
-                ph.sale_percentage
+                ph.price
             FROM price_history ph
             JOIN products p ON ph.product_id = p.id
             JOIN supermarkets s ON ph.supermarket_id = s.id
@@ -309,9 +307,8 @@ class SqlPriceComparison:
                     price_lookup[item_code] = {}
                 
                 price_lookup[item_code][supermarket] = {
-                    'price': float(row['price']),
-                    'is_on_sale': row['is_on_sale'],
-                    'sale_percentage': row['sale_percentage']
+                    'price': float(row['price'])
+                    # Removed is_on_sale and sale_percentage since they don't exist
                 }
             
             # Calculate totals
