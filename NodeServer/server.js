@@ -2,6 +2,7 @@ const express = require('express');
 const cors = require('cors');
 const helmet = require('helmet');
 const rateLimit = require('express-rate-limit');
+const path = require('path');
 const config = require('./config/env');
 require('dotenv').config();
 
@@ -12,7 +13,10 @@ const userRoutes = require('./routes/userPostgres');
 const nutritionRoutes = require('./routes/nutrition');
 const productRoutes = require('./routes/products');
 const priceRoutes = require('./routes/price');
+const dailyMenuRoutes = require('./routes/dailyMenus');
+const imageRoutes = require('./routes/images');
 const errorHandler = require('./middleware/errorHandler');
+const { generalLimiter, authLimiter } = require('./middleware/rateLimiter');
 const logger = require('./utils/logger');
 
 const app = express();
@@ -33,12 +37,7 @@ app.use(cors({
 }));
 
 // Rate limiting
-const limiter = rateLimit({
-  windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 100, // limit each IP to 100 requests per windowMs
-  message: 'Too many requests from this IP, please try again later'
-});
-app.use(limiter);
+app.use(generalLimiter);
 
 // Body parsing middleware
 app.use(express.json({ limit: '10mb' }));
@@ -46,6 +45,8 @@ app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
 // Serve static files
 app.use('/uploads', express.static('uploads'));
+// Removed local image serving - now using Supabase storage
+// app.use('/images', express.static(path.join(__dirname, 'images copy')));
 
 // Logging middleware
 app.use((req, res, next) => {
@@ -54,11 +55,13 @@ app.use((req, res, next) => {
 });
 
 // Routes
-app.use('/api/auth', authRoutes);
+app.use('/api/auth', authLimiter, authRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/nutrition', nutritionRoutes);
 app.use('/api/products', productRoutes);
 app.use('/api/price', priceRoutes);
+app.use('/api/daily-menus', dailyMenuRoutes);
+app.use('/api/images', imageRoutes);
 
 // Health check with database status
 app.get('/health', async (req, res) => {

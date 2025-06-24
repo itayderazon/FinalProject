@@ -128,6 +128,8 @@ CREATE TABLE user_nutrition_profiles (
     weight DECIMAL(5,2),
     age INTEGER,
     gender VARCHAR(10),
+    activity_level VARCHAR(20),
+    dietary_goal VARCHAR(20),
     daily_calorie_goal INTEGER,
     macro_goals JSONB DEFAULT '{}',
     updated_at TIMESTAMPTZ DEFAULT NOW()
@@ -161,10 +163,94 @@ CREATE TABLE nutrition_log_items (
     custom_food_name VARCHAR(255),
     quantity DECIMAL(8,2) NOT NULL,
     unit VARCHAR(20) DEFAULT 'grams',
-    calories INTEGER NOT NULL,
+    calories DECIMAL(8,2) NOT NULL,
     protein DECIMAL(6,2) DEFAULT 0,
     carbs DECIMAL(6,2) DEFAULT 0,
     fat DECIMAL(6,2) DEFAULT 0
+);
+
+-- ==========================================
+-- DAILY MENU PLANNING TABLES
+-- ==========================================
+
+CREATE TABLE daily_menus (
+    id SERIAL PRIMARY KEY,
+    user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    menu_date DATE NOT NULL,
+    name VARCHAR(255) NOT NULL,
+    description TEXT,
+    total_calories INTEGER DEFAULT 0,
+    total_protein DECIMAL(6,2) DEFAULT 0,
+    total_carbs DECIMAL(6,2) DEFAULT 0,
+    total_fat DECIMAL(6,2) DEFAULT 0,
+    is_template BOOLEAN DEFAULT FALSE,
+    created_at TIMESTAMPTZ DEFAULT NOW(),
+    updated_at TIMESTAMPTZ DEFAULT NOW(),
+    UNIQUE(user_id, menu_date, name)
+);
+
+CREATE TABLE daily_menu_meals (
+    id SERIAL PRIMARY KEY,
+    daily_menu_id INTEGER NOT NULL REFERENCES daily_menus(id) ON DELETE CASCADE,
+    meal_type VARCHAR(20) NOT NULL, -- 'breakfast', 'lunch', 'dinner', 'snack'
+    meal_order INTEGER DEFAULT 1, -- for multiple snacks
+    name VARCHAR(255),
+    description TEXT,
+    target_calories INTEGER DEFAULT 0,
+    target_protein DECIMAL(6,2) DEFAULT 0,
+    target_carbs DECIMAL(6,2) DEFAULT 0,
+    target_fat DECIMAL(6,2) DEFAULT 0,
+    created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+CREATE TABLE daily_menu_items (
+    id SERIAL PRIMARY KEY,
+    daily_menu_meal_id INTEGER NOT NULL REFERENCES daily_menu_meals(id) ON DELETE CASCADE,
+    product_id INTEGER REFERENCES products(id),
+    custom_food_name VARCHAR(255),
+    quantity DECIMAL(8,2) NOT NULL,
+    unit VARCHAR(20) DEFAULT 'grams',
+    calories DECIMAL(8,2) NOT NULL,
+    protein DECIMAL(6,2) DEFAULT 0,
+    carbs DECIMAL(6,2) DEFAULT 0,
+    fat DECIMAL(6,2) DEFAULT 0,
+    source_type VARCHAR(20) DEFAULT 'manual', -- 'generated', 'manual', 'imported'
+    source_menu_id INTEGER, -- reference to saved generated menu if applicable
+    display_order INTEGER DEFAULT 1,
+    created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- ==========================================
+-- SAVED GENERATED MENUS TABLE
+-- ==========================================
+
+CREATE TABLE saved_generated_menus (
+    id SERIAL PRIMARY KEY,
+    user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    name VARCHAR(255) NOT NULL,
+    description TEXT,
+    generation_parameters JSONB DEFAULT '{}', -- stores original generation params
+    total_calories INTEGER DEFAULT 0,
+    total_protein DECIMAL(6,2) DEFAULT 0,
+    total_carbs DECIMAL(6,2) DEFAULT 0,
+    total_fat DECIMAL(6,2) DEFAULT 0,
+    created_at TIMESTAMPTZ DEFAULT NOW(),
+    updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+CREATE TABLE saved_generated_menu_items (
+    id SERIAL PRIMARY KEY,
+    saved_menu_id INTEGER NOT NULL REFERENCES saved_generated_menus(id) ON DELETE CASCADE,
+    product_id INTEGER REFERENCES products(id),
+    custom_food_name VARCHAR(255),
+    quantity DECIMAL(8,2) NOT NULL,
+    unit VARCHAR(20) DEFAULT 'grams',
+    calories DECIMAL(8,2) NOT NULL,
+    protein DECIMAL(6,2) DEFAULT 0,
+    carbs DECIMAL(6,2) DEFAULT 0,
+    fat DECIMAL(6,2) DEFAULT 0,
+    display_order INTEGER DEFAULT 1,
+    created_at TIMESTAMPTZ DEFAULT NOW()
 );
 
 -- ==========================================
@@ -218,6 +304,23 @@ CREATE INDEX idx_products_name_search ON products USING GIN(to_tsvector('simple'
 -- Category indexes
 CREATE INDEX idx_categories_name_he ON categories(name_he);
 CREATE INDEX idx_subcategories_name_he ON subcategories(name_he);
+
+-- For nutrition logs
+CREATE INDEX idx_nutrition_logs_user_date ON nutrition_logs(user_id, log_date);
+CREATE INDEX idx_nutrition_log_meals_log_id ON nutrition_log_meals(nutrition_log_id);
+CREATE INDEX idx_nutrition_log_items_meal_id ON nutrition_log_items(meal_id);
+
+-- For daily menus
+CREATE INDEX idx_daily_menus_user_date ON daily_menus(user_id, menu_date);
+CREATE INDEX idx_daily_menus_user_templates ON daily_menus(user_id, is_template) WHERE is_template = true;
+CREATE INDEX idx_daily_menu_meals_menu_id ON daily_menu_meals(daily_menu_id);
+CREATE INDEX idx_daily_menu_meals_type ON daily_menu_meals(meal_type);
+CREATE INDEX idx_daily_menu_items_meal_id ON daily_menu_items(daily_menu_meal_id);
+CREATE INDEX idx_daily_menu_items_source ON daily_menu_items(source_type, source_menu_id);
+
+-- For saved generated menus
+CREATE INDEX idx_saved_generated_menus_user ON saved_generated_menus(user_id, created_at DESC);
+CREATE INDEX idx_saved_generated_menu_items_menu_id ON saved_generated_menu_items(saved_menu_id);
 
 -- ==========================================
 -- HELPER FUNCTIONS

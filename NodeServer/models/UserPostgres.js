@@ -47,28 +47,33 @@ class User {
   static async findById(id) {
     try {
       const result = await pool.query(`
-        SELECT u.*, unp.height, unp.weight, unp.age, unp.gender, 
-               unp.dietary_goal, unp.daily_calorie_goal, unp.macro_goals,
-               al.code as activity_level_code, al.name as activity_level_name
+        SELECT u.*, 
+               unp.height, unp.weight, unp.age, unp.gender, 
+               unp.daily_calorie_goal, unp.macro_goals, unp.updated_at as nutrition_updated_at
         FROM users u
         LEFT JOIN user_nutrition_profiles unp ON u.id = unp.user_id
-        LEFT JOIN activity_levels al ON unp.activity_level_id = al.id
         WHERE u.id = $1 AND u.is_active = true
       `, [id]);
 
       if (!result.rows[0]) return null;
 
-      const user = new User(result.rows[0]);
-      user.nutrition_profile = {
-        height: result.rows[0].height,
-        weight: result.rows[0].weight,
-        age: result.rows[0].age,
-        gender: result.rows[0].gender,
-        activity_level: result.rows[0].activity_level_code,
-        dietary_goal: result.rows[0].dietary_goal,
-        daily_calorie_goal: result.rows[0].daily_calorie_goal,
-        macro_goals: result.rows[0].macro_goals
-      };
+      const userData = result.rows[0];
+      const user = new User(userData);
+
+      // Add nutrition profile if exists
+      if (userData.height !== null || userData.macro_goals !== null) {
+        user.nutrition_profile = {
+          height: userData.height,
+          weight: userData.weight,
+          age: userData.age,
+          gender: userData.gender,
+          daily_calorie_goal: userData.daily_calorie_goal,
+          macro_goals: typeof userData.macro_goals === 'string' 
+            ? JSON.parse(userData.macro_goals) 
+            : userData.macro_goals,
+          updated_at: userData.nutrition_updated_at
+        };
+      }
 
       return user;
     } catch (error) {
@@ -160,29 +165,16 @@ class User {
   // Update or create nutrition profile
   async updateNutritionProfile(profileData) {
     try {
-      // Find activity level ID
-      let activityLevelId = null;
-      if (profileData.activity_level) {
-        const activityResult = await pool.query(
-          'SELECT id FROM activity_levels WHERE code = $1',
-          [profileData.activity_level]
-        );
-        activityLevelId = activityResult.rows[0]?.id;
-      }
-
       const result = await pool.query(`
         INSERT INTO user_nutrition_profiles (
-          user_id, height, weight, age, gender, activity_level_id,
-          dietary_goal, daily_calorie_goal, macro_goals
+          user_id, height, weight, age, gender, daily_calorie_goal, macro_goals
         )
-        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+        VALUES ($1, $2, $3, $4, $5, $6, $7)
         ON CONFLICT (user_id) DO UPDATE SET
           height = EXCLUDED.height,
           weight = EXCLUDED.weight,
           age = EXCLUDED.age,
           gender = EXCLUDED.gender,
-          activity_level_id = EXCLUDED.activity_level_id,
-          dietary_goal = EXCLUDED.dietary_goal,
           daily_calorie_goal = EXCLUDED.daily_calorie_goal,
           macro_goals = EXCLUDED.macro_goals,
           updated_at = NOW()
@@ -193,8 +185,6 @@ class User {
         profileData.weight,
         profileData.age,
         profileData.gender,
-        activityLevelId,
-        profileData.dietary_goal,
         profileData.daily_calorie_goal,
         JSON.stringify(profileData.macro_goals || {})
       ]);
@@ -262,19 +252,12 @@ class User {
   // Calculate TDEE (Total Daily Energy Expenditure)
   calculateTDEE() {
     const bmr = this.calculateBMR();
-    if (!bmr || !this.nutrition_profile?.activity_level) {
+    if (!bmr) {
       return null;
     }
 
-    const activityMultipliers = {
-      'sedentary': 1.2,
-      'lightly_active': 1.375,
-      'moderately_active': 1.55,
-      'very_active': 1.725,
-      'extremely_active': 1.9
-    };
-
-    const multiplier = activityMultipliers[this.nutrition_profile.activity_level] || 1.2;
+    // Use a default sedentary multiplier since we don't track activity levels
+    const multiplier = 1.2;
     return Math.round(bmr * multiplier);
   }
 

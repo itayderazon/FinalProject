@@ -13,10 +13,13 @@ build/
 
 # Environment variables
 .env
+.env.*
 .env.local
 .env.development.local
 .env.test.local
 .env.production.local
+config.env
+*.env
 
 # IDE and editor files
 .vscode/
@@ -45,6 +48,11 @@ venv/
 ENV/
 env.bak/
 venv.bak/
+.pytest_cache/
+*.pyc
+*.pyo
+*.pyd
+.Python
 
 # Logs
 logs/
@@ -76,3 +84,137 @@ jspm_packages/
 
 # Archive directory
 archive/ 
+
+# Images and media files
+*.jpg
+*.jpeg
+*.png
+*.gif
+*.bmp
+*.tiff
+*.tif
+*.svg
+*.webp
+*.ico
+*.raw
+*.heic
+*.heif
+
+# Video files
+*.mp4
+*.avi
+*.mov
+*.wmv
+*.flv
+*.webm
+*.mkv
+
+# Audio files
+*.mp3
+*.wav
+*.flac
+*.aac
+*.ogg
+*.wma
+
+# Document files
+*.pdf
+*.doc
+*.docx
+*.xls
+*.xlsx
+*.ppt
+*.pptx
+
+# Database files
+*.db
+*.sqlite
+*.sqlite3
+*.mdb
+
+# Temporary files
+*.tmp
+*.temp
+*.cache
+*.bak
+*.backup
+*.old
+
+# Large data files
+*.json.gz
+*.csv.gz
+*.xml.gz
+
+# Compiled binaries
+*.exe
+*.dll
+*.so
+*.dylib
+
+# Package files
+*.zip
+*.rar
+*.7z
+*.tar
+*.gz
+
+# Lock files (keep package-lock.json but ignore others)
+yarn.lock
+pnpm-lock.yaml
+
+# Jupyter Notebook checkpoints
+.ipynb_checkpoints/
+
+# JetBrains
+.idea/
+*.iml
+*.ipr
+*.iws
+
+# MacOS
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# Windows
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+
+# Linux
+*~
+
+# Docker
+docker-compose.override.yml
+
+# SSL certificates
+*.crt
+*.key
+*.pem
+*.p12
+*.pfx
+
+# Project-specific ignores
+# Large image directories
+data/src/scrapers/images/
+NodeServer/images/
+NodeServer/images\ copy/
+
+# Large data files
+data/src/scrapers/combined_prices_rami_nutrition_with_images.json
+data/src/scrapers/combined_prices_rami_nutrition.json
+data/src/process/combined_prices_all.json
+
+# XML data files (large)
+data/src/data/*/
+
+# Vision assets (generated images)
+vision/
+
+# Python bytecode and cache
+*.pyc
+__pycache__/
+
+# Node.js logs
+NodeServer/logs/ 

@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { nutritionService } from '../services/nutritionService';
 import { showNotification } from '../utils/menuUtils';
 
@@ -7,14 +7,18 @@ export const useMenuGenerator = () => {
   const [generatedMenus, setGeneratedMenus] = useState([]);
   const [savedMenus, setSavedMenus] = useState([]);
   const [activeTab, setActiveTab] = useState('generate');
+  const [availableSubcategories, setAvailableSubcategories] = useState([]);
+  const [subcategoriesLoading, setSubcategoriesLoading] = useState(false);
   const [formData, setFormData] = useState({
     calories: 2000,
     protein: 150,
     carbs: 200,
     fat: 65,
-    meal_type: '',
+    meal_template: '',
+    subcategories: [],
     num_items: 5,
-    include_prices: true
+    include_prices: true,
+    requiredProducts: []
   });
 
   const presets = {
@@ -26,24 +30,41 @@ export const useMenuGenerator = () => {
 
   useEffect(() => {
     loadSavedMenus();
+    loadSubcategories();
   }, []);
 
-  const loadSavedMenus = () => {
-    // Mock saved menus - in real app, fetch from API
-    const mockSavedMenus = [
-      {
-        id: 1,
-        name: 'My Healthy Breakfast',
-        date: '2025-05-30',
-        total_nutrition: { calories: 450, protein: 25, carbs: 45, fat: 18 },
-        items: [
-          { name: 'Oatmeal', portion_grams: 80, nutrition: { calories: 150, protein: 5, carbs: 30, fat: 3 } },
-          { name: 'Banana', portion_grams: 120, nutrition: { calories: 100, protein: 1, carbs: 25, fat: 0 } },
-          { name: 'Greek Yogurt', portion_grams: 100, nutrition: { calories: 100, protein: 10, carbs: 6, fat: 6 } }
-        ]
+  const loadSavedMenus = async () => {
+    try {
+      const response = await nutritionService.getSavedMenus();
+      
+      if (response.success && response.savedMenus) {
+        setSavedMenus(response.savedMenus);
+      } else {
+        // Fall back to empty array if no saved menus
+        setSavedMenus([]);
       }
-    ];
-    setSavedMenus(mockSavedMenus);
+    } catch (error) {
+      console.error('Error loading saved menus:', error);
+      // Fall back to empty array on error
+      setSavedMenus([]);
+      showNotification('Failed to load saved menus', 'error');
+    }
+  };
+
+  const loadSubcategories = async () => {
+    try {
+      setSubcategoriesLoading(true);
+      const response = await nutritionService.getFoodCategories();
+      
+      if (response.success && response.subcategories) {
+        setAvailableSubcategories(response.subcategories);
+      }
+    } catch (error) {
+      console.error('Error loading subcategories:', error);
+      showNotification('Failed to load food subcategories', 'error');
+    } finally {
+      setSubcategoriesLoading(false);
+    }
   };
 
   const handleInputChange = (e) => {
@@ -72,8 +93,10 @@ export const useMenuGenerator = () => {
         carbs: formData.carbs, 
         fat: formData.fat,
         include_prices: formData.include_prices,
-        ...(formData.meal_type && { meal_type: formData.meal_type }),
-        ...(formData.num_items && { num_items: formData.num_items })
+        ...(formData.meal_template && { meal_template: formData.meal_template }),
+        ...(formData.subcategories && formData.subcategories.length > 0 && { subcategories: formData.subcategories }),
+        ...(formData.num_items && { num_items: formData.num_items }),
+        ...(formData.requiredProducts && formData.requiredProducts.length > 0 && { requiredProducts: formData.requiredProducts })
       };
 
       
@@ -129,23 +152,39 @@ export const useMenuGenerator = () => {
     try {
       const menuName = customName || `Menu ${new Date().toLocaleDateString()}`;
       
-      const savedMenu = {
-        id: Date.now(),
+      const menuData = {
         name: menuName,
-        date: new Date().toISOString(),
+        description: `Generated menu with ${menu.items.length} items`,
         total_nutrition: menu.total_nutrition,
-        items: menu.items
+        items: menu.items,
+        generation_parameters: {
+          calories: formData.calories,
+          protein: formData.protein,
+          carbs: formData.carbs,
+          fat: formData.fat,
+          meal_template: formData.meal_template,
+          subcategories: formData.subcategories,
+          num_items: formData.num_items,
+          include_prices: formData.include_prices
+        }
       };
 
-      // In real app, save to API
-      setSavedMenus(prev => [savedMenu, ...prev]);
-      showNotification('Menu saved successfully!', 'success');
+      // Save to database via API
+      const response = await nutritionService.saveMenu(menuData);
+      
+      if (response.success) {
+        showNotification('Menu saved successfully!', 'success');
+        // Reload saved menus to show the new one
+        await loadSavedMenus();
+      } else {
+        throw new Error('Failed to save menu');
+      }
       
       // Also log to nutrition diary
       const nutritionData = {
         date: new Date().toISOString(),
         meals: [{
-          type: formData.meal_type || 'lunch',
+          type: formData.meal_template || 'lunch',
           foods: menu.items.map(item => ({
             name: item.name,
             quantity: item.portion_grams,
@@ -167,14 +206,64 @@ export const useMenuGenerator = () => {
     }
   };
 
-  const deleteMenu = (menuId) => {
-    setSavedMenus(prev => prev.filter(menu => menu.id !== menuId));
-    showNotification('Menu deleted', 'info');
+  const deleteMenu = async (menuId) => {
+    try {
+      const response = await nutritionService.deleteSavedMenu(menuId);
+      
+      if (response.success) {
+        showNotification('Menu deleted', 'info');
+        // Reload saved menus to reflect the deletion
+        await loadSavedMenus();
+      } else {
+        throw new Error('Failed to delete menu');
+      }
+    } catch (error) {
+      console.error('Error deleting menu:', error);
+      showNotification('Failed to delete menu', 'error');
+    }
   };
 
   const clearResults = () => {
     setGeneratedMenus([]);
   };
+
+  const toggleSubcategory = (subcategoryName) => {
+    setFormData(prev => {
+      const currentSubcategories = prev.subcategories || [];
+      const isSelected = currentSubcategories.includes(subcategoryName);
+      
+      if (isSelected) {
+        return {
+          ...prev,
+          subcategories: currentSubcategories.filter(name => name !== subcategoryName)
+        };
+      } else {
+        return {
+          ...prev,
+          subcategories: [...currentSubcategories, subcategoryName]
+        };
+      }
+    });
+  };
+
+  const setRequiredProducts = useCallback((productIds) => {
+    setFormData(prev => ({
+      ...prev,
+      requiredProducts: productIds
+    }));
+  }, []);
+
+  const removeRequiredProduct = useCallback((productId) => {
+    setFormData(prev => {
+      // Convert productId to string for comparison since URL params are strings
+      const productIdStr = String(productId);
+      const newRequiredProducts = prev.requiredProducts.filter(id => String(id) !== productIdStr);
+      return {
+        ...prev,
+        requiredProducts: newRequiredProducts
+      };
+    });
+  }, [formData.requiredProducts]);
 
   return {
     // State
@@ -184,6 +273,8 @@ export const useMenuGenerator = () => {
     activeTab,
     formData,
     presets,
+    availableSubcategories,
+    subcategoriesLoading,
     
     // Actions
     setActiveTab,
@@ -192,6 +283,10 @@ export const useMenuGenerator = () => {
     generateMenu,
     saveMenu,
     deleteMenu,
-    clearResults
+    clearResults,
+    toggleSubcategory,
+    loadSavedMenus,
+    setRequiredProducts,
+    removeRequiredProduct
   };
 }; 

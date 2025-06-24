@@ -3,12 +3,13 @@
 // ====================
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { Toaster } from 'react-hot-toast';
 import { AuthProvider, useAuth } from './context/AuthContext';
 
 // Page imports
 import Homepage from './pages/Homepage';
-import LoggedInHomepage from './pages/LoggedInHomepage';
 import MenuGenerator from './pages/MenuGenerator';
+import DailyMenuPlanner from './pages/DailyMenuPlanner';
 import ProductCatalog from './pages/ProductCatalog';
 import Login from './pages/auth/Login';
 import Register from './pages/auth/Register';
@@ -83,14 +84,14 @@ function AppContent() {
           } />
           
           {/* Protected Routes */}
-          <Route path="/dashboard" element={
-            <ProtectedRoute>
-              <LoggedInHomepage />
-            </ProtectedRoute>
-          } />
           <Route path="/menu-generator" element={
             <ProtectedRoute>
               <MenuGenerator />
+            </ProtectedRoute>
+          } />
+          <Route path="/daily-menu-planner" element={
+            <ProtectedRoute>
+              <DailyMenuPlanner />
             </ProtectedRoute>
           } />
           <Route path="/products" element={
@@ -104,13 +105,27 @@ function AppContent() {
         </Routes>
       </main>
       
-      {/* Toast notifications container */}
-      <div id="toast-container" style={{
-        position: 'fixed',
-        top: '20px',
-        right: '20px',
-        zIndex: 1000
-      }}></div>
+      {/* Toast notifications */}
+      <Toaster
+        position="top-right"
+        toastOptions={{
+          duration: 3000,
+          style: {
+            background: '#333',
+            color: '#fff',
+          },
+          success: {
+            style: {
+              background: '#4caf50',
+            },
+          },
+          error: {
+            style: {
+              background: '#f44336',
+            },
+          },
+        }}
+      />
     </div>
   );
 }

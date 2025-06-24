@@ -36,13 +36,6 @@ const Navigation = () => {
         
         <div className="nav-links">
           <Link
-            to="/dashboard"
-            className={`nav-link ${isActive('/dashboard') ? 'active' : ''}`}
-          >
-            🏠 Dashboard
-          </Link>
-          
-          <Link
             to="/products"
             className={`nav-link ${isActive('/products') ? 'active' : ''}`}
           >
@@ -54,6 +47,13 @@ const Navigation = () => {
             className={`nav-link ${isActive('/menu-generator') ? 'active' : ''}`}
           >
             📋 Menu Generator
+          </Link>
+          
+          <Link
+            to="/daily-menu-planner"
+            className={`nav-link ${isActive('/daily-menu-planner') ? 'active' : ''}`}
+          >
+            📅 Daily Menu Planner
           </Link>
         </div>
 

@@ -11,9 +11,7 @@ class Config:
     CATEGORIES_DATA_FILE = os.path.join(DATA_DIR, "categories_extracted.json")
     
     # Algorithm settings
-    DEFAULT_MIN_ITEMS = 5  # Reduced from 4 to allow simpler menus
-    DEFAULT_MAX_ITEMS = 8 # Reduced from 8 to focus on core foods
-    DEFAULT_ATTEMPTS = 300  # Increased attempts
+    DEFAULT_ATTEMPTS = 300  # Number of attempts to generate menus
     
     # Nutrition constraints
     MAX_SUGAR_PERCENTAGE = 0.15  # Max 15% calories from sugar
@@ -42,55 +40,7 @@ class Config:
         'לחם, פיתה, לחמניה': {'min': 50, 'max': 150}
     }
     
-    
-    EXCLUDED_CATEGORIES = [
-       
-    ]
-    
-    EXCLUDED_SUBCATEGORIES = [
-    'מוצרי אפיה',
-    'רטבים', 
-    'דבש, ריבה וממרחים',
-    'שמן, חומץ ומיץ לימון',
-    'תבלינים',
-    'תרכיזים',
-    'קמח ופירורי לחם',
-    'סוכריות ומסטיקים',
-    'משקאות קלים',
-    'אלכוהול ואנרגיה',
-    'מזון לתינוקות',
-    'משקאות חמים',
-    'משקאות במארזים',
-]
-    
-    PREFERRED_CATEGORIES = [
-    
-    ]
-    
-    PREFERRED_SUBCATEGORIES = [
-
-    ]
-    
-    #
-    CATEGORY_LIMITS = {
-      
-    }
-    
-    SUBCATEGORY_LIMITS = {
-    }
-    
-    REQUIRED_CATEGORIES = [
-    ]
-    
-    REQUIRED_SUBCATEGORIES = [
-
-    ]
-    REQUIRED_ITEM_CODES = [
-
-]
-    REQUIRED_ITEM_PORTIONS = {
    
-}
     
     # Food classifications
     FOOD_CLASSIFICATIONS = {
@@ -100,39 +50,36 @@ class Config:
         'processed': ['שימורים', 'נקניקיות ונקניקים', 'אוכל להכנה מהירה'],
         'wholesome': ['אורגני וטבעוני', 'ללא גלוטן', 'פירות וירקות']
     }
-    
     # Meal rules
-    MEAL_RULES = {
-        'breakfast': {
-            'primary': ['חלב ביצים וסלטים', 'לחם ומאפים טריים'],
-            'secondary': ['דבש, ריבה וממרחים', 'פירות וירקות', 'משקאות'],
-            'forbidden': ['בשר  ודגים', 'קפואים'],
-            'required_types': ['protein', 'fiber']
-        },
-        'lunch': {
-            'primary': ['בשר  ודגים', 'קטניות ודגנים'],
-            'secondary': ['חלב ביצים וסלטים', 'פירות וירקות', 'שימורים בישול ואפיה'],
-            'forbidden': ['חטיפים ומתוקים'],
-            'required_types': ['protein', 'fiber']
-        },
-        'dinner': {
-            'primary': ['בשר  ודגים', 'קפואים'],
-            'secondary': ['קטניות ודגנים', 'חלב ביצים וסלטים', 'שימורים בישול ואפיה'],
-            'forbidden': ['חטיפים ומתוקים'],
-            'required_types': ['protein', 'fiber']
-        },
-        'snacks': {
-            'primary': ['פירות וירקות', 'דגנים וחטיפי אנרגיה'],
-            'secondary': ['חטיפים ומתוקים', 'חלב ביצים וסלטים', 'משקאות'],
-            'forbidden': [],
-            'required_types': ['fiber']
-        }
+    MEAL_SUBCATEGORY_TEMPLATES = {
+        'breakfast': [
+            'חלב', 'גבינות', 'יוגורט ומעדני חלב', 'חמאה מרגרינה שמנת',
+            'לחם, פיתה, לחמניה', 'דבש, ריבה וממרחים',
+            'פיצוחים ופירות יבשים', 'סלטים'
+        ],
+        'lunch': [
+            'בשרים על האש', 'נקניקיות ונקניקים', 'בשר קפוא',
+            'אורז וקטניות', 'פסטה, פתיתים, קוסקוס', 
+            'גבינות', 'סלטים', 'מזון מצונן',
+            'מרקים ותבשילים', 'שימורים'
+        ],
+        'dinner': [
+            'בשרים על האש', 'בשר קפוא', 'עוף קפוא', 'נקניקיות ונקניקים',
+            'אוכל להכנה מהירה', 'פיצות, מאפים ובצקים קפואים',
+            'אורז וקטניות', 'פסטה, פתיתים, קוסקוס', 'מרקים ותבשילים'
+        ],
+        'snack': [
+            'פיצוחים ופירות יבשים', 'דגנים וחטיפי אנרגיה',
+            'יוגורט ומעדני חלב', 'גבינות', 'חטיפים מלוחים',
+            'פריכיות וקרקרים', 'וופלים וביסקוויטים'
+        ]
     }
+
 
 class TestConfig(Config):
     """Test configuration"""
     DEBUG = True
-    ATTEMPTS = 10  # Very few attempts for fast tests
+    DEFAULT_ATTEMPTS = 10  # Very few attempts for fast tests
     NUTRITION_DATA_FILE = "tests/test_data.json"
 
 # Configuration mapping

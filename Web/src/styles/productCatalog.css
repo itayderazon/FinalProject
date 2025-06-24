@@ -43,7 +43,7 @@
   height: 100%; /* This makes all cards fill the available height */
   display: flex;
   flex-direction: column;
-  min-height: 350px; /* Minimum height for consistency */
+  min-height: 420px; /* Increased minimum height to accommodate images */
 }
 
 .product-card:hover {
@@ -110,6 +110,24 @@
   font-weight: 700;
   color: #059669;
   direction: ltr;
+}
+
+/* Product Image Styles */
+.product-image-container {
+  position: relative;
+  transition: transform 0.2s ease;
+}
+
+.product-image-container:hover {
+  transform: scale(1.02);
+}
+
+.product-image-container img {
+  transition: opacity 0.3s ease;
+}
+
+.product-image-container img:hover {
+  opacity: 0.9;
 }
 
 /* Actions section - always at bottom */
@@ -182,7 +200,7 @@
   
   .product-card {
     border-radius: 0.5rem;
-    min-height: 320px; /* Smaller minimum height on mobile */
+    min-height: 380px; /* Increased to accommodate images on mobile */
   }
   
   .search-filters {

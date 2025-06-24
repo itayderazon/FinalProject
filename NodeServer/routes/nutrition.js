@@ -12,8 +12,10 @@ const calculateNutritionValidation = [
   body('carbs').isNumeric().withMessage('Carbs must be a number'),
   body('fat').isNumeric().withMessage('Fat must be a number'),
   body('foods').optional().isArray().withMessage('Foods must be an array'), // ✅ Make optional
-  body('meal_type').optional().isString(),
-  body('num_items').optional().isNumeric()
+  body('meal_template').optional().isString(),
+  body('subcategories').optional().isArray().withMessage('Subcategories must be an array'),
+  body('num_items').optional().isNumeric(),
+  body('requiredProducts').optional().isArray().withMessage('Required products must be an array')
 ];
 
 const logNutritionValidation = [
@@ -29,6 +31,14 @@ const historyValidation = [
   query('limit').optional().isInt({ min: 1, max: 100 }).withMessage('Limit must be between 1 and 100')
 ];
 
+const saveMenuValidation = [
+  body('name').isString().notEmpty().withMessage('Menu name is required'),
+  body('description').optional().isString(),
+  body('total_nutrition').isObject().withMessage('Total nutrition must be an object'),
+  body('items').isArray().withMessage('Items must be an array'),
+  body('generation_parameters').optional().isObject()
+];
+
 // Apply authentication middleware to all routes - TEMPORARILY DISABLED FOR TESTING
 // router.use(authMiddleware.authenticate);
 
@@ -38,5 +48,11 @@ router.post('/log', logNutritionValidation, authMiddleware.authenticate, nutriti
 router.get('/history', historyValidation, authMiddleware.authenticate, nutritionController.getNutritionHistory);
 router.get('/recommendations', authMiddleware.authenticate, nutritionController.getRecommendations);
 router.get('/trends', authMiddleware.authenticate, nutritionController.analyzeTrends);
+router.get('/food-categories', nutritionController.getFoodCategories);
+
+// Saved menu routes
+router.get('/saved-menus', authMiddleware.authenticate, nutritionController.getSavedMenus);
+router.post('/saved-menus', saveMenuValidation, authMiddleware.authenticate, nutritionController.saveMenu);
+router.delete('/saved-menus/:id', authMiddleware.authenticate, nutritionController.deleteSavedMenu);
 
 module.exports = router;

@@ -1,15 +1,18 @@
 import React from 'react';
 import { calculateMacroPercentages } from '../../utils/menuUtils';
 
-const MenuForm = ({
-  formData,
-  handleInputChange,
-  applyPreset,
-  generateMenu,
-  clearResults,
-  loading,
-  generatedMenus,
-  presets
+const MenuForm = ({ 
+  formData, 
+  handleInputChange, 
+  applyPreset, 
+  generateMenu, 
+  clearResults, 
+  loading, 
+  generatedMenus, 
+  presets,
+  availableSubcategories,
+  subcategoriesLoading,
+  toggleSubcategory
 }) => {
   const macroPercentages = calculateMacroPercentages(formData);
 
@@ -147,12 +150,12 @@ const MenuForm = ({
 
       <div className="form-group">
         <label className="form-label">
-          <span>🕐</span>
-          Meal Type (Optional)
+          <span>🍽️</span>
+          Meal Template (Optional)
         </label>
         <select
-          name="meal_type"
-          value={formData.meal_type}
+          name="meal_template"
+          value={formData.meal_template}
           onChange={handleInputChange}
           className="form-select"
         >
@@ -162,6 +165,51 @@ const MenuForm = ({
           <option value="dinner">Dinner</option>
           <option value="snack">Snack</option>
         </select>
+      </div>
+
+      <div className="form-group">
+        <label className="form-label">
+          <span>🏷️</span>
+          Specific Subcategories (Optional)
+        </label>
+        <div className="subcategories-info">
+          <p className="field-description">
+            Choose specific food subcategories to include in your menu
+          </p>
+          {formData.subcategories.length > 0 && (
+            <p className="selected-count">
+              {formData.subcategories.length} selected subcategories
+            </p>
+          )}
+        </div>
+
+        {subcategoriesLoading ? (
+          <div className="loading-subcategories">
+            <div className="loading-spinner"></div>
+            <span>Loading subcategories...</span>
+          </div>
+        ) : (
+          <div className="subcategories-grid">
+            {availableSubcategories.length > 0 ? (
+              availableSubcategories.map((subcategory) => (
+                <label key={subcategory} className="subcategory-checkbox">
+                  <input
+                    type="checkbox"
+                    checked={formData.subcategories.includes(subcategory)}
+                    onChange={() => toggleSubcategory(subcategory)}
+                  />
+                  <span className="checkbox-label">{subcategory}</span>
+                </label>
+              ))
+            ) : (
+              <p className="no-subcategories">No subcategories available</p>
+            )}
+          </div>
+        )}
+
+        <div className="field-help">
+          Select specific subcategories or leave none selected to use all available food types.
+        </div>
       </div>
 
       <div className="form-group">

@@ -67,6 +67,11 @@ class PythonService {
     return await this.makeRequest('/api/nutrition/calculate', nutritionData);
   }
 
+  // Get food categories and subcategories
+  async getFoodCategories() {
+    return await this.makeRequest('/api/nutrition/food-categories', null, 'GET');
+  }
+
   // Get personalized recommendations
   async getRecommendations(recommendationData) {
     return await this.makeRequest('/api/nutrition/recommendations', recommendationData);

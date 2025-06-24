@@ -93,8 +93,6 @@ class Product {
                    'supermarket_name', s.name,
                    'price', ph.price,
                    'currency', ph.currency,
-                   'is_on_sale', ph.is_on_sale,
-                   'sale_percentage', ph.sale_percentage,
                    'recorded_at', ph.recorded_at
                  ) ORDER BY ph.recorded_at DESC
                ) FILTER (WHERE ph.id IS NOT NULL) as prices,
@@ -199,8 +197,6 @@ class Product {
               'supermarket_name', s.name,
               'price', ph.price,
               'currency', ph.currency,
-              'is_on_sale', ph.is_on_sale,
-              'sale_percentage', ph.sale_percentage,
               'recorded_at', ph.recorded_at
             ) ORDER BY ph.recorded_at DESC
           ) FILTER (WHERE ph.id IS NOT NULL) as prices
@@ -234,8 +230,6 @@ class Product {
           s.name_en as supermarket_name_en,
           ph.price,
           ph.currency,
-          ph.is_on_sale,
-          ph.sale_percentage,
           ph.recorded_at
         FROM price_history ph
         JOIN supermarkets s ON ph.supermarket_id = s.id

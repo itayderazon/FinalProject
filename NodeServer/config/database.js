@@ -31,7 +31,12 @@ const pool = new Pool(connectionConfig);
 // Handle pool errors
 pool.on('error', (err, client) => {
   console.error('💥 Unexpected error on idle PostgreSQL client', err);
-  process.exit(-1);
+  // Log error but don't exit process - let the application handle it gracefully
+  // Only exit in production if it's a critical connection failure
+  if (process.env.NODE_ENV === 'production' && err.code === 'ECONNREFUSED') {
+    console.error('❌ Critical database connection failure in production');
+    process.exit(1);
+  }
 });
 
 // Test connection on startup

@@ -2,7 +2,7 @@ import React from 'react';
 import ProductCard from './ProductCard';
 import ProductListItem from './ProductListItem';
 
-const ProductList = ({ products, viewMode, formatPrice, loading }) => {
+const ProductList = ({ products, viewMode, formatPrice, loading, fetchProductImage, getProductImageUrl, handleImageError, selectMode = false, onSelectProduct, selectedProducts = [] }) => {
   if (loading) {
     return (
       <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', padding: '3rem 0' }}>
@@ -15,23 +15,45 @@ const ProductList = ({ products, viewMode, formatPrice, loading }) => {
     <div style={{ width: '100%' }}>
       {viewMode === 'grid' ? (
         <div className="product-grid">
-          {products.map((product) => (
+          {products.map((product) => {
+            const productId = product._id || product.id;
+            const isSelected = selectedProducts.some(p => (p._id || p.id) === productId);
+            
+            return (
             <ProductCard 
-              key={product._id || product.id || Math.random()} 
+                key={productId || Math.random()} 
               product={product} 
               formatPrice={formatPrice}
+              fetchProductImage={fetchProductImage}
+              getProductImageUrl={getProductImageUrl}
+              handleImageError={handleImageError}
+                selectMode={selectMode}
+                onSelectProduct={onSelectProduct}
+                isSelected={isSelected}
             />
-          ))}
+            );
+          })}
         </div>
       ) : (
         <div style={{ maxWidth: '64rem', margin: '0 auto' }}>
-          {products.map((product) => (
+          {products.map((product) => {
+            const productId = product._id || product.id;
+            const isSelected = selectedProducts.some(p => (p._id || p.id) === productId);
+            
+            return (
             <ProductListItem 
-              key={product._id || product.id || Math.random()} 
+                key={productId || Math.random()} 
               product={product} 
               formatPrice={formatPrice}
+              fetchProductImage={fetchProductImage}
+              getProductImageUrl={getProductImageUrl}
+              handleImageError={handleImageError}
+                selectMode={selectMode}
+                onSelectProduct={onSelectProduct}
+                isSelected={isSelected}
             />
-          ))}
+            );
+          })}
         </div>
       )}
       
