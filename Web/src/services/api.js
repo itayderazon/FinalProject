@@ -1,8 +1,8 @@
 import axios from 'axios';
 import toast from 'react-hot-toast';
 
-const API_BASE_URL = 'http://localhost:3001/api';
-export const SERVER_BASE_URL = 'http://localhost:3001'; // Export for image fetching
+const API_BASE_URL = import.meta.env.VITE_API_URL;
+export const SERVER_BASE_URL = import.meta.env.VITE_SERVER_URL ; // Export for image fetching
 
 // Create axios instance
 const api = axios.create({

@@ -1,6 +1,7 @@
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
+import CartIcon from '../cart/CartIcon';
 import '../../styles/Navigation.css';
 
 const Navigation = () => {
@@ -56,6 +57,8 @@ const Navigation = () => {
             📅 Daily Menu Planner
           </Link>
         </div>
+
+        <CartIcon />
 
         <div className="nav-user">
           <div className="nav-user-info">

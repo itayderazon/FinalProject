@@ -82,14 +82,14 @@ const RequiredProductCard = ({
           <div className="portion-input-wrapper">
             <input
               type="number"
-              min="0.1"
-              max="10"
-              step="0.1"
+              min="10"
+              max="1000"
+              step="10"
               value={currentPortion}
               onChange={(e) => onPortionChange(productId, e.target.value)}
               className="portion-input"
             />
-            <span className="portion-unit">servings</span>
+            <span className="portion-unit">grams</span>
           </div>
         </div>
         
@@ -97,12 +97,12 @@ const RequiredProductCard = ({
           <div className="required-product-nutrition">
             {product.nutrition.calories && (
               <span className="nutrition-item calories">
-                {Math.round(product.nutrition.calories * currentPortion)} cal
+                {Math.round((product.nutrition.calories * currentPortion) / 100)} cal
               </span>
             )}
             {product.nutrition.protein && (
               <span className="nutrition-item protein">
-                {(product.nutrition.protein * currentPortion).toFixed(1)}g protein
+                {((product.nutrition.protein * currentPortion) / 100).toFixed(1)}g protein
               </span>
             )}
           </div>

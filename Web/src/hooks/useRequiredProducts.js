@@ -49,7 +49,7 @@ const useRequiredProducts = (productIds, onUpdateProductPortion) => {
         validProducts.forEach(product => {
           const productId = product.id || product._id;
           if (!productPortions[productId]) {
-            initialPortions[productId] = 1; // Default portion is 1
+            initialPortions[productId] = 100; // Default portion is 100g
           }
         });
         
@@ -70,7 +70,7 @@ const useRequiredProducts = (productIds, onUpdateProductPortion) => {
   const handlePortionChange = (productId, newPortion) => {
     const updatedPortions = {
       ...productPortions,
-      [productId]: Math.max(0.1, parseFloat(newPortion) || 1)
+      [productId]: Math.max(10, parseFloat(newPortion) || 100)  // Minimum 10g, default 100g
     };
     setProductPortions(updatedPortions);
     

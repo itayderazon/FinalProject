@@ -6,12 +6,10 @@ class Config:
     """Base configuration class"""
     
     # Data file paths
-    DATA_DIR = "data"
-    NUTRITION_DATA_FILE = os.path.join(DATA_DIR, "nutrition_data.json")
-    CATEGORIES_DATA_FILE = os.path.join(DATA_DIR, "categories_extracted.json")
+    
     
     # Algorithm settings
-    DEFAULT_ATTEMPTS = 300  # Number of attempts to generate menus
+    DEFAULT_ATTEMPTS = 100 # Number of attempts to generate menus
     
     # Nutrition constraints
     MAX_SUGAR_PERCENTAGE = 0.15  # Max 15% calories from sugar

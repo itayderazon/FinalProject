@@ -6,12 +6,13 @@ from ..models import Menu, MenuItem
 class MenuBuilder:
     """Enhanced MenuBuilder with better calorie distribution"""
     
-    def __init__(self, food_classifier, portion_calculator, config):
+    def __init__(self, food_classifier, portion_calculator, config, food_provider=None):
         self.food_classifier = food_classifier
         self.portion_calculator = portion_calculator
         self.config = config
+        self.food_provider = food_provider
     
-    def build_menu(self, foods, target_nutrition, num_items ):
+    def build_menu(self, foods, target_nutrition, num_items, required_items_with_portions=None):
         """Build a single menu with improved calorie distribution"""
         MAX_CALORIE_VARIANCE = 1.3
         menu = Menu()
@@ -23,7 +24,7 @@ class MenuBuilder:
         max_calories_per_item = target_calories_per_item * MAX_CALORIE_VARIANCE
         
         # Phase 1: Add required items if specified
-        remaining_nutrition = self._add_required_items(menu, foods, used_foods, remaining_nutrition, max_calories_per_item)
+        remaining_nutrition = self._add_required_items(menu, foods, used_foods, remaining_nutrition, max_calories_per_item, required_items_with_portions)
 
         
         # Phase 3: Add protein if needed (with calorie control)
@@ -37,23 +38,29 @@ class MenuBuilder:
         
         return menu
     
-    def _add_required_items(self, menu, foods, used_foods, remaining_nutrition, max_calories_per_item):
-        """Add items specified in REQUIRED_ITEM_CODES with calorie limits"""
-        required_item_codes = getattr(self.config, 'REQUIRED_ITEM_CODES', [])
-        required_portions = getattr(self.config, 'REQUIRED_ITEM_PORTIONS', {})
+    def _add_required_items(self, menu, foods, used_foods, remaining_nutrition, max_calories_per_item, required_items_with_portions):
+        """Add items specified in required_items_with_portions with their exact portions"""
+        # Use parameter instead of config
+        if not required_items_with_portions:
+            return remaining_nutrition
+            
+        print(f"🎯 Adding required items to menu: {required_items_with_portions}")
         
-        for item_code in required_item_codes:
-            required_food = self._find_food_by_code(foods, item_code)
+        for item_code, portion in required_items_with_portions.items():
+            # Fetch required item directly from database instead of searching in filtered foods
+            required_food = self._find_food_by_code_from_database(item_code)
             if required_food:
-                # Calculate portion with calorie limit
-                portion = self._get_required_portion_with_limit(required_food, item_code, required_portions, remaining_nutrition, max_calories_per_item)
-                
+                # Use the exact portion provided from frontend
                 menu.add_item(MenuItem(required_food, portion))
                 used_foods.add(required_food.item_code)
+                
+                print(f"✅ Added required item: {required_food.name} ({portion}g) - USER SPECIFIED PORTION")
                 
                 # Update remaining nutrition
                 item_nutrition = required_food.get_nutrition_for_portion(portion)
                 remaining_nutrition = self._subtract_nutrition(remaining_nutrition, item_nutrition)
+            else:
+                print(f"⚠️ Required item {item_code} not found in database")
         
         return remaining_nutrition
     
@@ -78,12 +85,33 @@ class MenuBuilder:
         return remaining_nutrition
     
     def _add_carbs_if_needed(self, menu, foods, used_foods, remaining_nutrition, num_items, max_calories_per_item):
-        """Add carb source with calorie control"""
-        if not any(self.food_classifier.is_fiber_source(item.food) for item in menu.items):
-            carb_foods = [f for f in foods if f.item_code not in used_foods 
-                         and self.food_classifier.is_fiber_source(f)]
+        """Add carb source with calorie control - improved to include staple carbs"""
+        # Check if we already have carb sources in the menu
+        has_carbs = any(f.nutrition_per_100g.carbs >= 20 for item in menu.items for f in [item.food])
+        
+        if not has_carbs and len(menu.items) < num_items:
+            # Define carb-rich subcategories (staples + fiber sources)
+            carb_subcategories = [
+                'אורז וקטניות',  # Rice and legumes
+                'פסטה, פתיתים, קוסקוס',  # Pasta, flakes, couscous  
+                'לחם, פיתה, לחמניה',  # Bread, pita, rolls
+                'דגנים וחטיפי אנרגיה',  # Grains and energy snacks
+                'פיצות, מאפים ובצקים קפואים',  # Frozen pizzas and pastries
+                'מוצרי אפיה',  # Baking products
+            ]
             
-            if carb_foods and len(menu.items) < num_items:
+            # Filter for carb foods (either from carb subcategories OR high carb content)
+            carb_foods = [f for f in foods if f.item_code not in used_foods and (
+                f.subcategory in carb_subcategories or  # Staple carb categories
+                f.nutrition_per_100g.carbs >= 25  # High carb content foods
+            )]
+            
+            print(f"🔍 Found {len(carb_foods)} potential carb foods")
+            if carb_foods:
+                # Debug: show subcategories available
+                subcategories = set(f.subcategory for f in carb_foods)
+                print(f"📋 Available carb subcategories: {', '.join(sorted(subcategories))}")
+                
                 selected_carb = self._select_carb_food(carb_foods)
                 # Use calorie-controlled portion calculation
                 portion = self._calculate_controlled_portion(selected_carb, remaining_nutrition, max_calories_per_item, 'carbs')
@@ -225,13 +253,43 @@ class MenuBuilder:
         return random.choice(top_proteins)
     
     def _select_carb_food(self, carb_foods):
-        """Select carb food with variety (flexible top 50%)"""
-        carb_foods.sort(key=lambda f: (f.nutrition_per_100g.carbs / max(1, f.nutrition_per_100g.fat),
-                                     f.nutrition_per_100g.carbs), reverse=True)
+        """Select carb food with variety and preference for staple carbs"""
+        if not carb_foods:
+            return None
         
-        variety_count = max(10, len(carb_foods) // 2)
-        top_carbs = carb_foods[:min(variety_count, len(carb_foods))]
-        return random.choice(top_carbs)
+        # Define preferred carb subcategories (rice, pasta, bread)
+        staple_carb_subcategories = [
+            'אורז וקטניות',  # Rice and legumes
+            'פסטה, פתיתים, קוסקוס',  # Pasta, flakes, couscous  
+            'לחם, פיתה, לחמניה',  # Bread, pita, rolls
+            'דגנים וחטיפי אנרגיה'  # Grains and energy snacks
+        ]
+        
+        # Separate staple carbs from other carbs
+        staple_carbs = [f for f in carb_foods if f.subcategory in staple_carb_subcategories]
+        other_carbs = [f for f in carb_foods if f.subcategory not in staple_carb_subcategories]
+        
+        # 70% chance to pick from staple carbs if available
+        if staple_carbs and random.random() < 0.7:
+            print(f"🍚 Selecting from {len(staple_carbs)} staple carb options")
+            selected_pool = staple_carbs
+        else:
+            print(f"🌾 Selecting from {len(carb_foods)} total carb options")
+            selected_pool = carb_foods
+        
+        # Sort by carb content but not too strictly - allow for variety
+        selected_pool.sort(key=lambda f: (
+            f.nutrition_per_100g.carbs / max(1, f.nutrition_per_100g.fat),
+            f.nutrition_per_100g.carbs
+        ), reverse=True)
+        
+        # Take top 70% to ensure variety but avoid worst options
+        variety_count = max(5, int(len(selected_pool) * 0.7))
+        top_carbs = selected_pool[:variety_count]
+        
+        selected = random.choice(top_carbs)
+        print(f"🎯 Selected carb: {selected.name} ({selected.subcategory})")
+        return selected
     
     def _select_balanced_food(self, foods, remaining_nutrition, current_menu):
         """Select food based on macro needs with high variety"""
@@ -293,6 +351,24 @@ class MenuBuilder:
             if food.item_code == item_code:
                 return food
         return None
+    
+    def _find_food_by_code_from_database(self, item_code):
+        """Find food by item code directly from database"""
+        if not self.food_provider:
+            print(f"❌ No food provider available to fetch item {item_code}")
+            return None
+        
+        try:
+            # Use the food provider to get the specific item by code
+            foods = self.food_provider.get_foods_by_item_codes([item_code])
+            if foods and len(foods) > 0:
+                return foods[0]
+            else:
+                print(f"❌ Item {item_code} not found in database")
+                return None
+        except Exception as e:
+            print(f"❌ Error fetching item {item_code} from database: {e}")
+            return None
     
     def _subtract_nutrition(self, target, subtract):
         """Subtract nutrition values, ensuring no negatives"""

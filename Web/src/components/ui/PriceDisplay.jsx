@@ -3,6 +3,9 @@ import { MapPin, Clock, ExternalLink } from 'lucide-react';
 
 const PriceDisplay = ({ product, formatPrice }) => {
   // Store mapping for display names and locations
+
+
+  //TODO: change this shit
   const storeDisplayInfo = {
     'Shufersal': { displayName: 'שופרסל', location: 'רחובות' },
     'Rami Levy': { displayName: 'רמי לוי', location: 'תל אביב' },

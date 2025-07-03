@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { calculateMacroPercentages } from '../../utils/menuUtils';
 
 const MenuForm = ({ 
@@ -15,41 +15,11 @@ const MenuForm = ({
   toggleSubcategory
 }) => {
   const macroPercentages = calculateMacroPercentages(formData);
+  const [showCategoryModal, setShowCategoryModal] = useState(false);
 
   return (
     <div className="menu-form">
       <h3 className="form-title">Nutrition Targets</h3>
-      
-      {/* Quick Presets */}
-      <div className="presets-section">
-        <h4 className="presets-title">Quick Presets:</h4>
-        <div className="presets-grid">
-          <button
-            className="preset-button"
-            onClick={() => applyPreset('weightLoss')}
-          >
-            🏃‍♀️ Weight Loss
-          </button>
-          <button
-            className="preset-button"
-            onClick={() => applyPreset('maintenance')}
-          >
-            ⚖️ Maintenance
-          </button>
-          <button
-            className="preset-button"
-            onClick={() => applyPreset('bulking')}
-          >
-            💪 Bulking
-          </button>
-          <button
-            className="preset-button"
-            onClick={() => applyPreset('keto')}
-          >
-            🥑 Keto
-          </button>
-        </div>
-      </div>
 
       {/* Macro Input */}
       <div className="form-group">
@@ -183,29 +153,27 @@ const MenuForm = ({
           )}
         </div>
 
-        {subcategoriesLoading ? (
-          <div className="loading-subcategories">
-            <div className="loading-spinner"></div>
-            <span>Loading subcategories...</span>
-          </div>
-        ) : (
-          <div className="subcategories-grid">
-            {availableSubcategories.length > 0 ? (
-              availableSubcategories.map((subcategory) => (
-                <label key={subcategory} className="subcategory-checkbox">
-                  <input
-                    type="checkbox"
-                    checked={formData.subcategories.includes(subcategory)}
-                    onChange={() => toggleSubcategory(subcategory)}
-                  />
-                  <span className="checkbox-label">{subcategory}</span>
-                </label>
-              ))
-            ) : (
-              <p className="no-subcategories">No subcategories available</p>
-            )}
-          </div>
-        )}
+        <button
+          type="button"
+          onClick={() => setShowCategoryModal(true)}
+          className="category-selection-btn"
+          disabled={subcategoriesLoading}
+        >
+          {subcategoriesLoading ? (
+            <>
+              <div className="loading-spinner"></div>
+              Loading categories...
+            </>
+          ) : (
+            <>
+              <span>🏷️</span>
+              {formData.subcategories.length > 0 
+                ? `Selected ${formData.subcategories.length} categories` 
+                : 'Select Food Categories'
+              }
+            </>
+          )}
+        </button>
 
         <div className="field-help">
           Select specific subcategories or leave none selected to use all available food types.
@@ -275,6 +243,73 @@ const MenuForm = ({
           </button>
         )}
       </div>
+
+      {/* Fullscreen Category Selection Modal */}
+      {showCategoryModal && (
+        <div className="category-modal-overlay" onClick={() => setShowCategoryModal(false)}>
+          <div className="category-modal" onClick={(e) => e.stopPropagation()}>
+            <div className="category-modal-header">
+              <h2 className="category-modal-title">
+                <span>🏷️</span>
+                Select Food Categories
+              </h2>
+              <button
+                onClick={() => setShowCategoryModal(false)}
+                className="category-modal-close"
+              >
+                ✕
+              </button>
+            </div>
+
+            <div className="category-modal-info">
+              <p>Choose specific food subcategories to include in your menu generation.</p>
+              <p className="selected-count">
+                {formData.subcategories.length > 0 
+                  ? `${formData.subcategories.length} categories selected`
+                  : 'No categories selected (all will be used)'
+                }
+              </p>
+            </div>
+
+            <div className="category-modal-content">
+              <div className="category-modal-grid">
+                {availableSubcategories.length > 0 ? (
+                  availableSubcategories.map((subcategory) => (
+                    <label key={subcategory} className="category-modal-checkbox">
+                      <input
+                        type="checkbox"
+                        checked={formData.subcategories.includes(subcategory)}
+                        onChange={() => toggleSubcategory(subcategory)}
+                      />
+                      <span className="category-checkbox-label">{subcategory}</span>
+                    </label>
+                  ))
+                ) : (
+                  <p className="no-categories">No subcategories available</p>
+                )}
+              </div>
+            </div>
+
+            <div className="category-modal-actions">
+              <button
+                onClick={() => {
+                  // Clear all selections
+                  formData.subcategories.forEach(cat => toggleSubcategory(cat));
+                }}
+                className="category-action-btn clear"
+              >
+                Clear All
+              </button>
+              <button
+                onClick={() => setShowCategoryModal(false)}
+                className="category-action-btn done"
+              >
+                Done ({formData.subcategories.length} selected)
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

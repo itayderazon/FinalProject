@@ -1,8 +1,10 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { nutritionService } from '../services/nutritionService';
 import { showNotification } from '../utils/menuUtils';
 
 export const useMenuGenerator = () => {
+  const [searchParams] = useSearchParams();
   const [loading, setLoading] = useState(false);
   const [generatedMenus, setGeneratedMenus] = useState([]);
   const [savedMenus, setSavedMenus] = useState([]);
@@ -10,28 +12,63 @@ export const useMenuGenerator = () => {
   const [availableSubcategories, setAvailableSubcategories] = useState([]);
   const [subcategoriesLoading, setSubcategoriesLoading] = useState(false);
   const [formData, setFormData] = useState({
-    calories: 2000,
-    protein: 150,
-    carbs: 200,
-    fat: 65,
+    calories: 500,
+    protein: 50,
+    carbs: 50,
+    fat: 11,
     meal_template: '',
     subcategories: [],
     num_items: 5,
     include_prices: true,
-    requiredProducts: []
+    requiredProducts: [],
+    requiredProductPortions: {}
   });
+
+  // Parse productIds from URL parameters
+  const productIdsFromUrl = useMemo(() => {
+    const requiredProducts = searchParams.get('requiredProducts');
+    if (requiredProducts) {
+      return requiredProducts.split(',').filter(id => id.trim());
+    }
+    return [];
+  }, [searchParams]);
 
   const presets = {
     weightLoss: { calories: 1500, protein: 130, carbs: 120, fat: 50 },
     maintenance: { calories: 2000, protein: 150, carbs: 200, fat: 65 },
     bulking: { calories: 2800, protein: 200, carbs: 350, fat: 85 },
-    keto: { calories: 1800, protein: 120, carbs: 30, fat: 140 }
   };
+
+  // Define setRequiredProducts before it's used in useEffect
+  const setRequiredProducts = useCallback((productIds) => {
+    setFormData(prev => ({
+      ...prev,
+      requiredProducts: productIds
+    }));
+  }, []);
+
+  // Handle portion updates for required products
+  const updateProductPortion = useCallback((productId, portion) => {
+    setFormData(prev => ({
+      ...prev,
+      requiredProductPortions: {
+        ...prev.requiredProductPortions,
+        [productId]: portion
+      }
+    }));
+  }, []);
 
   useEffect(() => {
     loadSavedMenus();
     loadSubcategories();
   }, []);
+
+  // Handle URL parameters for required products
+  useEffect(() => {
+    if (productIdsFromUrl.length > 0) {
+      setRequiredProducts(productIdsFromUrl);
+    }
+  }, [productIdsFromUrl, setRequiredProducts]);
 
   const loadSavedMenus = async () => {
     try {
@@ -87,6 +124,15 @@ export const useMenuGenerator = () => {
     try {
       setLoading(true);
       
+      // Transform required products into the format expected by backend
+      let requiredProductsForAPI = null;
+      if (formData.requiredProducts && formData.requiredProducts.length > 0) {
+        requiredProductsForAPI = formData.requiredProducts.map(productId => ({
+          item_id: productId,
+          portion_grams: formData.requiredProductPortions[productId] || 100 // Default to 100g if no portion specified
+        }));
+      }
+      
       const menuData = {
         calories: formData.calories,
         protein: formData.protein,
@@ -96,7 +142,7 @@ export const useMenuGenerator = () => {
         ...(formData.meal_template && { meal_template: formData.meal_template }),
         ...(formData.subcategories && formData.subcategories.length > 0 && { subcategories: formData.subcategories }),
         ...(formData.num_items && { num_items: formData.num_items }),
-        ...(formData.requiredProducts && formData.requiredProducts.length > 0 && { requiredProducts: formData.requiredProducts })
+        ...(requiredProductsForAPI && { requiredProducts: requiredProductsForAPI })
       };
 
       
@@ -246,13 +292,6 @@ export const useMenuGenerator = () => {
     });
   };
 
-  const setRequiredProducts = useCallback((productIds) => {
-    setFormData(prev => ({
-      ...prev,
-      requiredProducts: productIds
-    }));
-  }, []);
-
   const removeRequiredProduct = useCallback((productId) => {
     setFormData(prev => {
       // Convert productId to string for comparison since URL params are strings
@@ -275,6 +314,7 @@ export const useMenuGenerator = () => {
     presets,
     availableSubcategories,
     subcategoriesLoading,
+    productIdsFromUrl,
     
     // Actions
     setActiveTab,
@@ -287,6 +327,7 @@ export const useMenuGenerator = () => {
     toggleSubcategory,
     loadSavedMenus,
     setRequiredProducts,
-    removeRequiredProduct
+    removeRequiredProduct,
+    updateProductPortion
   };
 }; 
