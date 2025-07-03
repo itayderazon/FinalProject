@@ -1,6 +1,7 @@
 import api from './api';
+import axios from 'axios';
 
-const PYTHON_API_URL =  'http://localhost:3000/api';
+const PYTHON_API_URL = import.meta.env.VITE_PYTHON_API_URL;
 
 export const nutritionService = {
   async generateMenu(nutritionData) {

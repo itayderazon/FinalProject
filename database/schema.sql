@@ -1,5 +1,3 @@
-#docker exec -i nutrition-postgres psql -U nutrition_user -d nutrition_app < schema.sql
-
 -- Enable required extensions
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 CREATE EXTENSION IF NOT EXISTS "pg_trgm";        -- Full-text search
@@ -11,7 +9,7 @@ CREATE EXTENSION IF NOT EXISTS "btree_gin";      -- Better indexing
 -- ==========================================
 
 -- Categories (discovered from nutrition_data.json)
-CREATE TABLE categories (
+CREATE TABLE IF NOT EXISTS categories (
     id SERIAL PRIMARY KEY,
     name_he VARCHAR(100) NOT NULL UNIQUE,
     name_en VARCHAR(100),
@@ -22,7 +20,7 @@ CREATE TABLE categories (
 );
 
 -- Subcategories (discovered from nutrition_data.json)
-CREATE TABLE subcategories (
+CREATE TABLE IF NOT EXISTS subcategories (
     id SERIAL PRIMARY KEY,
     category_id INTEGER NOT NULL REFERENCES categories(id),
     name_he VARCHAR(100) NOT NULL,
@@ -34,7 +32,7 @@ CREATE TABLE subcategories (
 );
 
 -- Supermarkets (discovered from price field names)
-CREATE TABLE supermarkets (
+CREATE TABLE IF NOT EXISTS supermarkets (
     id SERIAL PRIMARY KEY,
     name VARCHAR(100) NOT NULL UNIQUE,
     price_field_name VARCHAR(100) UNIQUE,    -- "shufersal price", "rami levi price"
@@ -45,7 +43,7 @@ CREATE TABLE supermarkets (
 );
 
 -- Allergens (discovered from nutrition_data.json allergens arrays)
-CREATE TABLE allergens (
+CREATE TABLE IF NOT EXISTS allergens (
     id SERIAL PRIMARY KEY,
     name VARCHAR(50) UNIQUE NOT NULL,
     name_he VARCHAR(50),
@@ -57,7 +55,7 @@ CREATE TABLE allergens (
 -- MAIN PRODUCT TABLE
 -- ==========================================
 
-CREATE TABLE products (
+CREATE TABLE IF NOT EXISTS products (
     id SERIAL PRIMARY KEY,
     item_code VARCHAR(50) UNIQUE NOT NULL,
     name TEXT NOT NULL,
@@ -86,7 +84,7 @@ CREATE TABLE products (
 -- PRICE HISTORY
 -- ==========================================
 
-CREATE TABLE price_history (
+CREATE TABLE IF NOT EXISTS price_history (
     id BIGSERIAL PRIMARY KEY,
     item_code VARCHAR(50) NOT NULL,              -- Store original ItemCode from price data
     product_id INTEGER REFERENCES products(id) ON DELETE SET NULL,  -- Link to nutrition product if exists
@@ -102,14 +100,14 @@ CREATE TABLE price_history (
 );
 
 -- Create unique index for preventing duplicates per day using item_code
-CREATE UNIQUE INDEX idx_price_history_unique_daily 
+CREATE UNIQUE INDEX IF NOT EXISTS idx_price_history_unique_daily 
 ON price_history(item_code, supermarket_id, record_date);
 
 -- ==========================================
 -- USER TABLES (Keep minimal for your app)
 -- ==========================================
 
-CREATE TABLE users (
+CREATE TABLE IF NOT EXISTS users (
     id SERIAL PRIMARY KEY,
     email VARCHAR(255) UNIQUE NOT NULL,
     password_hash VARCHAR(255) NOT NULL,
@@ -122,7 +120,7 @@ CREATE TABLE users (
     updated_at TIMESTAMPTZ DEFAULT NOW()
 );
 
-CREATE TABLE user_nutrition_profiles (
+CREATE TABLE IF NOT EXISTS user_nutrition_profiles (
     user_id INTEGER PRIMARY KEY REFERENCES users(id) ON DELETE CASCADE,
     height INTEGER,
     weight DECIMAL(5,2),
@@ -135,7 +133,7 @@ CREATE TABLE user_nutrition_profiles (
     updated_at TIMESTAMPTZ DEFAULT NOW()
 );
 
-CREATE TABLE nutrition_logs (
+CREATE TABLE IF NOT EXISTS nutrition_logs (
     id SERIAL PRIMARY KEY,
     user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
     log_date DATE NOT NULL,
@@ -149,14 +147,14 @@ CREATE TABLE nutrition_logs (
     UNIQUE(user_id, log_date)
 );
 
-CREATE TABLE nutrition_log_meals (
+CREATE TABLE IF NOT EXISTS nutrition_log_meals (
     id SERIAL PRIMARY KEY,
     nutrition_log_id INTEGER NOT NULL REFERENCES nutrition_logs(id) ON DELETE CASCADE,
     meal_type VARCHAR(20) NOT NULL,
     meal_time TIMESTAMPTZ
 );
 
-CREATE TABLE nutrition_log_items (
+CREATE TABLE IF NOT EXISTS nutrition_log_items (
     id SERIAL PRIMARY KEY,
     meal_id INTEGER NOT NULL REFERENCES nutrition_log_meals(id) ON DELETE CASCADE,
     product_id INTEGER REFERENCES products(id),
@@ -173,7 +171,7 @@ CREATE TABLE nutrition_log_items (
 -- DAILY MENU PLANNING TABLES
 -- ==========================================
 
-CREATE TABLE daily_menus (
+CREATE TABLE IF NOT EXISTS daily_menus (
     id SERIAL PRIMARY KEY,
     user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
     menu_date DATE NOT NULL,
@@ -189,7 +187,7 @@ CREATE TABLE daily_menus (
     UNIQUE(user_id, menu_date, name)
 );
 
-CREATE TABLE daily_menu_meals (
+CREATE TABLE IF NOT EXISTS daily_menu_meals (
     id SERIAL PRIMARY KEY,
     daily_menu_id INTEGER NOT NULL REFERENCES daily_menus(id) ON DELETE CASCADE,
     meal_type VARCHAR(20) NOT NULL, -- 'breakfast', 'lunch', 'dinner', 'snack'
@@ -203,7 +201,7 @@ CREATE TABLE daily_menu_meals (
     created_at TIMESTAMPTZ DEFAULT NOW()
 );
 
-CREATE TABLE daily_menu_items (
+CREATE TABLE IF NOT EXISTS daily_menu_items (
     id SERIAL PRIMARY KEY,
     daily_menu_meal_id INTEGER NOT NULL REFERENCES daily_menu_meals(id) ON DELETE CASCADE,
     product_id INTEGER REFERENCES products(id),
@@ -224,7 +222,7 @@ CREATE TABLE daily_menu_items (
 -- SAVED GENERATED MENUS TABLE
 -- ==========================================
 
-CREATE TABLE saved_generated_menus (
+CREATE TABLE IF NOT EXISTS saved_generated_menus (
     id SERIAL PRIMARY KEY,
     user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
     name VARCHAR(255) NOT NULL,
@@ -238,7 +236,7 @@ CREATE TABLE saved_generated_menus (
     updated_at TIMESTAMPTZ DEFAULT NOW()
 );
 
-CREATE TABLE saved_generated_menu_items (
+CREATE TABLE IF NOT EXISTS saved_generated_menu_items (
     id SERIAL PRIMARY KEY,
     saved_menu_id INTEGER NOT NULL REFERENCES saved_generated_menus(id) ON DELETE CASCADE,
     product_id INTEGER REFERENCES products(id),
@@ -257,7 +255,7 @@ CREATE TABLE saved_generated_menu_items (
 -- PROCESSING TRACKING
 -- ==========================================
 
-CREATE TABLE data_loads (
+CREATE TABLE IF NOT EXISTS data_loads (
     id SERIAL PRIMARY KEY,
     file_path VARCHAR(500) NOT NULL,
     file_type VARCHAR(50) NOT NULL,           -- 'nutrition', 'prices', 'categories'
@@ -285,42 +283,42 @@ CREATE TABLE data_loads (
 -- ==========================================
 
 -- Product indexes
-CREATE INDEX idx_products_item_code ON products(item_code);
-CREATE INDEX idx_products_active ON products(is_active) WHERE is_active = true;
-CREATE INDEX idx_products_category ON products(category_id);
-CREATE INDEX idx_products_menu_eligible ON products(can_include_in_menu) WHERE can_include_in_menu = true;
+CREATE INDEX IF NOT EXISTS idx_products_item_code ON products(item_code);
+CREATE INDEX IF NOT EXISTS idx_products_active ON products(is_active) WHERE is_active = true;
+CREATE INDEX IF NOT EXISTS idx_products_category ON products(category_id);
+CREATE INDEX IF NOT EXISTS idx_products_menu_eligible ON products(can_include_in_menu) WHERE can_include_in_menu = true;
 
 -- JSONB nutrition index
-CREATE INDEX idx_products_nutrition_gin ON products USING GIN(nutrition);
+CREATE INDEX IF NOT EXISTS idx_products_nutrition_gin ON products USING GIN(nutrition);
 
 -- Price indexes
-CREATE INDEX idx_price_history_item_code ON price_history(item_code);
-CREATE INDEX idx_price_history_product_time ON price_history(product_id, recorded_at DESC);
-CREATE INDEX idx_price_history_supermarket_time ON price_history(supermarket_id, recorded_at DESC);
+CREATE INDEX IF NOT EXISTS idx_price_history_item_code ON price_history(item_code);
+CREATE INDEX IF NOT EXISTS idx_price_history_product_time ON price_history(product_id, recorded_at DESC);
+CREATE INDEX IF NOT EXISTS idx_price_history_supermarket_time ON price_history(supermarket_id, recorded_at DESC);
 
 -- Text search (remove hebrew config, use simple)
-CREATE INDEX idx_products_name_search ON products USING GIN(to_tsvector('simple', coalesce(name, '')));
+CREATE INDEX IF NOT EXISTS idx_products_name_search ON products USING GIN(to_tsvector('simple', coalesce(name, '')));
 
 -- Category indexes
-CREATE INDEX idx_categories_name_he ON categories(name_he);
-CREATE INDEX idx_subcategories_name_he ON subcategories(name_he);
+CREATE INDEX IF NOT EXISTS idx_categories_name_he ON categories(name_he);
+CREATE INDEX IF NOT EXISTS idx_subcategories_name_he ON subcategories(name_he);
 
 -- For nutrition logs
-CREATE INDEX idx_nutrition_logs_user_date ON nutrition_logs(user_id, log_date);
-CREATE INDEX idx_nutrition_log_meals_log_id ON nutrition_log_meals(nutrition_log_id);
-CREATE INDEX idx_nutrition_log_items_meal_id ON nutrition_log_items(meal_id);
+CREATE INDEX IF NOT EXISTS idx_nutrition_logs_user_date ON nutrition_logs(user_id, log_date);
+CREATE INDEX IF NOT EXISTS idx_nutrition_log_meals_log_id ON nutrition_log_meals(nutrition_log_id);
+CREATE INDEX IF NOT EXISTS idx_nutrition_log_items_meal_id ON nutrition_log_items(meal_id);
 
 -- For daily menus
-CREATE INDEX idx_daily_menus_user_date ON daily_menus(user_id, menu_date);
-CREATE INDEX idx_daily_menus_user_templates ON daily_menus(user_id, is_template) WHERE is_template = true;
-CREATE INDEX idx_daily_menu_meals_menu_id ON daily_menu_meals(daily_menu_id);
-CREATE INDEX idx_daily_menu_meals_type ON daily_menu_meals(meal_type);
-CREATE INDEX idx_daily_menu_items_meal_id ON daily_menu_items(daily_menu_meal_id);
-CREATE INDEX idx_daily_menu_items_source ON daily_menu_items(source_type, source_menu_id);
+CREATE INDEX IF NOT EXISTS idx_daily_menus_user_date ON daily_menus(user_id, menu_date);
+CREATE INDEX IF NOT EXISTS idx_daily_menus_user_templates ON daily_menus(user_id, is_template) WHERE is_template = true;
+CREATE INDEX IF NOT EXISTS idx_daily_menu_meals_menu_id ON daily_menu_meals(daily_menu_id);
+CREATE INDEX IF NOT EXISTS idx_daily_menu_meals_type ON daily_menu_meals(meal_type);
+CREATE INDEX IF NOT EXISTS idx_daily_menu_items_meal_id ON daily_menu_items(daily_menu_meal_id);
+CREATE INDEX IF NOT EXISTS idx_daily_menu_items_source ON daily_menu_items(source_type, source_menu_id);
 
 -- For saved generated menus
-CREATE INDEX idx_saved_generated_menus_user ON saved_generated_menus(user_id, created_at DESC);
-CREATE INDEX idx_saved_generated_menu_items_menu_id ON saved_generated_menu_items(saved_menu_id);
+CREATE INDEX IF NOT EXISTS idx_saved_generated_menus_user ON saved_generated_menus(user_id, created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_saved_generated_menu_items_menu_id ON saved_generated_menu_items(saved_menu_id);
 
 -- ==========================================
 -- HELPER FUNCTIONS
@@ -414,30 +412,37 @@ $$ LANGUAGE plpgsql;
 -- TRIGGERS
 -- ==========================================
 
+DROP TRIGGER IF EXISTS update_products_updated_at ON products;
 CREATE TRIGGER update_products_updated_at 
     BEFORE UPDATE ON products
     FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
+DROP TRIGGER IF EXISTS update_categories_updated_at ON categories;
 CREATE TRIGGER update_categories_updated_at 
     BEFORE UPDATE ON categories
     FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
+DROP TRIGGER IF EXISTS update_subcategories_updated_at ON subcategories;
 CREATE TRIGGER update_subcategories_updated_at 
     BEFORE UPDATE ON subcategories
     FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
+DROP TRIGGER IF EXISTS update_supermarkets_updated_at ON supermarkets;
 CREATE TRIGGER update_supermarkets_updated_at 
     BEFORE UPDATE ON supermarkets
     FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
+DROP TRIGGER IF EXISTS calculate_products_quality_score ON products;
 CREATE TRIGGER calculate_products_quality_score 
     BEFORE INSERT OR UPDATE ON products
     FOR EACH ROW EXECUTE FUNCTION calculate_data_quality_score();
 
+DROP TRIGGER IF EXISTS update_products_menu_eligibility ON products;
 CREATE TRIGGER update_products_menu_eligibility 
     BEFORE INSERT OR UPDATE ON products
     FOR EACH ROW EXECUTE FUNCTION update_menu_eligibility();
 
+DROP TRIGGER IF EXISTS update_products_category_counts ON products;
 CREATE TRIGGER update_products_category_counts 
     AFTER INSERT OR UPDATE OR DELETE ON products
     FOR EACH ROW EXECUTE FUNCTION update_category_counts();

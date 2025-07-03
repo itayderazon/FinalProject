@@ -46,9 +46,6 @@ def find_data_directory():
     """Auto-discover data directory"""
     possible_paths = [
         os.getenv('DATA_DIRECTORY'),
-        '../data',
-        './data',
-        '../../data',
         '../data/Final_Data',
     ]
     

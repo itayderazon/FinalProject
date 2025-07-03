@@ -36,9 +36,13 @@ class MenuValidator:
         
         return self.preference_filter.validate_required_categories(menu)
     
-    def validate_required_items(self, menu):
+    def validate_required_items(self, menu, required_items_with_portions=None):
         """Check if menu contains all required item codes"""
-        required_item_codes = getattr(self.config, 'REQUIRED_ITEM_CODES', [])
+        # Use parameter if provided, otherwise fall back to config
+        if required_items_with_portions is not None:
+            required_item_codes = list(required_items_with_portions.keys())
+        else:
+            required_item_codes = getattr(self.config, 'REQUIRED_ITEM_CODES', [])
         
         if not required_item_codes:
             return True, "No required items"

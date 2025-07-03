@@ -11,6 +11,7 @@ import Homepage from './pages/Homepage';
 import MenuGenerator from './pages/MenuGenerator';
 import DailyMenuPlanner from './pages/DailyMenuPlanner';
 import ProductCatalog from './pages/ProductCatalog';
+import ShoppingCart from './pages/ShoppingCart';
 import Login from './pages/auth/Login';
 import Register from './pages/auth/Register';
 import NotFound from './pages/NotFound';
@@ -41,7 +42,7 @@ const PublicRoute = ({ children }) => {
     return <LoadingSpinner fullScreen text="Checking authentication..." />;
   }
   
-  return !user ? children : <Navigate to="/dashboard" replace />;
+  return !user ? children : <Navigate to="/menu-generator" replace />;
 };
 
 function AppContent() {
@@ -97,6 +98,11 @@ function AppContent() {
           <Route path="/products" element={
             <ProtectedRoute>
               <ProductCatalog />
+            </ProtectedRoute>
+          } />
+          <Route path="/cart" element={
+            <ProtectedRoute>
+              <ShoppingCart />
             </ProtectedRoute>
           } />
           

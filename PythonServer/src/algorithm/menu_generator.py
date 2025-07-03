@@ -37,6 +37,7 @@ class MenuGenerator:
             self.food_classifier, 
             self.portion_calculator, 
             self.config,
+            self.food_provider  # Pass food provider for direct database access
         )
         
         self.menu_validator = MenuValidator(
@@ -50,7 +51,7 @@ class MenuGenerator:
             self.config
         )
     
-    def generate_menu(self, target_nutrition, subcategories=None, num_items=None, attempts=None):
+    def generate_menu(self, target_nutrition, subcategories=None, num_items=None, attempts=None, required_items_with_portions=None):
         """Generate multiple balanced menus with subcategory filtering"""
         
         # Validate required inputs
@@ -58,6 +59,12 @@ class MenuGenerator:
             raise ValueError("num_items is required - must be provided as input")
         if attempts is None:
             attempts = self.config.DEFAULT_ATTEMPTS
+        
+        # Debug: Check what required items are provided
+        if required_items_with_portions:
+            print(f"🎯 Required items with portions provided: {required_items_with_portions}")
+        else:
+            print("📝 No required items provided")
         
         if subcategories:
             print(f"Generating menu with subcategories: {subcategories}")
@@ -70,18 +77,24 @@ class MenuGenerator:
         suitable_foods = self._get_suitable_foods_by_subcategories(subcategories)
         if not suitable_foods:
             print(f"❌ No suitable foods found for subcategories: {subcategories}")
-            return None
+            # Check if we have required items and return them as fallback
+            return self._create_required_items_fallback_menu(target_nutrition, required_items_with_portions)
         
         print(f"Starting generation with {len(suitable_foods)} suitable foods...")
         
         # Generate menus (remove meal_type since we use subcategories now)
-        best_menus = self._generate_multiple_menus(suitable_foods, target_nutrition, num_items, attempts)
+        best_menus = self._generate_multiple_menus(suitable_foods, target_nutrition, num_items, attempts, required_items_with_portions)
         
         if best_menus:
             print(f"✅ Found {len(best_menus)} good menus")
             return best_menus
         else:
             print("❌ Failed to generate any valid menu")
+            # Fallback: create menu with just required items if they exist
+            fallback_menu = self._create_required_items_fallback_menu(target_nutrition, required_items_with_portions)
+            if fallback_menu:
+                print("✅ Created fallback menu with required items only")
+                return fallback_menu
             return None
     
     def _get_suitable_foods_by_subcategories(self, subcategories):
@@ -90,37 +103,103 @@ class MenuGenerator:
         suitable_foods = self.filter_service.get_suitable_foods(subcategories=subcategories)
         return suitable_foods
     
-    def _generate_multiple_menus(self, suitable_foods, target_nutrition, num_items, attempts):
-        """Generate multiple menus (remove meal_type dependency)"""
+    def _generate_multiple_menus(self, suitable_foods, target_nutrition, num_items, attempts, required_items_with_portions):
+        """Generate multiple menus with fallback to best option if validation fails"""
         best_menus = []
+        best_invalid_menu = None
+        best_invalid_score = float('inf')
         max_menus = 3
         
         for attempt in range(attempts):
             print(f"Attempt {attempt + 1}/{attempts}")
             
             # Generate menu (remove meal_type parameter)
-            menu = self.menu_builder.build_menu(suitable_foods, target_nutrition, num_items)
+            menu = self.menu_builder.build_menu(suitable_foods, target_nutrition, num_items, required_items_with_portions)
             
             if menu and len(menu.items) > 0:
-                # Basic validation (remove meal_rules parameter)
-                is_valid, validation_msg = self.menu_validator.is_menu_complete(menu, target_nutrition)
+                # Calculate score for all menus (valid or not)
+                score = self.menu_scorer.score_menu(menu, target_nutrition)
+                menu.validation_score = score
+                
+                # Basic validation - pass required_items for validation
+                is_valid, validation_msg = self._validate_menu_with_required_items(menu, target_nutrition, required_items_with_portions)
                 
                 if is_valid:
-                    score = self.menu_scorer.score_menu(menu, target_nutrition)
-                    menu.validation_score = score
+                    menu.is_fallback = False  # Mark as normal menu
                     best_menus.append(menu)
-                    
                     print(f"✅ Valid menu found (attempt {attempt + 1})")
                     
                     if len(best_menus) >= max_menus:
                         break
                 else:
                     print(f"❌ Menu validation failed: {validation_msg}")
+                    # Track the best invalid menu as fallback option
+                    if score < best_invalid_score:
+                        best_invalid_score = score
+                        best_invalid_menu = menu
+                        best_invalid_menu.is_fallback = True
+                        best_invalid_menu.fallback_reason = validation_msg
+                        print(f"📝 New best invalid menu (score: {score:.3f})")
         
-        best_menus.sort(key=lambda m: m.validation_score, reverse=False)
-        return best_menus[:max_menus]
+        # If we found valid menus, return them
+        if best_menus:
+            best_menus.sort(key=lambda m: m.validation_score, reverse=False)
+            return best_menus[:max_menus]
+        
+        # If no valid menus but we have a best invalid one, return it
+        if best_invalid_menu:
+            print(f"⚠️ Returning best invalid menu as fallback (score: {best_invalid_score:.3f})")
+            print(f"⚠️ Fallback reason: {best_invalid_menu.fallback_reason}")
+            return [best_invalid_menu]
+        
+        return []
+    
+    def _validate_menu_with_required_items(self, menu, target_nutrition, required_items_with_portions):
+        """Validate menu including required items check"""
+        # Basic macro validation
+        if not self.menu_validator.is_menu_valid(menu, target_nutrition):
+            return False, "Failed macro validation"
+        
+        # Required items validation with parameter
+        item_valid, item_msg = self.menu_validator.validate_required_items(menu, required_items_with_portions)
+        if not item_valid:
+            return False, f"Required items validation failed: {item_msg}"
+        
+        return True, "Menu validation passed"
     
     def calculate_menu_stats(self, menu):
         """Calculate menu statistics using scorer service"""
         stats = self.menu_scorer.calculate_menu_stats(menu)
         return stats
+        
+    def _create_required_items_fallback_menu(self, target_nutrition, required_items_with_portions):
+        """Create a fallback menu containing only required items when full menu generation fails"""
+        if not required_items_with_portions:
+            print("No required items to include in fallback menu")
+            return None
+        
+        print(f"Creating fallback menu with required items: {required_items_with_portions}")
+        
+        from ..models import Menu, MenuItem
+        fallback_menu = Menu()
+        
+        required_portions = getattr(self.config, 'REQUIRED_ITEM_PORTIONS', {})
+        
+        for item_code, portion in required_items_with_portions.items():
+            # Use the menu builder's database method to fetch the item
+            required_food = self.menu_builder._find_food_by_code_from_database(item_code)
+            if required_food:
+                # Use the exact portion specified by the user
+                fallback_menu.add_item(MenuItem(required_food, portion))
+                print(f"Added required item: {required_food.name} ({portion}g) - USER SPECIFIED PORTION")
+            else:
+                print(f"⚠️ Required item {item_code} not found in database")
+        
+        if len(fallback_menu.items) > 0:
+            # Score the fallback menu but mark it as fallback
+            fallback_menu.validation_score = 999  # High score to indicate it's a fallback
+            fallback_menu.is_fallback = True
+            fallback_menu.fallback_reason = "Required items only - full menu generation failed"
+            return [fallback_menu]
+        
+        return None

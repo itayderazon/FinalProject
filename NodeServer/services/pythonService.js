@@ -1,11 +1,12 @@
 const axios = require('axios');
 const logger = require('../utils/logger');
+const config = require('../config/env');
 
 class PythonService {
   constructor() {
-    this.baseURL = process.env.PYTHON_SERVER_URL || 'http://localhost:8000';
-    this.timeout = parseInt(process.env.PYTHON_TIMEOUT) || 30000;
-    this.retries = parseInt(process.env.PYTHON_RETRIES) || 3;
+    this.baseURL = config.PYTHON_SERVER_URL;
+    this.timeout = config.PYTHON_TIMEOUT;
+    this.retries = config.PYTHON_RETRIES;
   }
 
   async makeRequest(endpoint, data, method = 'POST') {
@@ -27,6 +28,8 @@ class PythonService {
     for (let attempt = 1; attempt <= this.retries; attempt++) {
       try {
         logger.info(`Python request attempt ${attempt}: ${method} ${endpoint}`);
+        console.log(`Making request to: ${config.url}`);
+        console.log(`Request data:`, JSON.stringify(config.data, null, 2));
         const response = await axios(config);
         
         logger.info(`Python request successful: ${endpoint}`);
@@ -99,7 +102,12 @@ class PythonService {
 
   // Price comparison methods
   async comparePrices(menuItems) {
-    return await this.makeRequest('/api/price/compare', { menu_items: menuItems });
+    console.log('PythonService comparePrices called with:', menuItems);
+    const requestData = { menu_items: menuItems };
+    console.log('Sending to Python server:', JSON.stringify(requestData, null, 2));
+    const response = await this.makeRequest('/api/price/compare', requestData);
+    console.log('Python server response:', JSON.stringify(response, null, 2));
+    return response;
   }
 
   async getCheapestCombination(menuItems) {

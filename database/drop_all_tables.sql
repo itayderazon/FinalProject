@@ -1,5 +1,3 @@
-#docker exec -i nutrition-postgres psql -U nutrition_user -d nutrition_app < drop_all_tables.sql
-
 -- Drop views first
 DROP VIEW IF EXISTS v_recent_loads CASCADE;
 DROP VIEW IF EXISTS v_data_summary CASCADE;

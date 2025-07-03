@@ -1,8 +1,7 @@
 // ====================
 // src/pages/MenuGenerator.jsx - Complete Version
 // ====================
-import React, { useEffect, useMemo } from 'react';
-import { useSearchParams } from 'react-router-dom';
+import React, { useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useMenuGenerator } from '../hooks/useMenuGenerator';
 import MenuForm from '../components/menu/MenuForm';
@@ -13,7 +12,6 @@ import '../styles/MenuGenerator.css';
 
 const MenuGenerator = () => {
   const { user } = useAuth();
-  const [searchParams] = useSearchParams();
   const {
     // State
     loading,
@@ -24,6 +22,7 @@ const MenuGenerator = () => {
     presets,
     availableSubcategories,
     subcategoriesLoading,
+    productIdsFromUrl,
     
     // Actions
     setActiveTab,
@@ -36,24 +35,9 @@ const MenuGenerator = () => {
     toggleSubcategory,
     loadSavedMenus,
     setRequiredProducts,
-    removeRequiredProduct
+    removeRequiredProduct,
+    updateProductPortion
   } = useMenuGenerator();
-
-  // Memoize productIds from URL to prevent infinite loops
-  const productIdsFromUrl = useMemo(() => {
-    const requiredProducts = searchParams.get('requiredProducts');
-    if (requiredProducts) {
-      return requiredProducts.split(',').filter(id => id.trim());
-    }
-    return [];
-  }, [searchParams]);
-
-  // Handle URL parameters for required products
-  useEffect(() => {
-    if (productIdsFromUrl.length > 0) {
-      setRequiredProducts(productIdsFromUrl);
-    }
-  }, [productIdsFromUrl, setRequiredProducts]);
 
   return (
     <div className="menu-generator">
@@ -62,7 +46,7 @@ const MenuGenerator = () => {
         <div className="menu-header">
           <h1 className="menu-title">
             <span>🍳</span>
-            AI Menu Generator
+            Menu Generator
           </h1>
           <p className="menu-description">
             Generate personalized meal plans based on your nutrition goals
@@ -76,10 +60,7 @@ const MenuGenerator = () => {
           <RequiredProducts 
           productIds={formData.requiredProducts || []}
             onRemoveProduct={removeRequiredProduct}
-          onUpdateProductPortion={(productId, portion) => {
-            // Handle portion updates - could store in local state or pass to parent
-            console.log(`Updated portion for product ${productId}: ${portion}`);
-          }}
+            onUpdateProductPortion={updateProductPortion}
           />
 
         {/* Tabs */}

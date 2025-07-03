@@ -107,10 +107,7 @@ class SqlFoodProvider:
         return self.foods_cache or []
     
     def get_food_by_code(self, item_code):
-        """Get specific food by item code"""
-        if not item_code:
-            return None
-        
+        """Get a specific food by its item code"""
         query = """
         SELECT 
             p.item_code,
@@ -127,15 +124,53 @@ class SqlFoodProvider:
         """
         
         try:
-            row = self.db.execute_single(query, (str(item_code),))
-            if not row:
-                return None
-            
-            return self.create_food_from_row(row)
+            rows = self.db.execute_query(query, [item_code])
+            if rows and len(rows) > 0:
+                return self.create_food_from_row(rows[0])
+            return None
             
         except Exception as e:
             print(f"Error getting food by code {item_code}: {e}")
             return None
+
+    def get_foods_by_item_codes(self, item_codes):
+        """Get specific foods by their item codes, bypassing all filtering"""
+        if not item_codes:
+            return []
+        
+        placeholders = ','.join(['%s'] * len(item_codes))
+        query = f"""
+        SELECT 
+            p.item_code,
+            p.name,
+            c.name_he as category,
+            sc.name_he as subcategory,
+            p.nutrition,
+            COALESCE((p.nutrition->>'sodium')::numeric, 0) as sodium
+        FROM products p
+        LEFT JOIN categories c ON p.category_id = c.id
+        LEFT JOIN subcategories sc ON p.subcategory_id = sc.id
+        WHERE p.id IN ({placeholders})
+        AND p.is_active = true
+        ORDER BY p.name
+        """
+        
+        try:
+            rows = self.db.execute_query(query, item_codes)
+            foods = []
+            
+            for row in rows:
+                food = self.create_food_from_row(row)
+                if food:
+                    foods.append(food)
+            
+            print(f"✅ Found {len(foods)} out of {len(item_codes)} requested items by item codes")
+            return foods
+            
+        except Exception as e:
+            print(f"Error getting foods by item codes: {e}")
+            return []
+    
     def get_filtered_foods(self, max_calories_per_100g=600, included_subcategories=None):
         """Get foods filtered by criteria"""
         

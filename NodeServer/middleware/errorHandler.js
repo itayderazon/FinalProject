@@ -1,4 +1,5 @@
 const logger = require('../utils/logger');
+const config = require('../config/env');
 
 const errorHandler = (error, req, res, next) => {
   // Log more detailed error information for debugging
@@ -53,7 +54,7 @@ const errorHandler = (error, req, res, next) => {
   }
 
   // Don't expose internal errors in production
-  if (process.env.NODE_ENV === 'production' && statusCode === 500) {
+  if (config.NODE_ENV === 'production' && statusCode === 500) {
     message = 'Something went wrong';
     details = null;
   }
@@ -69,7 +70,7 @@ const errorHandler = (error, req, res, next) => {
   }
 
   // Add stack trace in development
-  if (process.env.NODE_ENV === 'development') {
+  if (config.NODE_ENV === 'development') {
     errorResponse.stack = error.stack;
   }
 

@@ -1,8 +1,6 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { useAuth } from '../context/AuthContext';
-import { useDateNavigation } from '../hooks/useDateNavigation';
-import { useDailyMenus } from '../hooks/useDailyMenus';
-import { useModalState } from '../hooks/useModalState';
+import { useDailyMenuPlannerState } from '../hooks/useDailyMenuPlannerState';
 import CreateMenuModal from '../components/dailyMenu/CreateMenuModal';
 import AddMealModal from '../components/dailyMenu/AddMealModal';
 import NutritionSummary from '../components/dailyMenu/NutritionSummary';
@@ -15,66 +13,40 @@ import '../styles/DailyMenuPlanner.css';
 
 const DailyMenuPlanner = () => {
   const { user } = useAuth();
-  const [activeTab, setActiveTab] = useState('planner');
-
-  // Custom hooks for different concerns
-  const dateNavigation = useDateNavigation();
   const {
-    selectedDate,
-    setSelectedDate,
-    currentWeekStart,
-    navigateWeek,
-    getWeekDays,
-    getWeekRange
-  } = dateNavigation;
-
-  const menuData = useDailyMenus({
-    weekRange: getWeekRange(),
-    selectedDate
-  });
-  const {
+    // State
+    activeTab,
     loading,
+    selectedDate,
+    currentWeekStart,
     dailyMenus,
     selectedMenu,
     weeklyNutrition,
-    createMenu,
-    addMeal,
-    addGeneratedMenu,
-    deleteMeal,
-    getDayMenu
-  } = menuData;
-
-  const modalState = useModalState();
-  const {
+    weekDays,
+    
+    // Modal state
     showCreateModal,
     showAddMealModal,
     selectedMealType,
-    openCreateModal,
-    closeCreateModal,
-    openAddMealModal,
-    closeAddMealModal
-  } = modalState;
-
-  // Event handlers
-  const handleCreateMenu = async (menuData) => {
-    try {
-      await createMenu(menuData);
-      closeCreateModal();
-    } catch (error) {
-      console.error('Error creating menu:', error);
-      throw error;
-    }
-  };
-
-  const handleAddMeal = async (mealData) => {
-    try {
-      await addMeal(mealData, selectedMealType);
-      closeAddMealModal();
-    } catch (error) {
-      console.error('Error adding meal:', error);
-      throw error;
-    }
-  };
+    
+    // Handlers
+    onTabChange,
+    onDateSelect,
+    onNavigateWeek,
+    onCreateMenu,
+    onAddMeal,
+    onDeleteMeal,
+    onAddGeneratedMenu,
+    
+    // Modal handlers
+    onOpenCreateModal,
+    onCloseCreateModal,
+    onOpenAddMealModal,
+    onCloseAddMealModal,
+    
+    // Utility functions
+    getDayMenu
+  } = useDailyMenuPlannerState();
 
   if (loading) {
     return <LoadingSpinner fullScreen text="Loading your meal plans..." />;
@@ -97,7 +69,7 @@ const DailyMenuPlanner = () => {
         {/* Tabs */}
         <PlannerTabs 
           activeTab={activeTab} 
-          onTabChange={setActiveTab} 
+          onTabChange={onTabChange} 
         />
 
         {/* Content */}
@@ -105,23 +77,23 @@ const DailyMenuPlanner = () => {
           <div className="planner-content">
             <WeekNavigation 
               currentWeekStart={currentWeekStart}
-              onNavigateWeek={navigateWeek}
+              onNavigateWeek={onNavigateWeek}
             />
 
             <WeeklyCalendar 
-              weekDays={getWeekDays()}
+              weekDays={weekDays}
               selectedDate={selectedDate}
-              onDateSelect={setSelectedDate}
+              onDateSelect={onDateSelect}
               getDayMenu={getDayMenu}
             />
 
             <DayDetail 
               selectedDate={selectedDate}
               selectedMenu={selectedMenu}
-              onCreateMenu={openCreateModal}
-              onAddMeal={openAddMealModal}
-              onDeleteMeal={deleteMeal}
-              onAddGeneratedMenu={addGeneratedMenu}
+              onCreateMenu={onOpenCreateModal}
+              onAddMeal={onOpenAddMealModal}
+              onDeleteMeal={onDeleteMeal}
+              onAddGeneratedMenu={onAddGeneratedMenu}
             />
           </div>
         )}
@@ -140,16 +112,16 @@ const DailyMenuPlanner = () => {
       {showCreateModal && (
         <CreateMenuModal
           selectedDate={selectedDate}
-          onSubmit={handleCreateMenu}
-          onClose={closeCreateModal}
+          onSubmit={onCreateMenu}
+          onClose={onCloseCreateModal}
         />
       )}
 
       {showAddMealModal && (
         <AddMealModal
           mealType={selectedMealType}
-          onSubmit={handleAddMeal}
-          onClose={closeAddMealModal}
+          onSubmit={onAddMeal}
+          onClose={onCloseAddMealModal}
         />
       )}
     </div>

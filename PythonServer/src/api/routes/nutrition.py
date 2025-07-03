@@ -28,10 +28,29 @@ async def calculate_nutrition(request: NutritionRequest):
         
         logger.info(f"Generating menu: {target_nutrition.calories}cal")
         
+        # Extract required items and portions if provided
+        required_items_with_portions = None
+        if request.requiredProducts:
+            required_items_with_portions = {
+                item.item_id: item.portion_grams 
+                for item in request.requiredProducts
+            }
+            logger.info(f"Required items with portions: {required_items_with_portions}")
+        
+        # Use default num_items if not provided
+        num_items = request.num_items if request.num_items is not None else 5
+        
+        # Use subcategories if provided
+        subcategories = request.subcategories if request.subcategories else None
+        
+        logger.info(f"Menu generation parameters: num_items={num_items}, subcategories={subcategories}")
+        
         menus = app_service.menu_generator.generate_menu(
-            target_nutrition,
-            request.subcategories,
-            request.num_items
+            target_nutrition=target_nutrition,
+            subcategories=subcategories,
+            num_items=num_items,
+            attempts=20,
+            required_items_with_portions=required_items_with_portions
         )
         
         generation_time = (datetime.now() - start_time).total_seconds() * 1000

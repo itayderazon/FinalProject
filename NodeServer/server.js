@@ -13,6 +13,7 @@ const userRoutes = require('./routes/userPostgres');
 const nutritionRoutes = require('./routes/nutrition');
 const productRoutes = require('./routes/products');
 const priceRoutes = require('./routes/price');
+const cartRoutes = require('./routes/cart');
 const dailyMenuRoutes = require('./routes/dailyMenus');
 const imageRoutes = require('./routes/images');
 const errorHandler = require('./middleware/errorHandler');
@@ -25,12 +26,7 @@ const PORT = config.PORT;
 // Security middleware
 app.use(helmet());
 app.use(cors({
-  origin: [
-    'http://localhost:5173', 
-    'http://localhost:5174',
-    'http://127.0.0.1:5173',   // ← Add this
-    'http://127.0.0.1:5174'    // ← Add this
-  ],
+  origin: config.CORS_ORIGINS,
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization']
@@ -60,6 +56,7 @@ app.use('/api/users', userRoutes);
 app.use('/api/nutrition', nutritionRoutes);
 app.use('/api/products', productRoutes);
 app.use('/api/price', priceRoutes);
+app.use('/api/cart', cartRoutes);
 app.use('/api/daily-menus', dailyMenuRoutes);
 app.use('/api/images', imageRoutes);
 
@@ -167,7 +164,7 @@ process.on('unhandledRejection', (reason, promise) => {
 process.on('uncaughtException', (error) => {
   logger.error('Uncaught Exception:', error);
   // Don't exit in development to keep server running
-  if (process.env.NODE_ENV === 'production') {
+  if (config.NODE_ENV === 'production') {
     process.exit(1);
   }
 });

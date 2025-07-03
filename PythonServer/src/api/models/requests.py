@@ -1,6 +1,11 @@
 from pydantic import BaseModel, Field
 from typing import Optional, List, Dict, Any
 
+class RequiredProduct(BaseModel):
+    """Model for required product with portion"""
+    item_id: str = Field(..., description="Product ID")
+    portion_grams: float = Field(..., gt=0, description="Portion in grams")
+
 class NutritionRequest(BaseModel):
     calories: float = Field(..., gt=0, le=5000)
     protein: float = Field(..., ge=0, le=500)
@@ -12,6 +17,9 @@ class NutritionRequest(BaseModel):
     
     # Option 2: Use specific subcategories
     subcategories: Optional[List[str]] = Field(None)
+    
+    # Required products with their portions
+    requiredProducts: Optional[List[RequiredProduct]] = Field(None, description="List of required products with portions")
     
     num_items: Optional[int] = Field(None, gt=0, le=20)
     include_prices: Optional[bool] = Field(False)

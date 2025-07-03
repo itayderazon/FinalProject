@@ -1,5 +1,6 @@
 const fs = require('fs');
 const path = require('path');
+const config = require('../config/env');
 
 class Logger {
   constructor() {
@@ -25,7 +26,7 @@ class Logger {
   }
 
   writeToFile(level, content) {
-    if (process.env.NODE_ENV === 'production') {
+    if (config.NODE_ENV === 'production') {
       const filename = `${level}-${new Date().toISOString().split('T')[0]}.log`;
       const filepath = path.join(this.logDir, filename);
       fs.appendFileSync(filepath, content + '\n');
@@ -51,7 +52,7 @@ class Logger {
   }
 
   debug(message, data = null) {
-    if (process.env.NODE_ENV === 'development') {
+    if (config.NODE_ENV === 'development') {
       const formatted = this.formatMessage('DEBUG', message, data);
       console.log('\x1b[36m%s\x1b[0m', formatted); // Cyan
     }

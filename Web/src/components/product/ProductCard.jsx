@@ -1,16 +1,19 @@
 import React, { useState, useEffect } from 'react';
-import { ShoppingCart, Heart, Eye, Plus } from 'lucide-react';
+import { ShoppingCart, Heart, Eye, Plus, Check } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { formatCalories, formatProtein, formatStoreCount } from '../../utils/formatters';
 import Modal from '../ui/Modal';
 import PriceDisplay from '../ui/PriceDisplay';
+import useShoppingCart from '../../hooks/useShoppingCart';
 
 const ProductCard = ({ product, formatPrice, fetchProductImage, getProductImageUrl, handleImageError, selectMode = false, onSelectProduct, isSelected = false }) => {
   const [showPriceModal, setShowPriceModal] = useState(false);
   const [imageError, setImageError] = useState(false);
   const [imageUrl, setImageUrl] = useState(null);
   const [imageLoading, setImageLoading] = useState(true);
+  const [addingToCart, setAddingToCart] = useState(false);
   const navigate = useNavigate();
+  const { addToCart, isInCart, getItemQuantity } = useShoppingCart();
   
   // Use priceStats from API or calculate from prices array
   const priceStats = product.priceStats || (() => {
@@ -41,6 +44,16 @@ const ProductCard = ({ product, formatPrice, fetchProductImage, getProductImageU
       onSelectProduct(product);
     }
   };
+
+  const handleAddToCart = async () => {
+    setAddingToCart(true);
+    const productId = product.id || product._id;
+    await addToCart(productId, 1);
+    setAddingToCart(false);
+  };
+
+  const productInCart = isInCart(product.id || product._id);
+  const cartQuantity = getItemQuantity(product.id || product._id);
 
   // Fetch image when component mounts
   useEffect(() => {
@@ -197,36 +210,73 @@ const ProductCard = ({ product, formatPrice, fetchProductImage, getProductImageU
               // Normal mode - show all buttons
               <>
                 <div style={{ display: 'flex', gap: '0.5rem' }}>
-              <button 
-                className="btn-primary" 
-                style={{ flex: '1', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.25rem', fontSize: '0.75rem' }}
-                onClick={handleViewPrices}
-              >
-                <Eye style={{ width: '0.875rem', height: '0.875rem' }} />
-                צפה במחירים
-              </button>
-              <button className="btn-secondary">
-                <ShoppingCart style={{ width: '1rem', height: '1rem' }} />
-              </button>
-            </div>
-            <button 
-              className="btn-primary" 
-              style={{ 
-                width: '100%',
-                display: 'flex', 
-                alignItems: 'center', 
-                justifyContent: 'center', 
-                gap: '0.5rem',
-                backgroundColor: '#16a34a',
-                border: 'none',
-                fontSize: '0.875rem'
-              }}
-              onClick={handleAddToMenu}
-              title="הוסף למנה"
-            >
-              <Plus style={{ width: '1rem', height: '1rem' }} />
-              הוסף למנה
-            </button>
+                  <button 
+                    className="btn-primary" 
+                    style={{ flex: '1', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.25rem', fontSize: '0.75rem' }}
+                    onClick={handleViewPrices}
+                  >
+                    <Eye style={{ width: '0.875rem', height: '0.875rem' }} />
+                    צפה במחירים
+                  </button>
+                  <button 
+                    className="btn-secondary"
+                    onClick={handleAddToCart}
+                    disabled={addingToCart}
+                    style={{
+                      backgroundColor: productInCart ? '#16a34a' : 'transparent',
+                      color: productInCart ? 'white' : '#6b7280',
+                      border: `1px solid ${productInCart ? '#16a34a' : '#d1d5db'}`,
+                      position: 'relative'
+                    }}
+                    title={productInCart ? `בעגלה (${cartQuantity})` : 'הוסף לעגלה'}
+                  >
+                    {addingToCart ? (
+                      <div style={{ width: '1rem', height: '1rem', border: '2px solid #f3f3f3', borderTop: '2px solid currentColor', borderRadius: '50%', animation: 'spin 1s linear infinite' }}></div>
+                    ) : productInCart ? (
+                      <Check style={{ width: '1rem', height: '1rem' }} />
+                    ) : (
+                      <ShoppingCart style={{ width: '1rem', height: '1rem' }} />
+                    )}
+                    {productInCart && cartQuantity > 1 && (
+                      <span style={{
+                        position: 'absolute',
+                        top: '-4px',
+                        right: '-4px',
+                        backgroundColor: '#ef4444',
+                        color: 'white',
+                        borderRadius: '50%',
+                        width: '16px',
+                        height: '16px',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        fontSize: '0.625rem',
+                        fontWeight: '600',
+                        border: '1px solid white'
+                      }}>
+                        {cartQuantity}
+                      </span>
+                    )}
+                  </button>
+                </div>
+                <button 
+                  className="btn-primary" 
+                  style={{ 
+                    width: '100%',
+                    display: 'flex', 
+                    alignItems: 'center', 
+                    justifyContent: 'center', 
+                    gap: '0.5rem',
+                    backgroundColor: '#16a34a',
+                    border: 'none',
+                    fontSize: '0.875rem'
+                  }}
+                  onClick={handleAddToMenu}
+                  title="הוסף למנה"
+                >
+                  <Plus style={{ width: '1rem', height: '1rem' }} />
+                  הוסף למנה
+                </button>
               </>
             )}
           </div>
