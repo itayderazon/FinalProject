@@ -1,11 +1,16 @@
 import { useState } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { useDateNavigation } from './useDateNavigation';
 import { useDailyMenus } from './useDailyMenus';
 import { useModalState } from './useModalState';
 
 export const useDailyMenuPlannerState = () => {
-  // Main state
-  const [activeTab, setActiveTab] = useState('planner');
+  const [searchParams, setSearchParams] = useSearchParams();
+  
+  // Main state with URL persistence
+  const [activeTab, setActiveTab] = useState(
+    searchParams.get('tab') || 'planner'
+  );
 
   // Custom hooks for different concerns
   const dateNavigation = useDateNavigation();
@@ -66,6 +71,18 @@ export const useDailyMenuPlannerState = () => {
     }
   };
 
+  // Handle tab change with URL persistence
+  const handleTabChange = (newTab) => {
+    setActiveTab(newTab);
+    const params = new URLSearchParams(searchParams);
+    if (newTab && newTab !== 'planner') {
+      params.set('tab', newTab);
+    } else {
+      params.delete('tab');
+    }
+    setSearchParams(params);
+  };
+
   // Return all state and handlers needed by the presentation component
   return {
     // State
@@ -84,7 +101,7 @@ export const useDailyMenuPlannerState = () => {
     selectedMealType,
     
     // Handlers
-    onTabChange: setActiveTab,
+    onTabChange: handleTabChange,
     onDateSelect: setSelectedDate,
     onNavigateWeek: navigateWeek,
     onCreateMenu: handleCreateMenu,

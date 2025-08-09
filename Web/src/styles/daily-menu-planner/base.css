@@ -1,0 +1,155 @@
+/* ====================
+   src/styles/dailyplanner/base.css - Base styles and variables
+   ==================== */
+
+:root {
+  /* Primary Colors */
+  --gradient-primary: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  --gradient-success: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  
+  /* Colors */
+  --primary-blue: #667eea;
+  --primary-purple: #764ba2;
+  --success-green: #10b981;
+  --success-dark: #059669;
+  --danger-red: #ef4444;
+  --danger-dark: #dc2626;
+  
+  /* Grays */
+  --gray-50: #f9fafb;
+  --gray-100: #f3f4f6;
+  --gray-200: #e5e7eb;
+  --gray-300: #d1d5db;
+  --gray-400: #9ca3af;
+  --gray-500: #6b7280;
+  --gray-600: #374151;
+  --gray-700: #1f2937;
+  --gray-800: #111827;
+  
+  /* Additional Colors */
+  --blue-50: #eff6ff;
+  --blue-500: #3b82f6;
+  --blue-600: #2563eb;
+  --green-50: #f0fdf4;
+  --yellow-400: #fbbf24;
+  --yellow-500: #f59e0b;
+  --orange-500: #ff9800;
+  --orange-600: #f57c00;
+  --purple-500: #8b5cf6;
+  --purple-600: #a78bfa;
+  --red-100: #fee2e2;
+  --red-200: #fecaca;
+  --red-300: #fca5a5;
+  --red-500: #ef4444;
+  
+  /* Shadows */
+  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.1);
+  --shadow-md: 0 4px 20px rgba(0, 0, 0, 0.08);
+  --shadow-lg: 0 8px 25px rgba(102, 126, 234, 0.15);
+  --shadow-xl: 0 25px 50px rgba(0, 0, 0, 0.25);
+  
+  /* Border Radius */
+  --radius-sm: 6px;
+  --radius-md: 8px;
+  --radius-lg: 12px;
+  --radius-xl: 16px;
+  
+  /* Transitions */
+  --transition-fast: all 0.2s ease;
+  --transition-normal: all 0.3s ease;
+}
+
+.daily-menu-planner {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 20px;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+  min-height: 100vh;
+}
+
+.planner-container {
+  background: white;
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-md);
+  overflow: hidden;
+}
+
+.planner-content {
+  padding: 30px;
+}
+
+.nutrition-content {
+  padding: 32px;
+  background: var(--gray-50);
+  min-height: 100vh;
+}
+
+/* Base Button Styles */
+.btn-primary {
+  background: var(--gradient-primary);
+  color: white;
+  border: none;
+  border-radius: var(--radius-md);
+  font-weight: 500;
+  cursor: pointer;
+  transition: var(--transition-fast);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.btn-primary:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+}
+
+.btn-success {
+  background: var(--gradient-success);
+  color: white;
+  border: none;
+  border-radius: var(--radius-md);
+  font-weight: 500;
+  cursor: pointer;
+  transition: var(--transition-fast);
+}
+
+.btn-success:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 15px rgba(16, 185, 129, 0.4);
+}
+
+.btn-secondary {
+  background: white;
+  border: 1px solid var(--gray-300);
+  color: var(--gray-600);
+  border-radius: var(--radius-md);
+  font-weight: 500;
+  cursor: pointer;
+  transition: var(--transition-fast);
+}
+
+.btn-secondary:hover {
+  background: var(--gray-100);
+}
+
+.btn-danger {
+  background: var(--red-100);
+  border: 1px solid var(--red-200);
+  color: var(--danger-red);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: var(--transition-fast);
+}
+
+.btn-danger:hover {
+  background: var(--danger-red);
+  color: white;
+  border-color: var(--danger-red);
+}
+
+.btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+}

@@ -165,29 +165,70 @@ class User {
   // Update or create nutrition profile
   async updateNutritionProfile(profileData) {
     try {
+      // Build dynamic query based on provided fields
+      const updateFields = [];
+      const values = [this.id];
+      let valueCounter = 2;
+
+      // Only include fields that are actually provided (not null/undefined)
+      if (profileData.height !== undefined && profileData.height !== null) {
+        updateFields.push(`height = $${valueCounter}`);
+        values.push(profileData.height);
+        valueCounter++;
+      }
+      
+      if (profileData.weight !== undefined && profileData.weight !== null) {
+        updateFields.push(`weight = $${valueCounter}`);
+        values.push(profileData.weight);
+        valueCounter++;
+      }
+      
+      if (profileData.age !== undefined && profileData.age !== null) {
+        updateFields.push(`age = $${valueCounter}`);
+        values.push(profileData.age);
+        valueCounter++;
+      }
+      
+      if (profileData.gender !== undefined && profileData.gender !== null) {
+        updateFields.push(`gender = $${valueCounter}`);
+        values.push(profileData.gender);
+        valueCounter++;
+      }
+      
+      if (profileData.activity_level !== undefined && profileData.activity_level !== null) {
+        updateFields.push(`activity_level = $${valueCounter}`);
+        values.push(profileData.activity_level);
+        valueCounter++;
+      }
+      
+      if (profileData.dietary_goal !== undefined && profileData.dietary_goal !== null) {
+        updateFields.push(`dietary_goal = $${valueCounter}`);
+        values.push(profileData.dietary_goal);
+        valueCounter++;
+      }
+      
+      if (profileData.daily_calorie_goal !== undefined && profileData.daily_calorie_goal !== null) {
+        updateFields.push(`daily_calorie_goal = $${valueCounter}`);
+        values.push(profileData.daily_calorie_goal);
+        valueCounter++;
+      }
+      
+      if (profileData.macro_goals !== undefined && profileData.macro_goals !== null) {
+        updateFields.push(`macro_goals = $${valueCounter}`);
+        values.push(JSON.stringify(profileData.macro_goals));
+        valueCounter++;
+      }
+
+      // Always update the timestamp
+      updateFields.push('updated_at = NOW()');
+
       const result = await pool.query(`
-        INSERT INTO user_nutrition_profiles (
-          user_id, height, weight, age, gender, daily_calorie_goal, macro_goals
-        )
-        VALUES ($1, $2, $3, $4, $5, $6, $7)
+        INSERT INTO user_nutrition_profiles (user_id, updated_at)
+        VALUES ($1, NOW())
         ON CONFLICT (user_id) DO UPDATE SET
-          height = EXCLUDED.height,
-          weight = EXCLUDED.weight,
-          age = EXCLUDED.age,
-          gender = EXCLUDED.gender,
-          daily_calorie_goal = EXCLUDED.daily_calorie_goal,
-          macro_goals = EXCLUDED.macro_goals,
-          updated_at = NOW()
+          ${updateFields.join(', ')}
         RETURNING *
-      `, [
-        this.id,
-        profileData.height,
-        profileData.weight,
-        profileData.age,
-        profileData.gender,
-        profileData.daily_calorie_goal,
-        JSON.stringify(profileData.macro_goals || {})
-      ]);
+      `, values);
 
       return result.rows[0];
     } catch (error) {

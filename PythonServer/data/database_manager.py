@@ -62,7 +62,7 @@ class DatabaseManager:
         """Execute query with error handling"""
         if not self.is_connected:
             if not self.connect():
-                raise Exception("Cannot execute query: database not connected")
+                raise Exception(f"Cannot execute database query: Connection to PostgreSQL database failed. Please check database server status and connection parameters. Query attempted: {query[:100]}...")
         
         conn = None
         try:
@@ -118,5 +118,5 @@ def create_database_manager():
     """Create and connect database manager"""
     db_manager = DatabaseManager()
     if not db_manager.connect():
-        raise Exception("Failed to connect to database")
+        raise Exception("Failed to establish database connection during server initialization. Please verify PostgreSQL is running, credentials are correct, and the database exists. Check environment variables and connection settings.")
     return db_manager

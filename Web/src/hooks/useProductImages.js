@@ -19,7 +19,7 @@ const useProductImages = () => {
 
     try {
       // Request image from NodeServer API
-      console.log('Fetching image from NodeServer for item code:', itemCode);
+
       const response = await fetch(`${SERVER_BASE_URL}/api/images/product/${itemCode}?type=small`, {
         method: 'GET',
         headers: {
@@ -31,16 +31,16 @@ const useProductImages = () => {
         const data = await response.json();
         
         if (data.success && data.exists && data.imageUrl) {
-          console.log('Successfully got image URL for product:', product.name, 'URL:', data.imageUrl);
+  
           setImageCache(prev => new Map(prev.set(itemCode, data.imageUrl)));
           return data.imageUrl;
         } else {
-          console.log('No image found for product:', product.name, 'Item code:', itemCode);
+  
           setImageCache(prev => new Map(prev.set(itemCode, null)));
           return null;
         }
       } else {
-        console.log('Failed to fetch image for product:', product.name, 'Status:', response.status);
+
         setImageCache(prev => new Map(prev.set(itemCode, null)));
         return null;
       }

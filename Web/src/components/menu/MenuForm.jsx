@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { calculateMacroPercentages } from '../../utils/menuUtils';
+import AllergenSelector from './AllergenSelector';
 
 const MenuForm = ({ 
   formData, 
@@ -12,7 +13,10 @@ const MenuForm = ({
   presets,
   availableSubcategories,
   subcategoriesLoading,
-  toggleSubcategory
+  toggleSubcategory,
+  availableAllergens,
+  allergensLoading,
+  toggleAllergen
 }) => {
   const macroPercentages = calculateMacroPercentages(formData);
   const [showCategoryModal, setShowCategoryModal] = useState(false);
@@ -179,6 +183,14 @@ const MenuForm = ({
           Select specific subcategories or leave none selected to use all available food types.
         </div>
       </div>
+
+      {/* Allergen Selector */}
+      <AllergenSelector
+        availableAllergens={availableAllergens}
+        selectedAllergens={formData.excluded_allergens || []}
+        onToggleAllergen={toggleAllergen}
+        loading={allergensLoading}
+      />
 
       <div className="form-group">
         <label className="form-label">

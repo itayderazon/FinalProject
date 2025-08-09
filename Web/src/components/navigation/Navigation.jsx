@@ -2,7 +2,7 @@ import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import CartIcon from '../cart/CartIcon';
-import '../../styles/Navigation.css';
+import '../../styles/components/Navigation.css';
 
 const Navigation = () => {
   const { user, logout, isAuthenticated } = useAuth();

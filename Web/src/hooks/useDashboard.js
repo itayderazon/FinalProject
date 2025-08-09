@@ -14,45 +14,53 @@ export const useDashboard = () => {
     try {
       setLoading(true);
       
-      // In a real app, you would fetch data from your API
-      // const [todayStatsResponse, historyResponse] = await Promise.all([
-      //   nutritionService.getTodayStats(),
-      //   nutritionService.getNutritionHistory()
-      // ]);
+      // Fetch real data from the API
+      const today = new Date().toISOString().split('T')[0];
+      const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
       
-      // Mock data for now
-      const mockTodayStats = {
-        dailyTotals: { 
-          calories: 1850, 
-          protein: 120, 
-          carbs: 180, 
-          fat: 65 
-        }
+      const [todayResponse, historyResponse] = await Promise.all([
+        nutritionService.getNutritionHistory({
+          startDate: today,
+          endDate: today
+        }),
+        nutritionService.getNutritionHistory({
+          startDate: thirtyDaysAgo,
+          endDate: today
+        })
+      ]);
+      
+      // Process today's stats
+      let todayStats = {
+        dailyTotals: { calories: 0, protein: 0, carbs: 0, fat: 0 }
       };
       
-      const mockNutritionHistory = [
-        { 
-          _id: '1', 
-          date: new Date().toISOString(), 
-          dailyTotals: { calories: 1850 }, 
-          meals: ['breakfast', 'lunch'] 
-        },
-        { 
-          _id: '2', 
-          date: new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString(), 
-          dailyTotals: { calories: 2100 }, 
-          meals: ['breakfast', 'lunch', 'dinner'] 
-        },
-        { 
-          _id: '3', 
-          date: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString(), 
-          dailyTotals: { calories: 1750 }, 
-          meals: ['breakfast', 'lunch', 'snack'] 
-        }
-      ];
+      if (todayResponse.logs && todayResponse.logs.length > 0) {
+        const todayLog = todayResponse.logs[0];
+        todayStats = {
+          dailyTotals: {
+            calories: Number(todayLog.total_calories) || 0,
+            protein: parseFloat(todayLog.total_protein) || 0,
+            carbs: parseFloat(todayLog.total_carbs) || 0,
+            fat: parseFloat(todayLog.total_fat) || 0
+          }
+        };
+      }
       
-      setTodayStats(mockTodayStats);
-      setNutritionHistory(mockNutritionHistory);
+      // Process nutrition history
+      const nutritionHistory = historyResponse.logs ? historyResponse.logs.map(log => ({
+        _id: log.id,
+        date: log.log_date,
+        dailyTotals: {
+          calories: Number(log.total_calories) || 0,
+          protein: parseFloat(log.total_protein) || 0,
+          carbs: parseFloat(log.total_carbs) || 0,
+          fat: parseFloat(log.total_fat) || 0
+        },
+        meals: [] // meals data structure not available in current API response
+      })) : [];
+      
+      setTodayStats(todayStats);
+      setNutritionHistory(nutritionHistory);
       
     } catch (error) {
       console.error('Error fetching dashboard data:', error);

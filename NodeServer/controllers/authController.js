@@ -3,49 +3,43 @@ const User = require('../models/UserPostgres');
 const { validationResult } = require('express-validator');
 const logger = require('../utils/logger');
 const { JWT_SECRET } = require('../config/env');
+const { STATUS_CODES, MESSAGES, DEFAULTS } = require('../constants/api');
 
 class AuthController {
-  // User login
+  /**
+   * User login
+   * @param {Object} req - Express request object
+   * @param {Object} res - Express response object
+   * @param {Function} next - Express next middleware function
+   */
   async login(req, res, next) {
     try {
-      console.log('🔐 Login attempt started');
-      console.log('📝 Request body:', req.body);
-      
       const errors = validationResult(req);
       if (!errors.isEmpty()) {
-        console.log('❌ Validation errors:', errors.array());
-        return res.status(400).json({ 
-          error: 'Validation failed', 
+        return res.status(STATUS_CODES.BAD_REQUEST).json({ 
+          error: MESSAGES.ERROR.VALIDATION_FAILED, 
           details: errors.array() 
         });
       }
 
       const { email, password } = req.body;
-      console.log('🔍 Looking for user with email:', email);
 
       // Find user by email (PostgreSQL method)
       const user = await User.findByEmail(email);
-      console.log('👤 User found:', user ? 'Yes' : 'No');
       if (!user) {
-        console.log('❌ User not found for email:', email);
-        return res.status(401).json({ 
-          error: 'Invalid email or password' 
+        return res.status(STATUS_CODES.UNAUTHORIZED).json({ 
+          error: MESSAGES.ERROR.INVALID_CREDENTIALS 
         });
       }
 
-      console.log('🔑 Checking password...');
       // Check password (PostgreSQL method)
       const isPasswordValid = await user.comparePassword(password);
-      console.log('🔓 Password valid:', isPasswordValid);
       if (!isPasswordValid) {
-        console.log('❌ Invalid password for user:', email);
-        return res.status(401).json({ 
-          error: 'Invalid email or password' 
+        return res.status(STATUS_CODES.UNAUTHORIZED).json({ 
+          error: MESSAGES.ERROR.INVALID_CREDENTIALS 
         });
       }
 
-      console.log('🎫 Generating JWT token...');
-      console.log('🔑 JWT_SECRET available:', !!JWT_SECRET);
       // Generate JWT token
       const token = jwt.sign(
         { 
@@ -54,13 +48,12 @@ class AuthController {
           email: user.email 
         },
         JWT_SECRET,
-        { expiresIn: '7d' }
+        { expiresIn: DEFAULTS.JWT.EXPIRES_IN }
       );
 
-      console.log('✅ Login successful for user:', email);
       logger.info(`User logged in: ${user.email}`);
 
-      res.status(200).json({ 
+      res.status(STATUS_CODES.OK).json({ 
         token,
         user: {
           id: user.id,
@@ -72,19 +65,27 @@ class AuthController {
         }
       });
     } catch (error) {
-      console.error('💥 Login error occurred:', error);
-      console.error('💥 Error stack:', error.stack);
+      logger.error('Login error occurred:', error);
       next(error);
     }
   }
 
-  // User logout (token invalidation would require Redis or similar)
+  /**
+   * User logout (token invalidation would require Redis or similar)
+   * @param {Object} req - Express request object
+   * @param {Object} res - Express response object
+   */
   async logout(req, res) {
     // In a real application, you might want to blacklist the token
     res.status(200).json({ message: 'Logged out successfully' });
   }
 
-  // Refresh token
+  /**
+   * Refresh token
+   * @param {Object} req - Express request object
+   * @param {Object} res - Express response object
+   * @param {Function} next - Express next middleware function
+   */
   async refreshToken(req, res, next) {
     try {
       const { userId } = req.user;
@@ -122,7 +123,12 @@ class AuthController {
     }
   }
 
-  // Validate existing token and return user data
+  /**
+   * Validate existing token and return user data
+   * @param {Object} req - Express request object
+   * @param {Object} res - Express response object
+   * @param {Function} next - Express next middleware function
+   */
   async validateToken(req, res, next) {
     try {
       const { userId } = req.user;

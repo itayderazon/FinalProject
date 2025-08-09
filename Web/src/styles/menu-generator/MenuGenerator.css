@@ -1,0 +1,22 @@
+/* ====================
+   src/styles/menugenerator/MenuGenerator.css - Main import file
+   ==================== */
+
+/* Import all component styles */
+@import './base.css';
+@import './header.css';
+@import './tabs.css';
+@import './form.css';
+@import './presets.css';
+@import './buttons.css';
+@import './macro-chart.css';
+@import './loading-states.css';
+@import './menu-cards.css';
+@import './nutrition.css';
+@import './food-items.css';
+@import './price-comparison.css';
+@import './subcategories.css';
+@import './required-products.css';
+@import './saved-menus.css';
+@import './modals.css';
+@import './notifications.css';

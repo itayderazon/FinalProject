@@ -15,7 +15,8 @@ const calculateNutritionValidation = [
   body('meal_template').optional().isString(),
   body('subcategories').optional().isArray().withMessage('Subcategories must be an array'),
   body('num_items').optional().isNumeric(),
-  body('requiredProducts').optional().isArray().withMessage('Required products must be an array')
+  body('requiredProducts').optional().isArray().withMessage('Required products must be an array'),
+  body('excluded_allergens').optional().isArray().withMessage('Excluded allergens must be an array')
 ];
 
 const logNutritionValidation = [
@@ -46,6 +47,7 @@ const saveMenuValidation = [
 router.post('/calculate', calculateNutritionValidation, nutritionController.calculateNutrition);
 router.post('/log', logNutritionValidation, authMiddleware.authenticate, nutritionController.logNutrition);
 router.get('/history', historyValidation, authMiddleware.authenticate, nutritionController.getNutritionHistory);
+router.delete('/items/:itemId', authMiddleware.authenticate, nutritionController.deleteNutritionItem);
 router.get('/recommendations', authMiddleware.authenticate, nutritionController.getRecommendations);
 router.get('/trends', authMiddleware.authenticate, nutritionController.analyzeTrends);
 router.get('/food-categories', nutritionController.getFoodCategories);

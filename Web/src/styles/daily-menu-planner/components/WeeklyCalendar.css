@@ -1,0 +1,129 @@
+/* ===== WEEKLY CALENDAR ===== */
+.weekly-calendar {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 0.75rem;
+  margin-bottom: 1.5rem;
+}
+
+.day-card {
+  background: white;
+  border: 1px solid #e5e7eb;
+  border-radius: 0.5rem;
+  padding: 0.75rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.day-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: linear-gradient(90deg, #667eea, #764ba2);
+  transform: scaleX(0);
+  transition: transform 0.2s ease;
+}
+
+.day-card:hover {
+  border-color: #d1d5db;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+}
+
+.day-card:hover::before {
+  transform: scaleX(1);
+}
+
+.day-card.selected {
+  border-color: #3b82f6;
+  background: #f0f4ff;
+  box-shadow: 0 2px 4px rgba(59, 130, 246, 0.1);
+}
+
+.day-card.selected::before {
+  transform: scaleX(1);
+  background: #3b82f6;
+}
+
+.day-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.5rem;
+}
+
+.day-name {
+  font-weight: 600;
+  font-size: 0.75rem;
+  color: #374151;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.day-date {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: #1f2937;
+  line-height: 1;
+}
+
+.day-content {
+  margin-top: 0.5rem;
+}
+
+.day-summary {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.menu-name {
+  font-size: 0.75rem;
+  color: #374151;
+  font-weight: 500;
+  line-height: 1.2;
+}
+
+.calorie-count {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: #059669;
+}
+
+.no-menu {
+  color: #9ca3af;
+  font-style: italic;
+  font-size: 0.75rem;
+}
+
+/* Responsive Calendar */
+@media (max-width: 768px) {
+  .weekly-calendar {
+    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+    gap: 12px;
+    margin-bottom: 20px;
+  }
+  
+  .day-card {
+    padding: 12px;
+  }
+  
+  .day-date {
+    font-size: 1.25rem;
+  }
+  
+  .day-name {
+    font-size: 0.8rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .weekly-calendar {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}

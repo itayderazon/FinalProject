@@ -71,6 +71,9 @@ class DynamicDataLoader:
         self.connect()
         
         try:
+            # Step 0: Extract allergens from data
+            self._extract_allergens(data_path)
+            
             # Step 1: Discover structure from all JSON files
             self._discover_data_structure(data_path)
             
@@ -81,7 +84,10 @@ class DynamicDataLoader:
             self._load_nutrition_data(data_path)
             self._load_price_data(data_path)
             
-            # Step 4: Final summary
+            # Step 4: Update supermarket counts after all data is loaded
+            self._update_supermarket_counts()
+            
+            # Step 5: Final summary
             self._print_summary()
             
         except Exception as e:
@@ -351,22 +357,36 @@ class DynamicDataLoader:
                         if result:
                             subcategory_id = result[0]
                     
-                    # Insert product
+                    # Process allergens - convert allergen names to IDs
+                    allergen_ids = []
+                    if 'allergens' in item and isinstance(item['allergens'], list):
+                        for allergen_name in item['allergens']:
+                            if allergen_name:  # Skip empty strings
+                                cursor.execute("SELECT id FROM allergens WHERE name = %s", (allergen_name,))
+                                allergen_result = cursor.fetchone()
+                                if allergen_result:
+                                    allergen_ids.append(allergen_result[0])
+                                else:
+                                    logger.warning(f"Allergen not found in database: {allergen_name}")
+                    
+                    # Insert product with allergen_ids (supermarket_count will be updated later)
                     cursor.execute("""
-                        INSERT INTO products (item_code, name, category_id, subcategory_id, nutrition)
-                        VALUES (%(item_code)s, %(name)s, %(category_id)s, %(subcategory_id)s, %(nutrition)s)
+                        INSERT INTO products (item_code, name, category_id, subcategory_id, nutrition, allergen_ids, supermarket_count)
+                        VALUES (%(item_code)s, %(name)s, %(category_id)s, %(subcategory_id)s, %(nutrition)s, %(allergen_ids)s, 0)
                         ON CONFLICT (item_code) DO UPDATE SET
                             name = EXCLUDED.name,
                             category_id = EXCLUDED.category_id,
                             subcategory_id = EXCLUDED.subcategory_id,
                             nutrition = EXCLUDED.nutrition,
+                            allergen_ids = EXCLUDED.allergen_ids,
                             updated_at = NOW()
                     """, {
                         'item_code': item.get('item_code'),
                         'name': item.get('name'),
                         'category_id': category_id,
                         'subcategory_id': subcategory_id,
-                        'nutrition': json.dumps(nutrition)
+                        'nutrition': json.dumps(nutrition),
+                        'allergen_ids': allergen_ids
                     })
                     
                     processed += 1
@@ -601,6 +621,100 @@ class DynamicDataLoader:
             logger.error(f"Error generating summary: {e}")
         finally:
             cursor.close()
+    
+    def _extract_allergens(self, data_path: Path):
+        """
+        Load allergens from the distinct_allergens.json file in Final_Data
+        """
+        logger.info("🧪 Phase 0: Loading allergens from JSON file...")
+        
+        # Find the allergens JSON file
+        allergens_file = data_path / "distinct_allergens.json"
+        
+        if not allergens_file.exists():
+            logger.warning(f"⚠️  Allergens file not found at {allergens_file}")
+            logger.warning("⚠️  Skipping allergen loading step")
+            return
+        
+        try:
+            # Read the allergens from JSON file
+            logger.info(f"📖 Reading allergens from: {allergens_file}")
+            with open(allergens_file, 'r', encoding='utf-8') as f:
+                allergen_data = json.load(f)
+            
+            allergens = allergen_data.get('allergens', [])
+            total_count = allergen_data.get('total_count', 0)
+            
+            logger.info(f"📋 Found {total_count} distinct allergens")
+            for i, allergen in enumerate(allergens[:10], 1):  # Show first 10
+                logger.info(f"    {i:2d}. {allergen}")
+            
+            if len(allergens) > 10:
+                logger.info(f"    ... and {len(allergens) - 10} more allergens")
+            
+            # Store allergens for use in data processing
+            self.discovered_allergens = set(allergens)
+            logger.info("✅ Allergens loaded successfully")
+                    
+        except Exception as e:
+            logger.error(f"❌ Failed to read allergens file: {e}")
+            logger.warning("⚠️  Continuing with data loading...")
+    
+    def _update_supermarket_counts(self):
+        """
+        Update supermarket_count for each product based on price_history data
+        """
+        logger.info("🏪 Phase 5: Updating supermarket counts...")
+        
+        cursor = self.conn.cursor()
+        
+        try:
+            # Update supermarket counts for all products with price data
+            logger.info("Calculating supermarket counts from price history...")
+            cursor.execute("""
+                UPDATE products 
+                SET supermarket_count = subq.count
+                FROM (
+                    SELECT 
+                        p.id,
+                        COUNT(DISTINCT ph.supermarket_id) as count
+                    FROM products p
+                    JOIN price_history ph ON p.id = ph.product_id
+                    JOIN supermarkets s ON ph.supermarket_id = s.id
+                    WHERE s.is_active = true
+                    AND ph.recorded_at > NOW() - INTERVAL '30 days'
+                    GROUP BY p.id
+                ) subq
+                WHERE products.id = subq.id
+            """)
+            
+            updated_count = cursor.rowcount
+            self.conn.commit()
+            
+            logger.info(f"✅ Updated supermarket counts for {updated_count} products")
+            
+            # Log some statistics
+            cursor.execute("""
+                SELECT 
+                    supermarket_count,
+                    COUNT(*) as product_count
+                FROM products 
+                WHERE is_active = true 
+                GROUP BY supermarket_count 
+                ORDER BY supermarket_count DESC
+            """)
+            
+            stats = cursor.fetchall()
+            logger.info("📊 Supermarket availability distribution:")
+            for count, products in stats:
+                logger.info(f"  {count} supermarkets: {products} products")
+            
+        except Exception as e:
+            self.conn.rollback()
+            logger.error(f"❌ Failed to update supermarket counts: {e}")
+            raise
+        finally:
+            cursor.close()
 
 
 def main():
@@ -617,7 +731,7 @@ def main():
     }
     
     # Data directory
-    data_directory = os.getenv('DATA_DIRECTORY', '../data')
+    data_directory = os.getenv('DATA_DIRECTORY', '../data/Final_Data')
     
     # Create and run loader
     loader = DynamicDataLoader(db_config)

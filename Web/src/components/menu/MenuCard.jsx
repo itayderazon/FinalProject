@@ -126,6 +126,33 @@ const MenuCard = ({ menu, index, onSave }) => {
         </div>
       </div>
 
+      {/* Food Items */}
+      <div className="food-items">
+        <h5 className="items-title">Ingredients:</h5>
+        <div className="items-list">
+          {menu.items.map((item, itemIndex) => (
+            <div key={itemIndex} className="food-item">
+              <div className="food-info">
+                <h6 className="food-name">{item.name}</h6>
+                <p className="food-details">
+                  {item.portion_grams.toFixed(0)}g • {item.category || 'Food'}
+                </p>
+              </div>
+              <div className="food-nutrition">
+                <p className="food-calories">
+                  {item.nutrition.calories.toFixed(0)} cal
+                </p>
+                <p className="food-macros">
+                  P: {item.nutrition.protein.toFixed(0)}g • 
+                  C: {item.nutrition.carbs.toFixed(0)}g • 
+                  F: {item.nutrition.fat.toFixed(0)}g
+                </p>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+
       {/* Price Comparison Section */}
       {menu.price_comparison && (
         <div className="price-comparison-section">
@@ -213,33 +240,6 @@ const MenuCard = ({ menu, index, onSave }) => {
           )}
         </div>
       )}
-
-      {/* Food Items */}
-      <div className="food-items">
-        <h5 className="items-title">Ingredients:</h5>
-        <div className="items-list">
-          {menu.items.map((item, itemIndex) => (
-            <div key={itemIndex} className="food-item">
-              <div className="food-info">
-                <h6 className="food-name">{item.name}</h6>
-                <p className="food-details">
-                  {item.portion_grams.toFixed(0)}g • {item.category || 'Food'}
-                </p>
-              </div>
-              <div className="food-nutrition">
-                <p className="food-calories">
-                  {item.nutrition.calories.toFixed(0)} cal
-                </p>
-                <p className="food-macros">
-                  P: {item.nutrition.protein.toFixed(0)}g • 
-                  C: {item.nutrition.carbs.toFixed(0)}g • 
-                  F: {item.nutrition.fat.toFixed(0)}g
-                </p>
-              </div>
-            </div>
-          ))}
-        </div>
-      </div>
 
       {/* Save Dialog */}
       {showSaveDialog && (

@@ -4,14 +4,11 @@ const cartService = {
   // Add item to cart
   async addToCart(productId, quantity = 1) {
     try {
-      console.log('Frontend cartService.addToCart called with:', { productId, quantity, productIdType: typeof productId });
       const requestData = {
         productId,
         quantity
       };
-      console.log('Sending to backend:', requestData);
       const response = await api.post('/cart/add', requestData);
-      console.log('Backend response:', response.data);
       return response.data;
     } catch (error) {
       console.error('addToCart error:', error.response?.data || error);
@@ -64,9 +61,7 @@ const cartService = {
   // Compare prices for cart items
   async comparePrices() {
     try {
-      console.log('Frontend cartService.comparePrices called');
       const response = await api.get('/cart/compare-prices');
-      console.log('Price comparison response from backend:', response.data);
       return response.data;
     } catch (error) {
       console.error('comparePrices error:', error.response?.data || error);

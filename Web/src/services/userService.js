@@ -1,4 +1,5 @@
 import api from './api';
+import { DEFAULT_NUTRITION_GOALS } from '../constants/presets';
 
 class UserService {
   // Get current user profile
@@ -26,50 +27,26 @@ class UserService {
   // Get user nutrition goals (from macro_goals in nutrition profile)
   async getNutritionGoals(userId) {
     try {
-      console.log('🔍 UserService: Fetching nutrition goals for user:', userId);
       const response = await api.get(`/users/${userId}`);
       const user = response.data.user || response.data;
       
-      console.log('👤 UserService: User data received:', {
-        hasNutritionProfile: !!user.nutrition_profile,
-        nutritionProfile: user.nutrition_profile
-      });
-      
       if (user.nutrition_profile && user.nutrition_profile.macro_goals) {
-        console.log('✅ UserService: Found macro goals:', user.nutrition_profile.macro_goals);
         return user.nutrition_profile.macro_goals;
       }
-      
-      console.log('⚠️ UserService: No macro goals found, returning defaults');
       // Return default goals if none are set
-      return {
-        calories: 2000,
-        protein: 140,
-        carbs: 250,
-        fat: 70
-      };
+      return DEFAULT_NUTRITION_GOALS;
     } catch (error) {
       console.error('Error fetching nutrition goals:', error);
       // Return default goals on error
-      return {
-        calories: 2000,
-        protein: 140,
-        carbs: 250,
-        fat: 70
-      };
+      return DEFAULT_NUTRITION_GOALS;
     }
   }
 
   // Update user nutrition goals
   async updateNutritionGoals(userId, goals) {
     try {
-      // First get the current nutrition profile
-      const currentUser = await api.get(`/users/${userId}`);
-      const user = currentUser.data.user || currentUser.data;
-      
-      // Prepare the profile update with the new macro goals
+      // Only send the macro goals and daily calorie goal, nothing else
       const profileUpdate = {
-        ...user.nutrition_profile,
         macro_goals: goals,
         daily_calorie_goal: goals.calories
       };

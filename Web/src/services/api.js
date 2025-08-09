@@ -45,7 +45,7 @@ api.interceptors.response.use(
       toast.error('Server error. Please try again later.');
     } else if (!error.response) {
       // Network error - don't log out user
-      console.log('Network error:', error.message);
+      // Silently handle network errors to avoid console spam
     }
     return Promise.reject(error);
   }

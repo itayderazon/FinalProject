@@ -46,7 +46,10 @@ def find_data_directory():
     """Auto-discover data directory"""
     possible_paths = [
         os.getenv('DATA_DIRECTORY'),
+        '/mnt/c/Users/itayd/Year3EX/FinalProject/FinalProject/data/Final_Data',
         '../data/Final_Data',
+        './data/Final_Data',
+        os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'data', 'Final_Data'),
     ]
     
     for path in possible_paths:

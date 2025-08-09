@@ -1,0 +1,75 @@
+/* ====================
+   src/styles/menugenerator/macro-chart.css - Macro visualization styles
+   ==================== */
+
+.macro-chart {
+  background: var(--gray-50);
+  padding: 16px;
+  border-radius: var(--radius-md);
+  margin: 20px 0;
+}
+
+.chart-title {
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--gray-600);
+  margin-bottom: 12px;
+  text-align: center;
+}
+
+.macro-bar {
+  display: flex;
+  height: 8px;
+  border-radius: 4px;
+  overflow: hidden;
+  background: var(--gray-200);
+  margin-bottom: 12px;
+}
+
+.macro-segment {
+  transition: all 0.3s ease;
+}
+
+.macro-segment.protein {
+  background: var(--blue-500);
+}
+
+.macro-segment.carbs {
+  background: var(--primary-green);
+}
+
+.macro-segment.fat {
+  background: var(--purple-500);
+}
+
+.macro-legend {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.legend-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.75rem;
+  color: var(--gray-500);
+}
+
+.legend-color {
+  width: 12px;
+  height: 12px;
+  border-radius: 2px;
+}
+
+.legend-color.protein {
+  background: var(--blue-500);
+}
+
+.legend-color.carbs {
+  background: var(--primary-green);
+}
+
+.legend-color.fat {
+  background: var(--purple-500);
+}

@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import '../styles/Homepage.css';
+import '../styles/homepage/Homepage.css';
 
 const Homepage = () => {
   return (
@@ -14,7 +14,7 @@ const Homepage = () => {
           </h1>
           <p className="homepage-description">
             Generate personalized meal plans, track your nutrition, and achieve your health goals 
-            with AI-powered recommendations tailored just for you.
+            with recommendations tailored just for you.
           </p>
           <div className="homepage-buttons">
             <Link to="/register" className="btn-primary">
@@ -33,7 +33,7 @@ const Homepage = () => {
         <div className="features-container">
           <h2 className="features-title">Why Choose NutritionApp?</h2>
           <p className="features-description">
-            Our AI-powered platform makes healthy eating simple, personalized, and effective.
+            Our platform makes healthy eating simple, personalized, and effective.
           </p>
 
           <div className="features-grid">

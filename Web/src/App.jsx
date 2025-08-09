@@ -1,10 +1,12 @@
-// ====================
-// src/App.jsx - Fixed with Full Width Layout
-// ====================
+/**
+ * Main App Component
+ * Central application component with routing and authentication
+ */
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { Toaster } from 'react-hot-toast';
 import { AuthProvider, useAuth } from './context/AuthContext';
+import { TOAST, LAYOUT } from './constants/ui';
 
 // Page imports
 import Homepage from './pages/Homepage';
@@ -64,7 +66,7 @@ function AppContent() {
       <main style={{ 
         flex: 1, 
         width: '100%',
-        minHeight: 'calc(100vh - 64px)' // Subtract navigation height
+        minHeight: `calc(100vh - ${LAYOUT.HEADER_HEIGHT})` // Subtract navigation height
       }}>
         <Routes>
           {/* Public Routes */}
@@ -113,19 +115,21 @@ function AppContent() {
       
       {/* Toast notifications */}
       <Toaster
-        position="top-right"
+        position={TOAST.POSITION}
         toastOptions={{
-          duration: 3000,
+          duration: TOAST.DURATION.INFO,
           style: {
             background: '#333',
             color: '#fff',
           },
           success: {
+            duration: TOAST.DURATION.SUCCESS,
             style: {
               background: '#4caf50',
             },
           },
           error: {
+            duration: TOAST.DURATION.ERROR,
             style: {
               background: '#f44336',
             },

@@ -14,14 +14,13 @@ class MenuBuilder:
     
     def build_menu(self, foods, target_nutrition, num_items, required_items_with_portions=None):
         """Build a single menu with improved calorie distribution"""
-        MAX_CALORIE_VARIANCE = 1.3
         menu = Menu()
         used_foods = set()
         remaining_nutrition = target_nutrition
         
         # Calculate target calories per item for distribution control
         target_calories_per_item = target_nutrition.calories / num_items
-        max_calories_per_item = target_calories_per_item * MAX_CALORIE_VARIANCE
+        max_calories_per_item = target_calories_per_item * self.config.MAX_CALORIE_VARIANCE
         
         # Phase 1: Add required items if specified
         remaining_nutrition = self._add_required_items(menu, foods, used_foods, remaining_nutrition, max_calories_per_item, required_items_with_portions)
@@ -221,7 +220,7 @@ class MenuBuilder:
         
         # Final check: ensure we don't exceed calorie limit
         final_calories = food_nutrition.calories * (final_portion / 100)
-        if final_calories > max_calories_per_item * 1.1:  # Small tolerance
+        if final_calories > max_calories_per_item * self.config.CALORIE_TOLERANCE:  # Small tolerance
             adjusted_portion = (max_calories_per_item / food_nutrition.calories) * 100
             final_portion = self.portion_calculator.apply_portion_limits(food, adjusted_portion)
         
@@ -343,7 +342,12 @@ class MenuBuilder:
         
         health_bonus = (100 - self.food_classifier.get_food_score(food)) / 1000
         
-        return -(macro_score + health_bonus + diversity_bonus)  # Negative for higher is better
+        # Add supermarket availability bonus
+        supermarket_count = getattr(food, 'supermarket_count', 0)
+        max_expected = getattr(self.config, 'MAX_EXPECTED_SUPERMARKETS', 5)
+        availability_bonus = -(supermarket_count / max_expected) * 0.3  # Up to 0.3 bonus for max availability
+        
+        return -(macro_score + health_bonus + diversity_bonus + availability_bonus)  # Negative for higher is better
     #TODO: refactor this to use the food lookup service
     def _find_food_by_code(self, foods, item_code):
         """Find food by item code"""

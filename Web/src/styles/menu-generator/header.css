@@ -1,0 +1,32 @@
+/* ====================
+   src/styles/menugenerator/header.css - Header component styles
+   ==================== */
+
+.menu-header {
+  margin-bottom: 32px;
+  text-align: center;
+}
+
+.menu-title {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  font-size: 2.5rem;
+  font-weight: bold;
+  color: var(--gray-900);
+  margin-bottom: 8px;
+}
+
+.menu-description {
+  color: var(--gray-500);
+  font-size: 1.125rem;
+  max-width: 600px;
+  margin: 0 auto;
+}
+
+@media (max-width: 768px) {
+  .menu-title {
+    font-size: 2rem;
+  }
+}

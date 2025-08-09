@@ -1,0 +1,246 @@
+/* ====================
+   src/styles/menugenerator/required-products.css - Required products section styles
+   ==================== */
+
+.required-products-section {
+  background: white;
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-md);
+  border: 1px solid var(--gray-200);
+  padding: 24px;
+  margin-bottom: 24px;
+}
+
+.required-products-header {
+  margin-bottom: 20px;
+}
+
+.required-products-header .header-content {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 16px;
+}
+
+.required-products-header .header-info {
+  flex: 1;
+}
+
+.required-products-header h3 {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: var(--gray-900);
+  margin-bottom: 8px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.required-products-description {
+  color: var(--gray-500);
+  font-size: 0.875rem;
+}
+
+.empty-required-products {
+  text-align: center;
+  padding: 40px 20px;
+  color: var(--gray-500);
+}
+
+.empty-required-products .empty-icon {
+  font-size: 3rem;
+  margin-bottom: 16px;
+}
+
+.empty-required-products h4 {
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: var(--gray-600);
+  margin-bottom: 8px;
+}
+
+.empty-required-products p {
+  font-size: 0.875rem;
+}
+
+.required-products-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+  gap: 16px;
+}
+
+.required-product-card {
+  background: var(--gray-50);
+  border: 1px solid var(--gray-200);
+  border-radius: var(--radius-lg);
+  padding: 16px;
+  display: flex;
+  gap: 16px;
+  align-items: flex-start;
+  transition: all 0.2s ease;
+  position: relative;
+}
+
+.required-product-card:hover {
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  border-color: var(--primary-green);
+}
+
+.product-image-container {
+  width: 80px;
+  height: 80px;
+  flex-shrink: 0;
+  position: relative;
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  background: var(--gray-100);
+}
+
+.product-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: var(--radius-md);
+}
+
+.product-image-placeholder {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--gray-200);
+  color: var(--gray-400);
+  border-radius: var(--radius-md);
+}
+
+.required-product-info {
+  flex: 1;
+}
+
+.required-product-name {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--gray-900);
+  margin-bottom: 8px;
+  line-height: 1.4;
+}
+
+.required-product-details {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.required-product-brand {
+  background: #eff6ff;
+  color: #2563eb;
+  padding: 2px 8px;
+  border-radius: 4px;
+  font-size: 0.75rem;
+  font-weight: 500;
+}
+
+.required-product-category {
+  background: var(--success-bg);
+  color: var(--primary-green);
+  padding: 2px 8px;
+  border-radius: 4px;
+  font-size: 0.75rem;
+}
+
+.portion-input-container {
+  margin-bottom: 12px;
+  padding: 12px;
+  background: white;
+  border: 1px solid var(--gray-200);
+  border-radius: var(--radius-md);
+}
+
+.portion-label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: var(--gray-600);
+  margin-bottom: 6px;
+}
+
+.portion-input-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.portion-input {
+  width: 80px;
+  padding: 6px 8px;
+  border: 1px solid var(--gray-300);
+  border-radius: 4px;
+  font-size: 0.875rem;
+  text-align: center;
+  background: white;
+}
+
+.portion-input:focus {
+  outline: none;
+  border-color: var(--primary-green);
+  box-shadow: 0 0 0 2px rgba(22, 163, 74, 0.1);
+}
+
+.portion-unit {
+  font-size: 0.75rem;
+  color: var(--gray-500);
+  font-weight: 500;
+}
+
+.required-product-nutrition {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.required-product-nutrition .nutrition-item {
+  font-size: 0.75rem;
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-weight: 500;
+}
+
+.required-product-nutrition .nutrition-item.calories {
+  background: var(--yellow-100);
+  color: #d97706;
+}
+
+.required-product-nutrition .nutrition-item.protein {
+  background: var(--red-100);
+  color: var(--red-500);
+}
+
+@media (max-width: 768px) {
+  .required-products-header .header-content {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  
+  .required-products-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .required-product-card {
+    flex-direction: column;
+    text-align: center;
+  }
+  
+  .product-image-container {
+    align-self: center;
+  }
+  
+  .remove-product-btn {
+    position: static;
+    align-self: center;
+    margin-top: 12px;
+  }
+}

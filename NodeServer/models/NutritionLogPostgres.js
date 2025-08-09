@@ -258,6 +258,59 @@ class NutritionLog {
     }
   }
 
+  // Remove a specific item from a meal and update totals
+  async removeItem(itemId) {
+    const client = await pool.connect();
+    
+    try {
+      await client.query('BEGIN');
+
+      // Get the meal_id first to check if we need to remove the meal too
+      const itemResult = await client.query(`
+        SELECT meal_id FROM nutrition_log_items 
+        WHERE id = $1
+      `, [itemId]);
+
+      if (itemResult.rows.length === 0) {
+        throw new Error('Item not found');
+      }
+
+      const mealId = itemResult.rows[0].meal_id;
+
+      // Delete the item
+      await client.query(`
+        DELETE FROM nutrition_log_items 
+        WHERE id = $1
+      `, [itemId]);
+
+      // Check if the meal still has items
+      const remainingItemsResult = await client.query(`
+        SELECT COUNT(*) as count FROM nutrition_log_items 
+        WHERE meal_id = $1
+      `, [mealId]);
+
+      // If no items left in the meal, delete the meal too
+      if (parseInt(remainingItemsResult.rows[0].count) === 0) {
+        await client.query(`
+          DELETE FROM nutrition_log_meals 
+          WHERE id = $1 AND nutrition_log_id = $2
+        `, [mealId, this.id]);
+      }
+
+      // Update totals
+      await this.updateTotals(client);
+
+      await client.query('COMMIT');
+      return true;
+    } catch (error) {
+      await client.query('ROLLBACK');
+      console.error('Error removing item:', error);
+      throw error;
+    } finally {
+      client.release();
+    }
+  }
+
   // Get nutrition summary for a date range
   static async getSummary(userId, startDate, endDate) {
     try {
