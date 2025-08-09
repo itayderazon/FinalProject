@@ -1,0 +1,71 @@
+/* ====================
+   src/styles/menugenerator/base.css - Base styles and variables
+   ==================== */
+
+   :root {
+    --primary-green: #16a34a;
+    --primary-green-hover: #15803d;
+    --primary-green-light: #22c55e;
+    --success-bg: #f0fdf4;
+    --success-border: #dcfce7;
+    
+    --gray-50: #f9fafb;
+    --gray-100: #f3f4f6;
+    --gray-200: #e5e7eb;
+    --gray-300: #d1d5db;
+    --gray-400: #9ca3af;
+    --gray-500: #6b7280;
+    --gray-600: #374151;
+    --gray-900: #111827;
+    
+    --blue-500: #3b82f6;
+    --blue-100: #dbeafe;
+    --purple-500: #8b5cf6;
+    --purple-100: #e9d5ff;
+    --yellow-500: #f59e0b;
+    --yellow-100: #fef3c7;
+    --red-500: #dc2626;
+    --red-100: #fee2e2;
+    
+    --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.1);
+    --shadow-md: 0 4px 6px rgba(0, 0, 0, 0.05);
+    --shadow-lg: 0 8px 16px rgba(0, 0, 0, 0.1);
+    --shadow-xl: 0 12px 24px rgba(0, 0, 0, 0.1);
+    
+    --radius-sm: 6px;
+    --radius-md: 8px;
+    --radius-lg: 12px;
+    --radius-xl: 16px;
+  }
+  
+  .menu-generator {
+    min-height: 100vh;
+    background: var(--gray-50);
+    padding: 32px 0;
+  }
+  
+  .menu-container {
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 0 20px;
+  }
+  
+  .menu-layout {
+    display: grid;
+    grid-template-columns: 400px 1fr;
+    gap: 32px;
+    align-items: start;
+  }
+  
+  @media (max-width: 1024px) {
+    .menu-layout {
+      grid-template-columns: 1fr;
+      gap: 24px;
+    }
+  }
+  
+  @media (max-width: 768px) {
+    .menu-container {
+      padding: 0 16px;
+    }
+  }

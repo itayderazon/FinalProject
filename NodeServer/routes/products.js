@@ -86,6 +86,24 @@ router.get('/categories/:categoryId/subcategories', async (req, res) => {
   }
 });
 
+// Get all allergens
+router.get('/allergens', async (req, res) => {
+  try {
+    const allergens = await Product.getAllergens();
+    res.json({
+      success: true,
+      allergens,
+      count: allergens.length
+    });
+  } catch (error) {
+    console.error('Error fetching allergens:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to fetch allergens'
+    });
+  }
+});
+
 // Search products
 router.get('/search', async (req, res) => {
   try {

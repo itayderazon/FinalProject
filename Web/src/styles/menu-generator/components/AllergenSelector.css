@@ -1,0 +1,89 @@
+.allergen-selector {
+  margin-bottom: 1.5rem;
+}
+
+.allergen-selector h4 {
+  margin: 0 0 0.5rem 0;
+  color: #333;
+  font-size: 1rem;
+  font-weight: 600;
+}
+
+.allergen-description {
+  margin: 0 0 1rem 0;
+  color: #666;
+  font-size: 0.875rem;
+}
+
+.allergen-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  gap: 0.5rem;
+}
+
+.allergen-button {
+  padding: 0.5rem 0.75rem;
+  border: 2px solid #e5e7eb;
+  border-radius: 8px;
+  background: white;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  text-align: left;
+  font-size: 0.875rem;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+}
+
+.allergen-button:hover {
+  border-color: #d1d5db;
+  background: #f9fafb;
+}
+
+.allergen-button.selected {
+  border-color: #ef4444;
+  background: #fee2e2;
+  color: #dc2626;
+}
+
+.allergen-button.selected:hover {
+  border-color: #dc2626;
+  background: #fecaca;
+}
+
+.allergen-name {
+  font-weight: 500;
+  margin-bottom: 0.25rem;
+}
+
+.allergen-count {
+  color: #6b7280;
+  font-size: 0.75rem;
+}
+
+.allergen-button.selected .allergen-count {
+  color: #991b1b;
+}
+
+.allergen-loading,
+.allergen-empty {
+  padding: 1rem;
+  text-align: center;
+  color: #6b7280;
+  font-size: 0.875rem;
+  border: 2px dashed #e5e7eb;
+  border-radius: 8px;
+}
+
+.selected-allergens-summary {
+  margin-top: 0.75rem;
+  padding: 0.5rem;
+  background: #fee2e2;
+  border-radius: 6px;
+  text-align: center;
+}
+
+.selected-allergens-summary small {
+  color: #dc2626;
+  font-weight: 500;
+} 

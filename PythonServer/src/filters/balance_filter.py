@@ -120,10 +120,16 @@ class AllergenFilter(FoodFilter):
     
     def has_excluded_allergens(self, food):
         """Check if food contains any excluded allergens"""
-        # This would need to be implemented based on how allergen data is stored
-        # For now, we'll assume allergens are stored in a food.allergens list
+        # Check if food has allergen_ids attribute and contains any excluded allergens
+        if hasattr(food, 'allergen_ids') and food.allergen_ids:
+            # Handle both list and individual allergen cases
+            food_allergens = food.allergen_ids if isinstance(food.allergen_ids, list) else [food.allergen_ids]
+            return any(allergen_id in self.excluded_allergens for allergen_id in food_allergens)
+        
+        # Legacy support for 'allergens' attribute if it exists
         if hasattr(food, 'allergens') and food.allergens:
             return any(allergen in self.excluded_allergens for allergen in food.allergens)
+        
         return False
 
 class HealthScoreFilter(FoodFilter):

@@ -93,7 +93,7 @@ const useProductCatalog = () => {
   };
 
   const handleImageError = (product, setImageError) => {
-    console.log('Image error for product:', product.name, 'item_code:', product.item_code);
+    
     setImageError(true);
   };
 

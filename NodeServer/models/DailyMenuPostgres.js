@@ -139,7 +139,22 @@ class DailyMenu {
       // Get items for each meal
       for (const meal of result.rows) {
         const itemsResult = await pool.query(`
-          SELECT dmi.*, p.name as product_name, p.item_code
+          SELECT 
+            dmi.id,
+            dmi.daily_menu_meal_id,
+            dmi.product_id,
+            dmi.custom_food_name,
+            dmi.quantity,
+            dmi.unit,
+            dmi.calories,
+            dmi.protein,
+            dmi.carbs,
+            dmi.fat,
+            dmi.source_type,
+            dmi.source_menu_id,
+            dmi.display_order,
+            p.name as product_name, 
+            p.item_code
           FROM daily_menu_items dmi
           LEFT JOIN products p ON dmi.product_id = p.id
           WHERE dmi.daily_menu_meal_id = $1
@@ -155,11 +170,15 @@ class DailyMenu {
           name: item.product_name || item.custom_food_name,
           quantity: item.quantity,
           unit: item.unit,
+          calories: parseFloat(item.calories) || 0,
+          protein: parseFloat(item.protein) || 0,
+          carbs: parseFloat(item.carbs) || 0,
+          fat: parseFloat(item.fat) || 0,
           nutrition: {
-            calories: item.calories,
-            protein: item.protein,
-            carbs: item.carbs,
-            fat: item.fat
+            calories: parseFloat(item.calories) || 0,
+            protein: parseFloat(item.protein) || 0,
+            carbs: parseFloat(item.carbs) || 0,
+            fat: parseFloat(item.fat) || 0
           },
           source_type: item.source_type,
           source_menu_id: item.source_menu_id,
@@ -207,16 +226,36 @@ class DailyMenu {
       for (let i = 0; i < items.length; i++) {
         const item = items[i];
         
-        // Debug logging to see what's being saved
-        console.log('Saving item to database:', {
-          custom_food_name: item.custom_food_name,
-          quantity: item.quantity,
-          unit: item.unit,
-          calories: item.calories,
-          protein: item.protein,
-          carbs: item.carbs,
-          fat: item.fat
-        });
+        // If item has product_id, fetch nutrition data from products table
+        let nutritionData = {
+          calories: item.calories || 0,
+          protein: item.protein || 0,
+          carbs: item.carbs || 0,
+          fat: item.fat || 0
+        };
+        
+        if (item.product_id) {
+          try {
+            const productResult = await client.query(`
+              SELECT nutrition FROM products WHERE id = $1
+            `, [item.product_id]);
+            
+            if (productResult.rows.length > 0) {
+              const productNutrition = productResult.rows[0].nutrition;
+              if (productNutrition) {
+                nutritionData = {
+                  calories: parseFloat(productNutrition.calories) || 0,
+                  protein: parseFloat(productNutrition.protein) || 0,
+                  carbs: parseFloat(productNutrition.carbs) || 0,
+                  fat: parseFloat(productNutrition.fat) || 0
+                };
+              }
+            }
+          } catch (error) {
+            console.error('Error fetching product nutrition:', error);
+            // Continue with item nutrition data as fallback
+          }
+        }
         
         await client.query(`
           INSERT INTO daily_menu_items (
@@ -230,10 +269,10 @@ class DailyMenu {
           item.custom_food_name || null,
           item.quantity,
           item.unit || 'grams',
-          item.calories,
-          item.protein || 0,
-          item.carbs || 0,
-          item.fat || 0,
+          nutritionData.calories,
+          nutritionData.protein,
+          nutritionData.carbs,
+          nutritionData.fat,
           item.source_type || 'manual',
           item.source_menu_id || null,
           i + 1

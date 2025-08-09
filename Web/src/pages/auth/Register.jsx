@@ -2,7 +2,7 @@ import React from 'react';
 import { useRegisterForm } from '../../hooks/useRegisterForm';
 import AuthHeader from '../../components/auth/AuthHeader';
 import RegisterForm from '../../components/auth/RegisterForm';
-import '../../styles/Auth.css';
+import '../../styles/auth/Auth.css';
 
 const Register = () => {
   const {

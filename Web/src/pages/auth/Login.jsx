@@ -2,7 +2,7 @@ import React from 'react';
 import { useLoginForm } from '../../hooks/useLoginForm';
 import AuthHeader from '../../components/auth/AuthHeader';
 import LoginForm from '../../components/auth/LoginForm';
-import '../../styles/Auth.css';
+import '../../styles/auth/Auth.css';
 
 const Login = () => {
   const {

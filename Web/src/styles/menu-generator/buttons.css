@@ -1,0 +1,164 @@
+/* ====================
+   src/styles/menugenerator/buttons.css - Button component styles
+   ==================== */
+
+.generate-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-top: 24px;
+}
+
+.generate-btn {
+  width: 100%;
+  padding: 14px;
+  border: none;
+  border-radius: var(--radius-md);
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.generate-btn.primary {
+  background: var(--primary-green);
+  color: white;
+}
+
+.generate-btn.primary:hover:not(:disabled) {
+  background: var(--primary-green-hover);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 16px rgba(22, 163, 74, 0.3);
+}
+
+.generate-btn.secondary {
+  background: var(--gray-100);
+  color: var(--gray-600);
+  border: 1px solid var(--gray-300);
+}
+
+.generate-btn.secondary:hover {
+  background: var(--gray-200);
+  transform: translateY(-1px);
+}
+
+.generate-btn:disabled {
+  background: var(--gray-400);
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+
+.action-btn {
+  padding: 8px 16px;
+  border: 1px solid var(--gray-300);
+  background: white;
+  border-radius: var(--radius-sm);
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.action-btn.refresh:hover {
+  border-color: var(--primary-green);
+  color: var(--primary-green);
+  background: var(--success-bg);
+}
+
+.action-btn.save {
+  background: var(--primary-green);
+  color: white;
+  border-color: var(--primary-green);
+}
+
+.action-btn.save:hover {
+  background: var(--primary-green-hover);
+  transform: translateY(-1px);
+}
+
+.choose-items-btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 20px;
+  background: var(--primary-green);
+  color: white;
+  border: none;
+  border-radius: var(--radius-md);
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  flex-shrink: 0;
+}
+
+.choose-items-btn:hover {
+  background: var(--primary-green-hover);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 8px rgba(22, 163, 74, 0.3);
+}
+
+.empty-action-btn {
+  background: var(--primary-green);
+  color: white;
+  padding: 12px 24px;
+  border: none;
+  border-radius: var(--radius-md);
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 16px;
+}
+
+.empty-action-btn:hover {
+  background: var(--primary-green-hover);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(22, 163, 74, 0.3);
+}
+
+.delete-btn {
+  background: none;
+  border: none;
+  color: var(--red-500);
+  cursor: pointer;
+  padding: 4px;
+  border-radius: 4px;
+  transition: all 0.2s ease;
+}
+
+.delete-btn:hover {
+  background: var(--red-100);
+}
+
+.remove-product-btn {
+  background: var(--red-100);
+  border: 1px solid #fecaca;
+  color: var(--red-500);
+  border-radius: var(--radius-md);
+  padding: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  position: absolute;
+  top: 12px;
+  right: 12px;
+}
+
+.remove-product-btn:hover {
+  background: #fecaca;
+  border-color: #f87171;
+}

@@ -1,34 +1,26 @@
-const API_BASE_URL = import.meta.env.VITE_API_URL;
+import api from './api';
 
 class DailyMenuService {
   // Helper method for API calls
   async apiCall(endpoint, options = {}) {
-    const token = localStorage.getItem('token');
-    
-    const config = {
-      headers: {
-        'Content-Type': 'application/json',
-        ...options.headers,
-      },
-      ...options,
-    };
-
-    if (token) {
-      config.headers.Authorization = `Bearer ${token}`;
-    }
-
     try {
-      const response = await fetch(`${API_BASE_URL}/daily-menus${endpoint}`, config);
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.error || `HTTP error! status: ${response.status}`);
+      const method = options.method || 'GET';
+      const url = `/daily-menus${endpoint}`;
+      
+      let response;
+      if (method === 'GET') {
+        response = await api.get(url);
+      } else if (method === 'POST') {
+        response = await api.post(url, JSON.parse(options.body || '{}'));
+      } else if (method === 'PUT') {
+        response = await api.put(url, JSON.parse(options.body || '{}'));
+      } else if (method === 'DELETE') {
+        response = await api.delete(url);
       }
-
-      return data;
+      
+      return response.data;
     } catch (error) {
-      console.error('API call failed:', error);
-      throw error;
+      throw error.response?.data || error;
     }
   }
 

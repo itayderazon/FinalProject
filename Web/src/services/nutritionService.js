@@ -24,9 +24,22 @@ export const nutritionService = {
     return response.data;
   },
 
+  async deleteNutritionItem(itemId, logDate) {
+    const response = await api.delete(`/nutrition/items/${itemId}`, {
+      data: { logDate }
+    });
+    return response.data;
+  },
+
   // Food categories and subcategories for menu generation
   async getFoodCategories() {
     const response = await api.get('/nutrition/food-categories');
+    return response.data;
+  },
+
+  // Get all allergens
+  async getAllergens() {
+    const response = await api.get('/products/allergens');
     return response.data;
   },
 

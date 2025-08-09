@@ -31,14 +31,16 @@ class SqlFoodProvider:
             c.name_he as category,
             sc.name_he as subcategory,
             p.nutrition,
-            COALESCE((p.nutrition->>'sodium')::numeric, 0) as sodium
+            COALESCE((p.nutrition->>'sodium')::numeric, 0) as sodium,
+            COALESCE(p.allergen_ids, '{}') as allergen_ids,
+            p.supermarket_count
         FROM products p
         LEFT JOIN categories c ON p.category_id = c.id
         LEFT JOIN subcategories sc ON p.subcategory_id = sc.id
         WHERE p.can_include_in_menu = true
         AND p.is_active = true
         AND (p.nutrition->>'calories')::numeric > 0
-        ORDER BY p.name
+        ORDER BY p.supermarket_count DESC, p.name
         """
         
         try:
@@ -90,13 +92,23 @@ class SqlFoodProvider:
             print(f"Warning: Invalid nutrition data for {row['item_code']}")
             return None
         
+        # Handle allergen_ids (PostgreSQL array)
+        allergen_ids = row.get('allergen_ids', [])
+        if allergen_ids is None:
+            allergen_ids = []
+        elif isinstance(allergen_ids, str):
+            # Handle case where it comes as string representation
+            allergen_ids = []
+        
         return Food(
             item_code=row['item_code'],
             name=row['name'],
             category=row['category'] or '',
             subcategory=row['subcategory'] or '',
             nutrition_per_100g=nutrition,
-            sodium=float(row['sodium'])
+            sodium=float(row['sodium']),
+            allergen_ids=allergen_ids,
+            supermarket_count=int(row.get('supermarket_count', 0))
         )
     
     def get_all_foods(self):
@@ -115,7 +127,9 @@ class SqlFoodProvider:
             c.name_he as category,
             sc.name_he as subcategory,
             p.nutrition,
-            COALESCE((p.nutrition->>'sodium')::numeric, 0) as sodium
+            COALESCE((p.nutrition->>'sodium')::numeric, 0) as sodium,
+            COALESCE(p.allergen_ids, '{}') as allergen_ids,
+            p.supermarket_count
         FROM products p
         LEFT JOIN categories c ON p.category_id = c.id
         LEFT JOIN subcategories sc ON p.subcategory_id = sc.id
@@ -146,13 +160,15 @@ class SqlFoodProvider:
             c.name_he as category,
             sc.name_he as subcategory,
             p.nutrition,
-            COALESCE((p.nutrition->>'sodium')::numeric, 0) as sodium
+            COALESCE((p.nutrition->>'sodium')::numeric, 0) as sodium,
+            COALESCE(p.allergen_ids, '{{}}') as allergen_ids,
+            p.supermarket_count
         FROM products p
         LEFT JOIN categories c ON p.category_id = c.id
         LEFT JOIN subcategories sc ON p.subcategory_id = sc.id
         WHERE p.id IN ({placeholders})
         AND p.is_active = true
-        ORDER BY p.name
+        ORDER BY p.supermarket_count DESC, p.name
         """
         
         try:
@@ -171,8 +187,8 @@ class SqlFoodProvider:
             print(f"Error getting foods by item codes: {e}")
             return []
     
-    def get_filtered_foods(self, max_calories_per_100g=600, included_subcategories=None):
-        """Get foods filtered by criteria"""
+    def get_filtered_foods(self, max_calories_per_100g=600, included_subcategories=None, excluded_allergens=None):
+        """Get foods filtered by criteria including allergen exclusions"""
         
         base_query = """
         SELECT 
@@ -181,7 +197,9 @@ class SqlFoodProvider:
             c.name_he as category,
             sc.name_he as subcategory,
             p.nutrition,
-            COALESCE((p.nutrition->>'sodium')::numeric, 0) as sodium
+            COALESCE((p.nutrition->>'sodium')::numeric, 0) as sodium,
+            COALESCE(p.allergen_ids, '{}') as allergen_ids,
+            p.supermarket_count
         FROM products p
         LEFT JOIN categories c ON p.category_id = c.id
         LEFT JOIN subcategories sc ON p.subcategory_id = sc.id
@@ -199,7 +217,12 @@ class SqlFoodProvider:
             base_query += f" AND sc.name_he IN ({placeholders})"
             params.extend(included_subcategories)
         
-        base_query += " ORDER BY p.name"
+        # Add allergen filtering if specified - exclude foods that contain any of the excluded allergens
+        if excluded_allergens:
+            base_query += " AND NOT (p.allergen_ids && %s)"
+            params.append(excluded_allergens)
+        
+        base_query += " ORDER BY p.supermarket_count DESC, p.name"
         
         try:
             rows = self.db.execute_query(base_query, params)
@@ -227,14 +250,16 @@ class SqlFoodProvider:
             c.name_he as category,
             sc.name_he as subcategory,
             p.nutrition,
-            COALESCE((p.nutrition->>'sodium')::numeric, 0) as sodium
+            COALESCE((p.nutrition->>'sodium')::numeric, 0) as sodium,
+            COALESCE(p.allergen_ids, '{}') as allergen_ids,
+            p.supermarket_count
         FROM products p
         LEFT JOIN categories c ON p.category_id = c.id
         LEFT JOIN subcategories sc ON p.subcategory_id = sc.id
         WHERE p.can_include_in_menu = true
         AND p.is_active = true
         AND (p.name ILIKE %s OR c.name_he ILIKE %s OR sc.name_he ILIKE %s)
-        ORDER BY p.name
+        ORDER BY p.supermarket_count DESC, p.name
         LIMIT %s
         """
         

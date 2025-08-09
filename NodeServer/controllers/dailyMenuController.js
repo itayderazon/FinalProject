@@ -139,8 +139,8 @@ class DailyMenuController {
       const dailyMenu = await DailyMenu.findByUserAndDate(userId, date, menuName);
       
       if (!dailyMenu) {
-        return res.status(404).json({ 
-          error: 'No menu found for this date',
+        return res.status(200).json({ 
+          daily_menu: null,
           date: date 
         });
       }
@@ -239,18 +239,27 @@ class DailyMenuController {
       const { meal_type, meal_order, name, description, target_nutrition, items } = req.body;
 
       // Process and validate items to ensure nutrition data is properly formatted
-      const processedItems = (items || []).map(item => ({
-        product_id: item.product_id || null,
-        custom_food_name: item.custom_food_name || null,
-        quantity: parseFloat(item.quantity) || 0,
-        unit: item.unit || 'grams',
-        calories: parseFloat(item.calories) || 0,
-        protein: parseFloat(item.protein) || 0,
-        carbs: parseFloat(item.carbs) || 0,
-        fat: parseFloat(item.fat) || 0,
-        source_type: item.source_type || 'manual',
-        source_menu_id: item.source_menu_id || null
-      }));
+      const processedItems = (items || []).map(item => {
+        const processedItem = {
+          product_id: item.product_id || null,
+          custom_food_name: item.custom_food_name || null,
+          quantity: parseFloat(item.quantity) || 0,
+          unit: item.unit || 'grams',
+          source_type: item.source_type || 'manual',
+          source_menu_id: item.source_menu_id || null
+        };
+        
+        // Only include nutrition data if no product_id (custom foods)
+        // For products, let addMeal function fetch nutrition from products table
+        if (!item.product_id) {
+          processedItem.calories = parseFloat(item.calories) || 0;
+          processedItem.protein = parseFloat(item.protein) || 0;
+          processedItem.carbs = parseFloat(item.carbs) || 0;
+          processedItem.fat = parseFloat(item.fat) || 0;
+        }
+        
+        return processedItem;
+      });
 
       const dailyMenu = await DailyMenu.findById(menuId);
       

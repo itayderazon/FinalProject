@@ -51,8 +51,8 @@ class MenuGenerator:
             self.config
         )
     
-    def generate_menu(self, target_nutrition, subcategories=None, num_items=None, attempts=None, required_items_with_portions=None):
-        """Generate multiple balanced menus with subcategory filtering"""
+    def generate_menu(self, target_nutrition, subcategories=None, num_items=None, attempts=None, required_items_with_portions=None, excluded_allergens=None):
+        """Generate multiple balanced menus with subcategory and allergen filtering"""
         
         # Validate required inputs
         if num_items is None:
@@ -66,17 +66,30 @@ class MenuGenerator:
         else:
             print("📝 No required items provided")
         
+        # Debug: Check filtering parameters
+        filter_info = []
         if subcategories:
-            print(f"Generating menu with subcategories: {subcategories}")
+            filter_info.append(f"subcategories: {subcategories}")
+        if excluded_allergens:
+            filter_info.append(f"excluded allergens: {excluded_allergens}")
+        
+        if filter_info:
+            print(f"Generating menu with {' and '.join(filter_info)}")
         else:
-            print("Generating menu with all subcategories")
+            print("Generating menu with no specific filters")
         
         print(f"Target: {target_nutrition.calories}cal, {target_nutrition.protein}g protein, {target_nutrition.carbs}g carbs, {target_nutrition.fat}g fat")
         
-        # Get suitable foods using subcategory filtering
-        suitable_foods = self._get_suitable_foods_by_subcategories(subcategories)
+        # Get suitable foods using subcategory and allergen filtering
+        suitable_foods = self._get_suitable_foods_by_filters(subcategories, excluded_allergens)
         if not suitable_foods:
-            print(f"❌ No suitable foods found for subcategories: {subcategories}")
+            filter_desc = []
+            if subcategories:
+                filter_desc.append(f"subcategories: {subcategories}")
+            if excluded_allergens:
+                filter_desc.append(f"excluded allergens: {excluded_allergens}")
+            
+            print(f"❌ No suitable foods found for {' and '.join(filter_desc) if filter_desc else 'specified filters'}")
             # Check if we have required items and return them as fallback
             return self._create_required_items_fallback_menu(target_nutrition, required_items_with_portions)
         
@@ -97,10 +110,19 @@ class MenuGenerator:
                 return fallback_menu
             return None
     
-    def _get_suitable_foods_by_subcategories(self, subcategories):
-        """Get filtered foods using database filter service with subcategories"""
-        print(f"Getting suitable foods for subcategories: {subcategories}")
-        suitable_foods = self.filter_service.get_suitable_foods(subcategories=subcategories)
+    def _get_suitable_foods_by_filters(self, subcategories, excluded_allergens):
+        """Get filtered foods using database filter service with subcategories and allergens"""
+        filter_desc = []
+        if subcategories:
+            filter_desc.append(f"subcategories: {subcategories}")
+        if excluded_allergens:
+            filter_desc.append(f"excluded allergens: {excluded_allergens}")
+        
+        print(f"Getting suitable foods for {' and '.join(filter_desc) if filter_desc else 'no specific filters'}")
+        suitable_foods = self.filter_service.get_suitable_foods(
+            subcategories=subcategories, 
+            excluded_allergens=excluded_allergens
+        )
         return suitable_foods
     
     def _generate_multiple_menus(self, suitable_foods, target_nutrition, num_items, attempts, required_items_with_portions):

@@ -8,8 +8,8 @@ class DatabaseFoodFilterService:
         self.config = config
         print("🗃️ Database Food Filter Service initialized")
     
-    def get_suitable_foods(self, subcategories=None):
-        """Get foods filtered by subcategories using database queries"""
+    def get_suitable_foods(self, subcategories=None, excluded_allergens=None):
+        """Get foods filtered by subcategories and allergens using database queries"""
         
         # Use configuration values for filtering parameters
         max_calories_per_100g = getattr(self.config, 'MAX_CALORIES_PER_100G', 600)
@@ -17,13 +17,20 @@ class DatabaseFoodFilterService:
         # Get filtered foods using database query
         suitable_foods = self.sql_food_provider.get_filtered_foods(
             max_calories_per_100g=max_calories_per_100g,
-            included_subcategories=subcategories
+            included_subcategories=subcategories,
+            excluded_allergens=excluded_allergens
         )
         
+        filter_info = []
         if subcategories:
-            print(f"✅ Database filtering with subcategories {subcategories} returned {len(suitable_foods)} suitable foods")
+            filter_info.append(f"subcategories {subcategories}")
+        if excluded_allergens:
+            filter_info.append(f"excluding allergens {excluded_allergens}")
+        
+        if filter_info:
+            print(f"✅ Database filtering with {' and '.join(filter_info)} returned {len(suitable_foods)} suitable foods")
         else:
-            print(f"✅ Database filtering (all subcategories) returned {len(suitable_foods)} suitable foods")
+            print(f"✅ Database filtering (no specific filters) returned {len(suitable_foods)} suitable foods")
         
         return suitable_foods
     

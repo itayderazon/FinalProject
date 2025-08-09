@@ -13,7 +13,12 @@ class MenuScorer:
             return float('inf')
         
         macro_score = self._calculate_macro_accuracy_score(menu, target_nutrition)
-        return macro_score
+        availability_penalty = self._calculate_availability_penalty(menu)
+        
+        # Combine scores: macro accuracy is primary, availability is secondary
+        availability_weight = getattr(self.config, 'AVAILABILITY_WEIGHT', 0.1)
+        total_score = macro_score + (availability_penalty * availability_weight)
+        return total_score
     
     def _calculate_macro_accuracy_score(self, menu, target_nutrition):
         """Calculate score based on macro accuracy"""
@@ -29,6 +34,31 @@ class MenuScorer:
         accuracy_score = cal_diff + protein_diff + carb_diff + (fat_diff * 1.5)
         
         return accuracy_score
+    
+    def _calculate_availability_penalty(self, menu):
+        """Calculate penalty based on supermarket availability (lower availability = higher penalty)"""
+        if not menu or len(menu.items) == 0:
+            return 0
+        
+        total_availability = 0
+        max_possible_availability = 0
+        
+        for item in menu.items:
+            food = item.food
+            supermarket_count = getattr(food, 'supermarket_count', 0)
+            total_availability += supermarket_count
+            max_expected = getattr(self.config, 'MAX_EXPECTED_SUPERMARKETS', 5)
+            max_possible_availability += max_expected
+        
+        if max_possible_availability == 0:
+            return 0
+        
+        # Calculate availability ratio (0 to 1)
+        availability_ratio = total_availability / max_possible_availability
+        
+        # Convert to penalty: higher availability = lower penalty
+        penalty = 1.0 - availability_ratio
+        return penalty
     
     def calculate_menu_stats(self, menu):
         """Calculate comprehensive menu statistics"""
@@ -46,7 +76,8 @@ class MenuScorer:
             'subcategories': menu.get_subcategories(),
             'item_count': len(menu.items),
             'balance_score': self._calculate_balance_score(menu),
-            'health_score': self._calculate_health_score(menu)
+            'health_score': self._calculate_health_score(menu),
+            'availability_stats': self._calculate_availability_stats(menu)
         }
     
     def _calculate_balance_score(self, menu):
@@ -87,3 +118,57 @@ class MenuScorer:
         
         total_score = sum(self.food_classifier.get_food_score(item.food) for item in menu.items)
         return round(total_score / len(menu.items))
+    
+    def _calculate_availability_stats(self, menu):
+        """Calculate comprehensive availability statistics"""
+        if not menu or len(menu.items) == 0:
+            return {
+                'total_supermarket_coverage': 0,
+                'average_availability': 0,
+                'items_with_no_availability': 0,
+                'best_available_item': None,
+                'worst_available_item': None
+            }
+        
+        availability_counts = []
+        items_with_no_availability = 0
+        best_item = None
+        worst_item = None
+        max_availability = 0
+        min_availability = float('inf')
+        
+        for item in menu.items:
+            food = item.food
+            supermarket_count = getattr(food, 'supermarket_count', 0)
+            availability_counts.append(supermarket_count)
+            
+            if supermarket_count == 0:
+                items_with_no_availability += 1
+            
+            if supermarket_count > max_availability:
+                max_availability = supermarket_count
+                best_item = {
+                    'name': food.name,
+                    'item_code': food.item_code,
+                    'supermarket_count': supermarket_count
+                }
+            
+            if supermarket_count < min_availability:
+                min_availability = supermarket_count
+                worst_item = {
+                    'name': food.name,
+                    'item_code': food.item_code,
+                    'supermarket_count': supermarket_count
+                }
+        
+        total_coverage = sum(availability_counts)
+        average_availability = total_coverage / len(availability_counts) if availability_counts else 0
+        
+        return {
+            'total_supermarket_coverage': total_coverage,
+            'average_availability': round(average_availability, 2),
+            'items_with_no_availability': items_with_no_availability,
+            'best_available_item': best_item,
+            'worst_available_item': worst_item,
+            'availability_score': round((1 - self._calculate_availability_penalty(menu)) * 100, 1)
+        }

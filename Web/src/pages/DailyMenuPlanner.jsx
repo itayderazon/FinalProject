@@ -9,7 +9,7 @@ import WeeklyCalendar from '../components/dailyMenu/WeeklyCalendar';
 import DayDetail from '../components/dailyMenu/DayDetail';
 import PlannerTabs from '../components/dailyMenu/PlannerTabs';
 import LoadingSpinner from '../components/common/LoadingSpinner';
-import '../styles/DailyMenuPlanner.css';
+import '../styles/daily-menu-planner/DailyMenuPlanner.css';
 
 const DailyMenuPlanner = () => {
   const { user } = useAuth();

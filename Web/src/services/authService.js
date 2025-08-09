@@ -7,7 +7,6 @@ export const authService = {
   },
 
   async register(userData) {
-    console.log(userData);
     const response = await api.post('/users/register', userData);
     return response.data;
   },

@@ -70,6 +70,9 @@ CREATE TABLE IF NOT EXISTS products (
     -- Allergen relationships
     allergen_ids INTEGER[] DEFAULT '{}',
     
+    -- Supermarket availability
+    supermarket_count INTEGER DEFAULT 0,
+    
     -- Status and quality
     can_include_in_menu BOOLEAN DEFAULT FALSE,
     is_active BOOLEAN DEFAULT TRUE,

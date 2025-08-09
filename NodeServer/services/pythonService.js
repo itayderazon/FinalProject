@@ -28,8 +28,10 @@ class PythonService {
     for (let attempt = 1; attempt <= this.retries; attempt++) {
       try {
         logger.info(`Python request attempt ${attempt}: ${method} ${endpoint}`);
-        console.log(`Making request to: ${config.url}`);
-        console.log(`Request data:`, JSON.stringify(config.data, null, 2));
+        logger.debug(`Making request to: ${config.url}`);
+        if (config.data) {
+          logger.debug('Request data:', JSON.stringify(config.data, null, 2));
+        }
         const response = await axios(config);
         
         logger.info(`Python request successful: ${endpoint}`);
@@ -102,11 +104,10 @@ class PythonService {
 
   // Price comparison methods
   async comparePrices(menuItems) {
-    console.log('PythonService comparePrices called with:', menuItems);
+    logger.info('PythonService comparePrices called with menu items count:', menuItems?.length);
     const requestData = { menu_items: menuItems };
-    console.log('Sending to Python server:', JSON.stringify(requestData, null, 2));
     const response = await this.makeRequest('/api/price/compare', requestData);
-    console.log('Python server response:', JSON.stringify(response, null, 2));
+    logger.info('Python server price comparison completed successfully');
     return response;
   }
 

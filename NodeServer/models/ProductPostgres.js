@@ -302,6 +302,56 @@ class Product {
     }
   }
 
+  // Get all allergens
+  static async getAllergens() {
+    try {
+      const result = await pool.query(`
+        SELECT a.*, COUNT(p.id) as product_count
+        FROM allergens a
+        LEFT JOIN products p ON a.id = ANY(p.allergen_ids) AND p.is_active = true
+        GROUP BY a.id
+        ORDER BY a.name
+      `);
+      
+      return result.rows;
+    } catch (error) {
+      console.error('Error getting allergens:', error);
+      throw error;
+    }
+  }
+
+  // Get products by allergen exclusion
+  static async findByAllergenExclusion(excludeAllergenIds, limit = 50, offset = 0) {
+    try {
+      let sql = `
+        SELECT p.*, c.name_he as category_name, c.name_en as category_name_en,
+               sc.name_he as subcategory_name, sc.name_en as subcategory_name_en
+        FROM products p
+        JOIN categories c ON p.category_id = c.id
+        LEFT JOIN subcategories sc ON p.subcategory_id = sc.id
+        WHERE p.is_active = true
+      `;
+      const params = [];
+
+      // Add allergen exclusion filters
+      if (excludeAllergenIds && Array.isArray(excludeAllergenIds) && excludeAllergenIds.length > 0) {
+        for (const allergenId of excludeAllergenIds) {
+          params.push(allergenId);
+          sql += ` AND NOT (p.allergen_ids @> ARRAY[$${params.length}])`;
+        }
+      }
+
+      sql += ` ORDER BY p.name LIMIT $${params.length + 1} OFFSET $${params.length + 2}`;
+      params.push(limit, offset);
+
+      const result = await pool.query(sql, params);
+      return result.rows.map(row => new Product(row));
+    } catch (error) {
+      console.error('Error finding products by allergen exclusion:', error);
+      throw error;
+    }
+  }
+
   // Update product images
   async updateImages(images) {
     try {

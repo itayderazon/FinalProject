@@ -5,13 +5,15 @@ from .nutrition import NutritionInfo
 class Food:
     """Responsible ONLY for food data"""
     
-    def __init__(self, item_code, name, category, subcategory, nutrition_per_100g, sodium=0):
+    def __init__(self, item_code, name, category, subcategory, nutrition_per_100g, sodium=0, allergen_ids=None, supermarket_count=0):
         self.item_code = str(item_code)
         self.name = str(name)
         self.category = str(category)
         self.subcategory = str(subcategory)
         self.nutrition_per_100g = nutrition_per_100g
         self.sodium = float(sodium)
+        self.allergen_ids = allergen_ids or []
+        self.supermarket_count = int(supermarket_count)
     
     def get_nutrition_for_portion(self, grams):
         """Get nutrition for a specific portion size"""
@@ -26,7 +28,9 @@ class Food:
             'category': self.category,
             'subcategory': self.subcategory,
             'nutrition_per_100g': self.nutrition_per_100g.to_dict(),
-            'sodium': self.sodium
+            'sodium': self.sodium,
+            'allergen_ids': self.allergen_ids,
+            'supermarket_count': self.supermarket_count
         }
     
     def __str__(self):

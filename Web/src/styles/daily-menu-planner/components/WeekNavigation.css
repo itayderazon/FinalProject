@@ -1,0 +1,84 @@
+/* ===== WEEK NAVIGATION ===== */
+.week-navigation {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.5rem;
+  padding: 0;
+}
+
+.nav-button {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 1rem;
+  background: white;
+  border: 1px solid #e5e7eb;
+  border-radius: 0.5rem;
+  cursor: pointer;
+  font-weight: 500;
+  color: #374151;
+  transition: all 0.2s ease;
+  font-size: 0.875rem;
+}
+
+.nav-button:hover {
+  border-color: #3b82f6;
+  background: #f0f4ff;
+  color: #3b82f6;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 4px rgba(59, 130, 246, 0.1);
+}
+
+.nav-button:active {
+  transform: translateY(0);
+}
+
+.week-title {
+  font-size: 1.125rem;
+  font-weight: 600;
+  margin: 0;
+  color: #1f2937;
+  text-align: center;
+}
+
+/* Responsive Navigation */
+@media (max-width: 768px) {
+  .week-navigation {
+    margin-bottom: 20px;
+    padding: 0 5px;
+  }
+  
+  .nav-button {
+    padding: 10px 16px;
+    font-size: 0.85rem;
+  }
+  
+  .week-title {
+    font-size: 1.1rem;
+  }
+  
+  .week-dates {
+    font-size: 0.8rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .week-navigation {
+    flex-direction: column;
+    gap: 15px;
+    align-items: center;
+  }
+  
+  .nav-buttons {
+    display: flex;
+    gap: 10px;
+    width: 100%;
+    justify-content: space-between;
+  }
+  
+  .nav-button {
+    flex: 1;
+    justify-content: center;
+  }
+}

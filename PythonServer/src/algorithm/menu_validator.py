@@ -15,17 +15,20 @@ class MenuValidator:
         
         total_nutrition = menu.get_total_nutrition()
         
-        # Check macro ratios with tighter ranges for better accuracy
+        # Check macro ratios with configurable ranges for better accuracy
         cal_ratio = total_nutrition.calories / target_nutrition.calories
         protein_ratio = total_nutrition.protein / target_nutrition.protein
         carb_ratio = total_nutrition.carbs / target_nutrition.carbs
         fat_ratio = total_nutrition.fat / target_nutrition.fat
         
-        # Temporarily more flexible ranges for debugging - allow 70% to 130% (±30%)
-        if not (0.7 <= cal_ratio <= 1.3): return False
-        if not (0.7 <= protein_ratio <= 1.3): return False  
-        if not (0.7 <= carb_ratio <= 1.3): return False
-        if not (0.7 <= fat_ratio <= 1.3): return False
+        # Use configurable validation ranges
+        min_ratio = self.config.MIN_NUTRITION_RATIO
+        max_ratio = self.config.MAX_NUTRITION_RATIO
+        
+        if not (min_ratio <= cal_ratio <= max_ratio): return False
+        if not (min_ratio <= protein_ratio <= max_ratio): return False  
+        if not (min_ratio <= carb_ratio <= max_ratio): return False
+        if not (min_ratio <= fat_ratio <= max_ratio): return False
         
         return True
     

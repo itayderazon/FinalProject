@@ -2,27 +2,21 @@ import { useState, useEffect, useCallback, useMemo } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { nutritionService } from '../services/nutritionService';
 import { showNotification } from '../utils/menuUtils';
+import { NUTRITION_PRESETS, DEFAULT_FORM_DATA } from '../constants/presets';
 
 export const useMenuGenerator = () => {
-  const [searchParams] = useSearchParams();
+  const [searchParams, setSearchParams] = useSearchParams();
   const [loading, setLoading] = useState(false);
   const [generatedMenus, setGeneratedMenus] = useState([]);
   const [savedMenus, setSavedMenus] = useState([]);
-  const [activeTab, setActiveTab] = useState('generate');
+  const [activeTab, setActiveTab] = useState(
+    searchParams.get('tab') || 'generate'
+  );
   const [availableSubcategories, setAvailableSubcategories] = useState([]);
   const [subcategoriesLoading, setSubcategoriesLoading] = useState(false);
-  const [formData, setFormData] = useState({
-    calories: 500,
-    protein: 50,
-    carbs: 50,
-    fat: 11,
-    meal_template: '',
-    subcategories: [],
-    num_items: 5,
-    include_prices: true,
-    requiredProducts: [],
-    requiredProductPortions: {}
-  });
+  const [availableAllergens, setAvailableAllergens] = useState([]);
+  const [allergensLoading, setAllergensLoading] = useState(false);
+  const [formData, setFormData] = useState(DEFAULT_FORM_DATA);
 
   // Parse productIds from URL parameters
   const productIdsFromUrl = useMemo(() => {
@@ -33,11 +27,7 @@ export const useMenuGenerator = () => {
     return [];
   }, [searchParams]);
 
-  const presets = {
-    weightLoss: { calories: 1500, protein: 130, carbs: 120, fat: 50 },
-    maintenance: { calories: 2000, protein: 150, carbs: 200, fat: 65 },
-    bulking: { calories: 2800, protein: 200, carbs: 350, fat: 85 },
-  };
+  const presets = NUTRITION_PRESETS;
 
   // Define setRequiredProducts before it's used in useEffect
   const setRequiredProducts = useCallback((productIds) => {
@@ -61,6 +51,7 @@ export const useMenuGenerator = () => {
   useEffect(() => {
     loadSavedMenus();
     loadSubcategories();
+    loadAllergens();
   }, []);
 
   // Handle URL parameters for required products
@@ -104,6 +95,22 @@ export const useMenuGenerator = () => {
     }
   };
 
+  const loadAllergens = async () => {
+    try {
+      setAllergensLoading(true);
+      const response = await nutritionService.getAllergens();
+      
+      if (response.success && response.allergens) {
+        setAvailableAllergens(response.allergens);
+      }
+    } catch (error) {
+      console.error('Error loading allergens:', error);
+      showNotification('Failed to load allergens', 'error');
+    } finally {
+      setAllergensLoading(false);
+    }
+  };
+
   const handleInputChange = (e) => {
     const { name, value, type } = e.target;
     setFormData(prev => ({
@@ -142,7 +149,8 @@ export const useMenuGenerator = () => {
         ...(formData.meal_template && { meal_template: formData.meal_template }),
         ...(formData.subcategories && formData.subcategories.length > 0 && { subcategories: formData.subcategories }),
         ...(formData.num_items && { num_items: formData.num_items }),
-        ...(requiredProductsForAPI && { requiredProducts: requiredProductsForAPI })
+        ...(requiredProductsForAPI && { requiredProducts: requiredProductsForAPI }),
+        ...(formData.excluded_allergens && formData.excluded_allergens.length > 0 && { excluded_allergens: formData.excluded_allergens })
       };
 
       
@@ -153,11 +161,8 @@ export const useMenuGenerator = () => {
       
       // More robust validation
       if (responseData && responseData.success === true && responseData.menus && Array.isArray(responseData.menus) && responseData.menus.length > 0) {
-        console.log('✅ Validation passed - Setting generated menus:', responseData.menus);
-        
         // If price comparison data exists at the response level, add it to each menu
         if (responseData.price_comparison && formData.include_prices) {
-          console.log('📊 Adding price comparison data to menus');
           responseData.menus = responseData.menus.map(menu => ({
             ...menu,
             price_comparison: responseData.price_comparison
@@ -167,19 +172,8 @@ export const useMenuGenerator = () => {
         setGeneratedMenus(responseData.menus);
         showNotification(`Successfully generated ${responseData.menus.length} menu options!`, 'success');
       } else {
-        console.error('❌ Validation failed - Invalid response structure:', {
-          hasResponse: !!response,
-          hasResponseData: !!responseData,
-          success: responseData?.success,
-          successType: typeof responseData?.success,
-          hasMenus: !!responseData?.menus,
-          isArray: Array.isArray(responseData?.menus),
-          menusLength: responseData?.menus?.length
-        });
-        
         // Try a more lenient approach based on your response structure
         if (responseData && responseData.success && responseData.menus) {
-          console.log('🔄 Trying lenient validation...');
           setGeneratedMenus(responseData.menus);
           showNotification(`Successfully generated ${responseData.menus.length || 'multiple'} menu options!`, 'success');
         } else {
@@ -292,6 +286,25 @@ export const useMenuGenerator = () => {
     });
   };
 
+  const toggleAllergen = (allergenName) => {
+    setFormData(prev => {
+      const currentExcludedAllergens = prev.excluded_allergens || [];
+      const isSelected = currentExcludedAllergens.includes(allergenName);
+      
+      if (isSelected) {
+        return {
+          ...prev,
+          excluded_allergens: currentExcludedAllergens.filter(name => name !== allergenName)
+        };
+      } else {
+        return {
+          ...prev,
+          excluded_allergens: [...currentExcludedAllergens, allergenName]
+        };
+      }
+    });
+  };
+
   const removeRequiredProduct = useCallback((productId) => {
     setFormData(prev => {
       // Convert productId to string for comparison since URL params are strings
@@ -304,6 +317,18 @@ export const useMenuGenerator = () => {
     });
   }, [formData.requiredProducts]);
 
+  // Handle tab change with URL persistence
+  const handleTabChange = useCallback((newTab) => {
+    setActiveTab(newTab);
+    const params = new URLSearchParams(searchParams);
+    if (newTab && newTab !== 'generate') {
+      params.set('tab', newTab);
+    } else {
+      params.delete('tab');
+    }
+    setSearchParams(params);
+  }, [searchParams, setSearchParams]);
+
   return {
     // State
     loading,
@@ -314,10 +339,12 @@ export const useMenuGenerator = () => {
     presets,
     availableSubcategories,
     subcategoriesLoading,
+    availableAllergens,
+    allergensLoading,
     productIdsFromUrl,
     
     // Actions
-    setActiveTab,
+    setActiveTab: handleTabChange,
     handleInputChange,
     applyPreset,
     generateMenu,
@@ -325,6 +352,7 @@ export const useMenuGenerator = () => {
     deleteMenu,
     clearResults,
     toggleSubcategory,
+    toggleAllergen,
     loadSavedMenus,
     setRequiredProducts,
     removeRequiredProduct,

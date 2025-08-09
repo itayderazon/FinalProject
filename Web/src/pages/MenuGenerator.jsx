@@ -8,7 +8,7 @@ import MenuForm from '../components/menu/MenuForm';
 import MenuResults from '../components/menu/MenuResults';
 import SavedMenuCard from '../components/menu/SavedMenuCard';
 import RequiredProducts from '../components/menu/RequiredProducts';
-import '../styles/MenuGenerator.css';
+import '../styles/menu-generator/MenuGenerator.css';
 
 const MenuGenerator = () => {
   const { user } = useAuth();
@@ -22,6 +22,8 @@ const MenuGenerator = () => {
     presets,
     availableSubcategories,
     subcategoriesLoading,
+    availableAllergens,
+    allergensLoading,
     productIdsFromUrl,
     
     // Actions
@@ -33,6 +35,7 @@ const MenuGenerator = () => {
     deleteMenu,
     clearResults,
     toggleSubcategory,
+    toggleAllergen,
     loadSavedMenus,
     setRequiredProducts,
     removeRequiredProduct,
@@ -97,6 +100,9 @@ const MenuGenerator = () => {
               availableSubcategories={availableSubcategories}
               subcategoriesLoading={subcategoriesLoading}
               toggleSubcategory={toggleSubcategory}
+              availableAllergens={availableAllergens}
+              allergensLoading={allergensLoading}
+              toggleAllergen={toggleAllergen}
             />
 
             {/* Right Column - Generated Menus */}

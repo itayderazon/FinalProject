@@ -21,6 +21,9 @@ class NutritionRequest(BaseModel):
     # Required products with their portions
     requiredProducts: Optional[List[RequiredProduct]] = Field(None, description="List of required products with portions")
     
+    # Excluded allergens
+    excluded_allergens: Optional[List[int]] = Field(None, description="List of allergen IDs to exclude")
+    
     num_items: Optional[int] = Field(None, gt=0, le=20)
     include_prices: Optional[bool] = Field(False)
     
