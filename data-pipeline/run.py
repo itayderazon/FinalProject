@@ -86,6 +86,11 @@ Environment Variables:
         action='store_true',
         help='Load all data from JSON files'
     )
+    parser.add_argument(
+        '--update-prices',
+        action='store_true',
+        help='Incrementally load ONLY price data for new supermarkets'
+    )
     
     parser.add_argument(
         '--data-dir',
@@ -112,9 +117,9 @@ Environment Variables:
     logger = logging.getLogger(__name__)
     
     # Validate arguments
-    if not args.load_all:
+    if not args.load_all and not args.update_prices:
         parser.print_help()
-        print("\n❌ Error: Please specify --load-all")
+        print("\n❌ Error: Please specify --load-all or --update-prices")
         sys.exit(1)
     
     try:
@@ -132,8 +137,14 @@ Environment Variables:
             return
         
         # Create and run loader
-        loader = DynamicDataLoader(db_config)
-        loader.load_all_data(data_directory)
+        if args.update_prices and not args.load_all:
+            # Lazy import to avoid module resolution before needed
+            import importlib
+            run_update = importlib.import_module('update_prices').update_prices
+            run_update(db_config, args.data_dir)
+        else:
+            loader = DynamicDataLoader(db_config)
+            loader.load_all_data(data_directory)
         
         logger.info("✅ Data pipeline completed successfully!")
         

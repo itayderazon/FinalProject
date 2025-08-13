@@ -601,10 +601,15 @@ class SqlPriceComparison:
                     # Removed is_on_sale and sale_percentage since they don't exist
                 }
             
-            # Calculate totals
+            # Calculate totals and availability counts
             supermarket_totals = {}
+            total_items_in_menu = len(menu_items)
             for sm in self.supermarkets:
-                supermarket_totals[sm] = 0.0
+                supermarket_totals[sm] = {
+                    'total_cost': 0.0,
+                    'items_found': 0,
+                    'total_items': total_items_in_menu
+                }
             
             item_breakdown = []
             
@@ -621,7 +626,8 @@ class SqlPriceComparison:
                         price_per_100g = item_prices[supermarket]['price']
                         item_cost = (portion_grams / 100.0) * price_per_100g
                         item_costs[supermarket] = round(item_cost, 2)
-                        supermarket_totals[supermarket] += item_cost
+                        supermarket_totals[supermarket]['total_cost'] += item_cost
+                        supermarket_totals[supermarket]['items_found'] += 1
                     else:
                         item_costs[supermarket] = None
                 
@@ -632,14 +638,32 @@ class SqlPriceComparison:
                     'prices_per_supermarket': item_costs
                 })
             
-            # Round totals
+            # Round totals and compute missing items
             for sm in self.supermarkets:
-                supermarket_totals[sm] = round(supermarket_totals[sm], 2)
+                supermarket_totals[sm]['total_cost'] = round(supermarket_totals[sm]['total_cost'], 2)
+                supermarket_totals[sm]['missing_items'] = supermarket_totals[sm]['total_items'] - supermarket_totals[sm]['items_found']
+
+            # Determine cheapest store among those with full coverage
+            eligible_supermarkets = [
+                sm for sm in self.supermarkets
+                if supermarket_totals[sm]['total_items'] > 0 and supermarket_totals[sm]['missing_items'] == 0
+            ]
+
+            cheapest_store = None
+            cheapest_total = None
+            if eligible_supermarkets:
+                cheapest_store = min(
+                    eligible_supermarkets,
+                    key=lambda sm: supermarket_totals[sm]['total_cost']
+                )
+                cheapest_total = supermarket_totals[cheapest_store]['total_cost']
             
             return {
                 'supermarket_totals': supermarket_totals,
                 'item_breakdown': item_breakdown,
-                'available_supermarkets': self.supermarkets
+                'available_supermarkets': self.supermarkets,
+                'cheapest_store': cheapest_store,
+                'cheapest_total': cheapest_total
             }
             
         except Exception as e:

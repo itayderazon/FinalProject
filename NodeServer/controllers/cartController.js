@@ -156,18 +156,27 @@ class CartController {
       console.log('getCartDetails for userId:', userId);
       console.log('Cart contents:', { itemCount: cart.items.length, items: cart.items });
 
-      // Get full product details for all cart items
-      const cartItemsWithDetails = await Promise.all(
-        cart.items.map(async (item) => {
-          console.log('Looking up product with ID:', item.productId, 'type:', typeof item.productId);
-          const product = await Product.findById(item.productId);
-          console.log('Product lookup result:', product ? { id: product.id, name: product.name } : 'null');
-          return {
-            ...item,
-            product: product ? product.toJSON() : null
-          };
-        })
-      );
+      // Get full product details for all cart items (including prices) in one batch
+      const productIds = cart.items.map(item => item.productId);
+      let productsWithPrices = [];
+      if (productIds.length > 0) {
+        try {
+          productsWithPrices = await Product.getProductsWithPrices(productIds);
+        } catch (e) {
+          console.error('Error fetching products with prices:', e);
+          productsWithPrices = [];
+        }
+      }
+
+      const productMap = new Map(productsWithPrices.map(p => [String(p.id), p]));
+
+      const cartItemsWithDetails = cart.items.map((item) => {
+        const product = productMap.get(String(item.productId));
+        return {
+          ...item,
+          product: product ? product.toJSON() : null
+        };
+      });
 
       // Filter out items where product no longer exists
       const validItems = cartItemsWithDetails.filter(item => item.product !== null);
@@ -287,19 +296,25 @@ class CartController {
 
     // Check if we have the correct data structure from Python server
     if (priceData && priceData.price_comparison && priceData.price_comparison.supermarket_totals) {
-      const { supermarket_totals, item_breakdown, available_supermarkets } = priceData.price_comparison;
+      let { supermarket_totals, item_breakdown, available_supermarkets } = priceData.price_comparison;
+      if (!Array.isArray(available_supermarkets) || available_supermarkets.length === 0) {
+        available_supermarkets = Object.keys(supermarket_totals || {});
+      }
       
       console.log('supermarket_totals:', supermarket_totals);
       console.log('item_breakdown:', item_breakdown);
 
-      // Initialize stores from supermarket totals (these are already calculated by Python server)
+      // Initialize stores map; we'll compute totals using item breakdown to include quantities
       available_supermarkets.forEach(storeName => {
+        const entry = supermarket_totals[storeName];
+        const isObject = entry && typeof entry === 'object';
         stores[storeName] = {
           name: storeName,
-          total: supermarket_totals[storeName] || 0,
+          total: 0, // will accumulate from item totals
           items: [],
           available_items: 0,
-          missing_items: 0
+          missing_items: 0,
+          total_items: (isObject && typeof entry.total_items === 'number') ? entry.total_items : cartItems.length
         };
       });
 
@@ -321,6 +336,7 @@ class CartController {
                 total_price: itemPrice * item.quantity
               });
               store.available_items++;
+              store.total += itemPrice * item.quantity;
             } else {
               // Item not available in this store
               store.missing_items++;
@@ -331,6 +347,13 @@ class CartController {
           available_supermarkets.forEach(storeName => {
             stores[storeName].missing_items++;
           });
+        }
+      });
+
+      // Ensure totals are numbers
+      Object.values(stores).forEach(store => {
+        if (!Number.isFinite(store.total)) {
+          store.total = 0;
         }
       });
 

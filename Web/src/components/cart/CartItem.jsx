@@ -1,31 +1,27 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { Minus, Plus, Trash2, Package } from 'lucide-react';
 import { formatPrice } from '../../utils/formatters';
-import useShoppingCart from '../../hooks/useShoppingCart';
+import useCartItem from '../../hooks/useCartItem';
 
 const CartItem = ({ item }) => {
-  const { updateQuantity, removeFromCart } = useShoppingCart();
-  const [updating, setUpdating] = useState(false);
-  const { product, quantity } = item;
+  const {
+    product,
+    quantity,
+    bestPrice,
+    itemTotal,
+    updating,
+    handleQuantityChange,
+    handleRemove,
+    imageUrl,
+    imageLoading,
+    imageError,
+    setImageError,
+    displayName,
+    displayBrand,
+    displayCategory
+  } = useCartItem(item);
 
-  const handleQuantityChange = async (newQuantity) => {
-    setUpdating(true);
-    await updateQuantity(product.id, newQuantity);
-    setUpdating(false);
-  };
-
-  const handleRemove = async () => {
-    setUpdating(true);
-    await removeFromCart(product.id);
-    setUpdating(false);
-  };
-
-  if (!product) {
-    return null;
-  }
-
-  const bestPrice = product.priceStats?.minPrice || 0;
-  const itemTotal = bestPrice * quantity;
+  // Always render a minimal row even if product details are missing
 
   return (
     <div
@@ -51,10 +47,22 @@ const CartItem = ({ item }) => {
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
+          overflow: 'hidden',
           flexShrink: 0
         }}
       >
-        <Package style={{ width: '2rem', height: '2rem', color: '#9ca3af' }} />
+        {imageLoading ? (
+          <span style={{ color: '#9ca3af', fontSize: '0.75rem' }}>טוען...</span>
+        ) : (!imageError && imageUrl) ? (
+          <img
+            src={imageUrl}
+            alt={displayName}
+            onError={() => setImageError(true)}
+            style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+          />
+        ) : (
+          <Package style={{ width: '2rem', height: '2rem', color: '#9ca3af' }} />
+        )}
       </div>
 
       {/* Product Details */}
@@ -68,20 +76,22 @@ const CartItem = ({ item }) => {
             lineHeight: '1.4'
           }}
         >
-          {product.name}
+          {displayName}
         </h3>
         
         <div style={{ display: 'flex', gap: '1rem', fontSize: '0.875rem', color: '#6b7280' }}>
-          <span>{product.brand || 'מותג לא ידוע'}</span>
-          <span>{product.category?.name || 'קטגוריה'}</span>
+          <span>{displayBrand}</span>
+          <span>{displayCategory}</span>
         </div>
 
         {/* Price per unit */}
-        <div style={{ marginTop: '0.5rem' }}>
-          <span style={{ fontSize: '0.875rem', color: '#059669' }}>
-            {formatPrice(bestPrice)} לכל יחידה
-          </span>
-        </div>
+        {bestPrice !== null && bestPrice !== undefined && (
+          <div style={{ marginTop: '0.5rem' }}>
+            <span style={{ fontSize: '0.875rem', color: '#059669' }}>
+              {formatPrice(bestPrice)} לכל יחידה
+            </span>
+          </div>
+        )}
       </div>
 
       {/* Quantity Controls */}

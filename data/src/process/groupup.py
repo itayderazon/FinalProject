@@ -143,10 +143,10 @@ class StandardRetailer(Retailer):
 # Register all retailers
 retailers = [
     StandardRetailer('shufersal', '../data/shufersal'),
-    StandardRetailer('rami levi', '../data/rami_levy'),
+    StandardRetailer('rami_levi', '../data/rami_levy'),
     StandardRetailer('victory', '../data/victory'),
     StandardRetailer('tivtaam', '../data/TivTaam'),
-    StandardRetailer('yeinotbitan', '../data/yeinot_bitan')
+    StandardRetailer('yeinot_bitan', '../data/yeinot_bitan')
 ]
 
 # Process all retailers

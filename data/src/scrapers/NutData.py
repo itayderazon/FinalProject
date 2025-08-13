@@ -259,22 +259,16 @@ def get_nutrition_from_api(item_code):
         return result
         
     except requests.exceptions.Timeout:
-        print(f"  ❌ TIMEOUT ERROR for item {item_code}: Request timed out after 10 seconds")
         return None
     except requests.exceptions.ConnectionError:
-        print(f"  ❌ CONNECTION ERROR for item {item_code}: Failed to connect to API")
         return None
     except requests.exceptions.HTTPError as e:
-        print(f"  ❌ HTTP ERROR for item {item_code}: {e.response.status_code} - {e.response.reason}")
         return None
     except json.JSONDecodeError:
-        print(f"  ❌ JSON DECODE ERROR for item {item_code}: Invalid JSON response from API")
         return None
     except KeyError as e:
-        print(f"  ❌ DATA STRUCTURE ERROR for item {item_code}: Missing expected key {e} in API response")
         return None
     except Exception as e:
-        print(f"  ❌ UNEXPECTED ERROR for item {item_code}: {type(e).__name__}: {e}")
         return None
 
 def get_rami_levi_item_codes(json_data):
