@@ -54,11 +54,16 @@ export const useDailyMenus = ({ weekRange, selectedDate }) => {
   };
 
   const addMeal = async (mealData, mealType) => {
-    if (!selectedMenu) {
-      throw new Error('No menu selected');
+    let menuId = selectedMenu?.id;
+    if (!menuId) {
+      // Ensure a menu exists for the date (backend will auto-create if missing)
+      const resp = await dailyMenuService.getDailyMenuByDate(selectedDate);
+      menuId = resp.daily_menu?.id;
     }
 
-    await dailyMenuService.addMealToDailyMenu(selectedMenu.id, {
+    if (!menuId) throw new Error('Failed to resolve daily menu for selected date');
+
+    await dailyMenuService.addMealToDailyMenu(menuId, {
       ...mealData,
       meal_type: mealType
     });
@@ -66,22 +71,16 @@ export const useDailyMenus = ({ weekRange, selectedDate }) => {
   };
 
   const addGeneratedMenu = async (mealType, generatedMenu) => {
-    let menuToUse = selectedMenu;
-    
-    if (!menuToUse) {
-      // Create a new daily menu first
-      const newMenuData = {
-        name: `Daily Menu - ${new Date(selectedDate).toLocaleDateString()}`,
-        menu_date: selectedDate,
-        description: 'Auto-created for generated meal'
-      };
-      
-      await dailyMenuService.createDailyMenu(newMenuData);
-      await loadMenuForDate(selectedDate);
-      menuToUse = selectedMenu;
+    // Ensure a menu exists for the date (backend will auto-create if missing)
+    let menuId = selectedMenu?.id;
+    if (!menuId) {
+      const resp = await dailyMenuService.getDailyMenuByDate(selectedDate);
+      menuId = resp.daily_menu?.id;
     }
 
-    await dailyMenuService.addGeneratedMenuToDaily(menuToUse.id, {
+    if (!menuId) throw new Error('Failed to resolve daily menu for selected date');
+
+    await dailyMenuService.addGeneratedMenuToDaily(menuId, {
       meal_type: mealType,
       generated_menu: generatedMenu
     });

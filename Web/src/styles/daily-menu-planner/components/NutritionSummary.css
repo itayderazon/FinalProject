@@ -20,6 +20,18 @@
   overflow: hidden;
 }
 
+/* Ensure header title/subtitle are white regardless of global overrides */
+.nutrition-summary .nutrition-page-header .nutrition-page-title,
+.nutrition-summary .nutrition-page-header .page-title,
+.nutrition-summary .nutrition-page-header .nutrition-page-subtitle,
+.nutrition-summary .nutrition-page-header .page-subtitle {
+  color: #ffffff !important;
+  background: none !important;
+  background-clip: initial !important;
+  -webkit-background-clip: initial !important;
+  -webkit-text-fill-color: #ffffff !important;
+}
+
 .nutrition-summary .nutrition-page-header::before {
   content: '';
   position: absolute;
@@ -313,40 +325,77 @@ div.nutrition-summary p.page-subtitle {
   gap: 0.5rem;
 }
 
-.add-custom-btn, .save-diary-btn {
-  padding: 0.375rem 0.75rem;
-  border: none;
-  border-radius: 0.375rem;
-  font-weight: 500;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  font-size: 0.8rem;
-  display: flex;
+/* Unified button styles for Nutrition Summary (ns-btn) */
+.ns-btn {
+  --btn-bg: #f3f4f6;
+  --btn-color: #374151;
+  --btn-bg-hover: #e5e7eb;
+  --btn-shadow: rgba(0, 0, 0, 0.06);
+  display: inline-flex;
   align-items: center;
+  justify-content: center;
   gap: 0.375rem;
+  padding: 0.5rem 0.875rem;
+  font-size: 0.875rem;
+  font-weight: 600;
+  border: none;
+  border-radius: 0.5rem;
+  background: var(--btn-bg);
+  color: var(--btn-color);
+  cursor: pointer;
+  transition: transform 0.15s ease, box-shadow 0.2s ease, background 0.2s ease, opacity 0.2s ease;
+  box-shadow: 0 1px 2px var(--btn-shadow);
 }
 
-.add-custom-btn {
-  background: #f3f4f6;
-  color: #374151;
+.ns-btn:hover {
+  background: var(--btn-bg-hover);
+  transform: translateY(-1px);
 }
 
-.add-custom-btn:hover {
-  background: #e5e7eb;
+.ns-btn:active {
+  transform: translateY(0);
 }
 
-.save-diary-btn {
-  background: #3b82f6;
-  color: white;
-}
-
-.save-diary-btn:hover:not(:disabled) {
-  background: #2563eb;
-}
-
-.save-diary-btn:disabled {
-  background: #9ca3af;
+.ns-btn.is-disabled, .ns-btn:disabled {
+  opacity: 0.6;
   cursor: not-allowed;
+  transform: none;
+}
+
+/* Sizes */
+.ns-btn--sm {
+  padding: 0.375rem 0.75rem;
+  font-size: 0.8rem;
+  border-radius: 0.375rem;
+}
+
+/* Variants */
+.ns-btn--primary {
+  --btn-bg: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+  --btn-bg-hover: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+  --btn-color: #ffffff;
+  --btn-shadow: rgba(37, 99, 235, 0.25);
+}
+
+.ns-btn--secondary {
+  --btn-bg: #f3f4f6;
+  --btn-bg-hover: #e5e7eb;
+  --btn-color: #374151;
+  --btn-shadow: rgba(0, 0, 0, 0.06);
+}
+
+.ns-btn--success {
+  --btn-bg: linear-gradient(135deg, #059669 0%, #047857 100%);
+  --btn-bg-hover: linear-gradient(135deg, #047857 0%, #065f46 100%);
+  --btn-color: #ffffff;
+  --btn-shadow: rgba(5, 150, 105, 0.25);
+}
+
+.ns-btn--danger {
+  --btn-bg: #fef2f2;
+  --btn-bg-hover: #fecaca;
+  --btn-color: #dc2626;
+  --btn-shadow: rgba(220, 38, 38, 0.15);
 }
 
 /* ====================
@@ -484,25 +533,7 @@ div.nutrition-summary p.page-subtitle {
   text-align: center;
 }
 
-.consumed-items-table .remove-btn {
-  background: #fef2f2;
-  border: 1px solid #fecaca;
-  color: #dc2626;
-  padding: 6px 10px;
-  border-radius: 6px;
-  cursor: pointer;
-  font-size: 0.875rem;
-  transition: all 0.2s ease;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.consumed-items-table .remove-btn:hover {
-  background: #dc2626;
-  color: white;
-  transform: scale(1.05);
-}
+/* Remove old remove-btn style in favor of ns-btn */
 
 /* Compact Food Items Grid (Alternative Layout - Not Used) */
 .consumed-items-grid {

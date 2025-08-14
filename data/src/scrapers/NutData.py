@@ -148,10 +148,7 @@ def get_nutrition_from_api(item_code):
             'carbs': None,
             'fat': None,
             'sodium': None,
-            'allergens': [],
-            'image_url': None,
-            'serving_size': None,
-            'serving_size_unit': None
+            'allergens': []
         }
         
         # Extract nutrition values from the corrected structure
@@ -200,61 +197,20 @@ def get_nutrition_from_api(item_code):
         }
         result['allergens'] = [allergen_map[code] for code in allergen_codes if code in allergen_map]
         
-        # Extract image URL - from actual API structure
-        images = item_data.get('images', {})
-        if images.get('original'):
-            result['image_url'] = f"https://www.rami-levy.co.il{images['original']}"
-        elif images.get('small'):
-            result['image_url'] = f"https://www.rami-levy.co.il{images['small']}"
-        elif images.get('trim'):
-            result['image_url'] = f"https://www.rami-levy.co.il{images['trim']}"
-        
-        # Extract serving size by calculating from nutritional values ratio
-        # Look for any nutrition item that has both per-100g and per-serving values
-        for nutrition_item in nutritional_values:
-            fields = nutrition_item.get('fields', [])
-            if len(fields) >= 2:
-                per_100g_field = None
-                per_serving_field = None
-                
-                for field in fields:
-                    col_label = field.get('col_label', '')
-                    if 'ל-100 גרם' in col_label:
-                        per_100g_field = field
-                    elif 'למנה' in col_label:
-                        per_serving_field = field
-                
-                # If we found both per-100g and per-serving values, calculate serving size
-                if per_100g_field and per_serving_field:
-                    per_100g_value = clean_numeric_value(per_100g_field.get('value'))
-                    per_serving_value = clean_numeric_value(per_serving_field.get('value'))
-                    
-                    if per_100g_value and per_serving_value and per_100g_value > 0:
-                        calculated_serving_size = (per_serving_value / per_100g_value) * 100
-                        result['serving_size'] = round(calculated_serving_size, 1)
-                        result['serving_size_unit'] = 'g'
-                        break
+        # Image URL and serving size fields were intentionally removed
         
         # Store net weight separately (this is the total product weight, not serving size)
         net_content = gs.get('Net_Content', {})
         if net_content.get('value'):
             result['net_weight'] = clean_numeric_value(net_content.get('value'))
-            result['net_weight_unit'] = net_content.get('UOM', 'g')
         
         # Log successful extraction
         nutrition_count = sum(1 for v in [result['calories'], result['fat'], result['carbs'], result['protein']] if v is not None)
-        extra_info = []
-        if result['image_url']:
-            extra_info.append("image")
-        if result['serving_size']:
-            extra_info.append("serving size")
-        
-        extra_info_text = f" + {', '.join(extra_info)}" if extra_info else ""
         
         if nutrition_count > 0:
-            print(f"  ✅ SUCCESS for item {item_code}: {result['name'][:40]} - Found {nutrition_count}/4 nutrition values{extra_info_text}")
+            print(f"  ✅ SUCCESS for item {item_code}: {result['name'][:40]} - Found {nutrition_count}/4 nutrition values")
         else:
-            print(f"  ⚠️  PARTIAL SUCCESS for item {item_code}: Product info found but no nutrition values extracted{extra_info_text}")
+            print(f"  ⚠️  PARTIAL SUCCESS for item {item_code}: Product info found but no nutrition values extracted")
         
         return result
         
@@ -365,7 +321,7 @@ def finalize_results(checkpoint_path, final_output_path):
         print(f"Error finalizing results: {e}")
         return False
 
-def save_results_to_file(results, filename="rami_levy_nutrition.json"):
+def save_results_to_file(results, filename="nutrition_data.json"):
     """Save the nutrition results to a JSON file"""
     with open(filename, 'w', encoding='utf-8') as f:
         json.dump(results, f, ensure_ascii=False, indent=2)
@@ -387,9 +343,6 @@ def print_sample_output(results, count=3):
         print(f"  Fat: {item.get('fat')}g")
         print(f"  Sodium: {item.get('sodium')}mg")
         print(f"  Allergens: {item.get('allergens')}")
-        print(f"  Image URL: {item.get('image_url', 'Not found')}")
-        serving_size_text = f"{item.get('serving_size')} {item.get('serving_size_unit', '')}" if item.get('serving_size') else "Not found"
-        print(f"  Serving Size: {serving_size_text}")
 
 # Example usage
 if __name__ == "__main__":
@@ -406,7 +359,7 @@ if __name__ == "__main__":
             # Set up file paths
             base_name = json_file_path.replace('.json', '')
             checkpoint_path = f"{base_name}_nutrition_checkpoint.json"
-            final_output_path = f"{base_name}_rami_nutrition.json"
+            final_output_path = os.path.join(os.path.dirname(json_file_path), "nutrition_data.json")
             
             # Get nutrition data for all Rami Levi items with checkpoint support
             nutrition_results = get_nutrition_for_rami_levi_items(products_data, checkpoint_path)

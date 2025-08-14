@@ -1,15 +1,11 @@
 import React, { useState } from 'react';
-import GeneratedMenusModal from './GeneratedMenusModal';
 
 const DailyMenuCard = ({ 
   menu, 
   onAddMeal, 
   onDeleteMeal, 
-  onAddGeneratedMenu,
   showActions = true 
 }) => {
-  const [showGeneratedMenus, setShowGeneratedMenus] = useState(false);
-  const [selectedMealType, setSelectedMealType] = useState(null);
 
   const mealTypes = [
     { type: 'breakfast', icon: '🌅', label: 'Breakfast' },
@@ -23,18 +19,7 @@ const DailyMenuCard = ({
     return menu.meals.filter(meal => meal.meal_type === mealType);
   };
 
-  const handleAddGeneratedMenu = (mealType) => {
-    setSelectedMealType(mealType);
-    setShowGeneratedMenus(true);
-  };
-
-  const handleSelectGeneratedMenu = (generatedMenu) => {
-    if (selectedMealType && onAddGeneratedMenu) {
-      onAddGeneratedMenu(selectedMealType, generatedMenu);
-    }
-    setShowGeneratedMenus(false);
-    setSelectedMealType(null);
-  };
+  // Generate menu flow removed from daily planner
 
   const formatNutrition = (nutrition) => {
     const safeValue = (value) => {
@@ -97,13 +82,7 @@ const DailyMenuCard = ({
                     >
                       <span>+</span>
                     </button>
-                    <button
-                      className="add-generated-btn"
-                      onClick={() => handleAddGeneratedMenu(type)}
-                      title="Add generated menu"
-                    >
-                      <span>🤖</span>
-                    </button>
+                    {/* Generate menu action removed */}
                   </div>
                 )}
               </div>
@@ -207,17 +186,7 @@ const DailyMenuCard = ({
         })}
       </div>
 
-      {/* Modals */}
-      {showGeneratedMenus && (
-        <GeneratedMenusModal
-          mealType={selectedMealType}
-          onSelectMenu={handleSelectGeneratedMenu}
-          onClose={() => {
-            setShowGeneratedMenus(false);
-            setSelectedMealType(null);
-          }}
-        />
-      )}
+      {/* Generate menu modal removed */}
     </div>
   );
 };

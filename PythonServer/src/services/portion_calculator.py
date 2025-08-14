@@ -1,6 +1,7 @@
 # src/services/portion_calculator.py - Portion calculation service
 
 import random
+import math
 from config import Config
 
 class PortionCalculator:
@@ -38,9 +39,67 @@ class PortionCalculator:
         return self.apply_portion_limits(food, portion)
     
     def apply_portion_limits(self, food, portion):
-        """Apply min/max limits to portion size"""
+        """Apply min/max limits and rounding rules to portion size.
+        Rounding rules:
+        - If food.net_size exists, is <= 250g, and calories(net_size) <= 300,
+          serve in whole packages: snap to the nearest integer multiple of net_size
+          within category limits (at least 1 package)
+        - Otherwise snap to nearest 5 grams so portions end in 0 or 5
+        Always enforce category-specific min/max limits.
+        """
         limits = self.get_portion_limits(food)
-        return max(limits['min'], min(limits['max'], round(portion)))
+        min_limit = limits['min']
+        max_limit = limits['max']
+
+        # Initial clamp
+        candidate = max(min_limit, min(max_limit, float(portion)))
+
+        # Package mode: prefer serving in whole packages if small and light enough
+        net_size_attr = getattr(food, 'net_size', None)
+        if net_size_attr is not None:
+            try:
+                net_size = float(net_size_attr)
+                if 0 < net_size <= 250:
+                    calories_per_net = food.nutrition_per_100g.calories * (net_size / 100.0)
+                    if calories_per_net <= 300:
+                        # Compute valid multiples range within category bounds
+                        lower_multiple = math.ceil(min_limit / net_size) * net_size
+                        upper_multiple = math.floor(max_limit / net_size) * net_size
+
+                        if lower_multiple <= upper_multiple:
+                            # Snap candidate to nearest multiple of net_size
+                            nearest = round(candidate / net_size) * net_size
+                            # Ensure at least one package
+                            if nearest < net_size:
+                                nearest = net_size
+                            # Clamp to the multiples range
+                            if nearest < lower_multiple:
+                                nearest = lower_multiple
+                            elif nearest > upper_multiple:
+                                nearest = upper_multiple
+                            return int(round(nearest))
+                        else:
+                            # No valid multiple in range; fall back by clamping one package to bounds
+                            return int(round(max(min_limit, min(max_limit, net_size))))
+            except Exception:
+                pass
+
+        # Snap to nearest step within limits (default 5g)
+        def snap_to_step(value, step_size, lower, upper):
+            if step_size <= 0:
+                return value
+            snapped = round(value / step_size) * step_size
+            # If snapping moved outside bounds, bring it back to closest valid multiple
+            if snapped < lower:
+                snapped = math.ceil(lower / step_size) * step_size
+            if snapped > upper:
+                snapped = math.floor(upper / step_size) * step_size
+            # As a final guard, clamp
+            return max(lower, min(upper, round(snapped)))
+
+        candidate = snap_to_step(candidate, 5, min_limit, max_limit)
+
+        return int(candidate)
     
     def calculate_smart_portion(self, food, target_nutrition, current_nutrition, remaining_slots, food_classifier):
         """Calculate portion with additional intelligence"""

@@ -34,7 +34,6 @@ export const useDailyMenuPlannerState = () => {
     weeklyNutrition,
     createMenu,
     addMeal,
-    addGeneratedMenu,
     deleteMeal,
     getDayMenu
   } = menuData;
@@ -107,7 +106,6 @@ export const useDailyMenuPlannerState = () => {
     onCreateMenu: handleCreateMenu,
     onAddMeal: handleAddMeal,
     onDeleteMeal: deleteMeal,
-    onAddGeneratedMenu: addGeneratedMenu,
     
     // Modal handlers
     onOpenCreateModal: openCreateModal,

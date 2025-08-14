@@ -5,6 +5,8 @@ from pydantic import BaseModel
 import requests
 import logging
 from typing import Optional
+from src.api.constants import NODE_BASE_URL, HTTP_TIMEOUT_SECONDS
+
 
 router = APIRouter()
 logger = logging.getLogger(__name__)
@@ -29,9 +31,9 @@ async def add_product_to_menu(request: AddProductRequest):
     """Add a product from catalog to menu by product ID"""
     try:
         # Fetch product from Node.js server
-        node_url = f"http://localhost:3001/api/products/item-code/{request.product_id}"
+        node_url = f"{NODE_BASE_URL}/api/products/item-code/{request.product_id}"
         
-        response = requests.get(node_url, timeout=10)
+        response = requests.get(node_url, timeout=HTTP_TIMEOUT_SECONDS)
         if response.status_code != 200:
             raise HTTPException(status_code=404, detail=f"Product {request.product_id} not found")
         
@@ -88,10 +90,10 @@ async def search_products(query: str = "", limit: int = 20):
     """Search products in catalog"""
     try:
         # Search products in Node.js server
-        node_url = "http://localhost:3001/api/products/search"
+        node_url = f"{NODE_BASE_URL}/api/products/search"
         params = {'q': query, 'limit': limit}
         
-        response = requests.get(node_url, params=params, timeout=10)
+        response = requests.get(node_url, params=params, timeout=HTTP_TIMEOUT_SECONDS)
         if response.status_code != 200:
             raise HTTPException(status_code=503, detail="Catalog service unavailable")
         

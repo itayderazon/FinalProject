@@ -58,7 +58,7 @@ class DailyMenuController {
       const endDateFormatted = endDate || new Date().toISOString().split('T')[0];
       const startDateFormatted = startDate || new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
 
-      const dailyMenus = await DailyMenu.getUserMenus(
+      let dailyMenus = await DailyMenu.getUserMenus(
         userId, 
         startDateFormatted, 
         endDateFormatted, 
@@ -66,6 +66,45 @@ class DailyMenuController {
         parseInt(limit),
         parseInt(offset)
       );
+
+      // Ensure an empty menu exists for each day in the requested range (auto-create if missing)
+      try {
+        const existingDates = new Set(dailyMenus.map(m => m.menu_date));
+
+        const start = new Date(startDateFormatted);
+        const end = new Date(endDateFormatted);
+        // Normalize times
+        start.setHours(0,0,0,0);
+        end.setHours(0,0,0,0);
+
+        const createdMenus = [];
+        for (let d = new Date(start); d <= end; d.setDate(d.getDate() + 1)) {
+          const dateStr = d.toISOString().split('T')[0];
+          if (!existingDates.has(dateStr)) {
+            try {
+              const created = await DailyMenu.create(userId, {
+                menu_date: dateStr,
+                name: `Daily Menu - ${dateStr}`,
+                description: 'Auto-created empty menu',
+                is_template: false
+              });
+              createdMenus.push(created);
+              existingDates.add(dateStr);
+            } catch (error) {
+              // Ignore unique violations or other non-fatal issues when creating defaults
+              if (error.code !== '23505') {
+                logger.warn(`Failed to auto-create daily menu for ${dateStr}: ${error.message}`);
+              }
+            }
+          }
+        }
+
+        if (createdMenus.length > 0) {
+          dailyMenus = dailyMenus.concat(createdMenus);
+        }
+      } catch (autoCreateError) {
+        logger.warn(`Auto-create daily menus failed: ${autoCreateError.message}`);
+      }
 
       res.status(200).json({
         daily_menus: dailyMenus.map(menu => menu.toJSON()),
@@ -136,13 +175,25 @@ class DailyMenuController {
       const { date } = req.params;
       const { menuName } = req.query;
 
-      const dailyMenu = await DailyMenu.findByUserAndDate(userId, date, menuName);
+      let dailyMenu = await DailyMenu.findByUserAndDate(userId, date, menuName);
       
+      // Auto-create empty menu if none exists for this date
       if (!dailyMenu) {
-        return res.status(200).json({ 
-          daily_menu: null,
-          date: date 
-        });
+        try {
+          dailyMenu = await DailyMenu.create(userId, {
+            menu_date: date,
+            name: `Daily Menu - ${date}`,
+            description: 'Auto-created empty menu',
+            is_template: false
+          });
+        } catch (error) {
+          if (error.code === '23505') {
+            // In rare race conditions, another request created it. Fetch again.
+            dailyMenu = await DailyMenu.findByUserAndDate(userId, date, menuName);
+          } else {
+            throw error;
+          }
+        }
       }
 
       const detailedMenu = await dailyMenu.getDetailedMenu();

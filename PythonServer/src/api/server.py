@@ -16,6 +16,7 @@ from src.api.routes.price import price_router
 from src.api.routes.health import health_router
 from src.api.routes.catalog import catalog_router
 from src.api.services.app_service import app_service
+from src.api.middleware.error_handlers import value_error_handler, internal_error_handler
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -55,6 +56,10 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+# Register global exception handlers
+app.add_exception_handler(ValueError, value_error_handler)
+app.add_exception_handler(Exception, internal_error_handler)
 
 # Include routers
 app.include_router(health_router, tags=["health"])

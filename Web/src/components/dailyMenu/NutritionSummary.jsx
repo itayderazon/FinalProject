@@ -134,8 +134,8 @@ const NutritionSummary = ({ weeklyData, dailyMenus }) => {
     }
   };
 
-  // Add item from planned menu to diary
-  const addToDiary = (plannedItem, mealType) => {
+  // Add item from planned menu to diary (auto-save to DB)
+  const addToDiary = async (plannedItem, mealType) => {
     // Check for duplicates
     const isDuplicate = diaryItems.some(item => {
       const sameProduct = plannedItem.product_id ? 
@@ -149,23 +149,51 @@ const NutritionSummary = ({ weeklyData, dailyMenus }) => {
       return;
     }
 
-    // Create new diary item
-    const newItem = {
-      id: `new_${itemIdCounter++}`,
-      name: plannedItem.custom_food_name || plannedItem.name,
-      mealType,
-      quantity: parseFloat(plannedItem.quantity) || 0,
+    // Sanitize and normalize nutrition values (fallback to nested nutrition object if needed)
+    const coerceNumber = (value) => {
+      if (value === null || value === undefined || value === '' || value === 'NaN') return 0;
+      const parsed = parseFloat(value);
+      return Number.isNaN(parsed) ? 0 : parsed;
+    };
+    const normalized = {
+      quantity: coerceNumber(plannedItem.quantity),
       unit: plannedItem.unit || 'grams',
-      calories: parseFloat(plannedItem.calories) || 0,
-      protein: parseFloat(plannedItem.protein) || 0,
-      carbs: parseFloat(plannedItem.carbs) || 0,
-      fat: parseFloat(plannedItem.fat) || 0,
-      productId: plannedItem.product_id,
-      saved: false // New item, not saved yet
+      calories: coerceNumber(plannedItem.calories ?? plannedItem.nutrition?.calories),
+      protein: coerceNumber(plannedItem.protein ?? plannedItem.nutrition?.protein),
+      carbs: coerceNumber(plannedItem.carbs ?? plannedItem.nutrition?.carbs),
+      fat: coerceNumber(plannedItem.fat ?? plannedItem.nutrition?.fat)
     };
 
-    setDiaryItems(prev => [...prev, newItem]);
-    toast.success(`Added ${newItem.name} to diary`);
+    // Persist immediately to backend and refresh log
+    try {
+      await nutritionService.logNutrition({
+        date: selectedDate,
+        meals: [
+          {
+            type: mealType,
+            foods: [
+              {
+                product_id: plannedItem.product_id,
+                name: plannedItem.custom_food_name || plannedItem.name,
+                quantity: normalized.quantity,
+                unit: normalized.unit,
+                calories: normalized.calories,
+                macros: {
+                  protein: normalized.protein,
+                  carbs: normalized.carbs,
+                  fat: normalized.fat
+                }
+              }
+            ]
+          }
+        ]
+      });
+      toast.success(`Added ${plannedItem.custom_food_name || plannedItem.name} to diary`);
+      await loadNutritionLog();
+    } catch (error) {
+      console.error('Error logging item:', error);
+      toast.error('Failed to add item to diary');
+    }
   };
 
   // Remove item from diary
@@ -208,8 +236,8 @@ const NutritionSummary = ({ weeklyData, dailyMenus }) => {
     }));
   };
 
-  // Add custom food
-  const addCustomFood = () => {
+  // Add custom food (auto-save)
+  const addCustomFood = async () => {
     const name = prompt('Food name:');
     if (!name) return;
     
@@ -219,72 +247,34 @@ const NutritionSummary = ({ weeklyData, dailyMenus }) => {
     const carbs = parseFloat(prompt('Carbs (g):', '0')) || 0;
     const fat = parseFloat(prompt('Fat (g):', '0')) || 0;
     
-    const newItem = {
-      id: `custom_${itemIdCounter++}`,
-      name,
-      mealType: 'snack',
-      quantity,
-      unit: 'grams',
-      calories,
-      protein,
-      carbs,
-      fat,
-      productId: null,
-      saved: false
-    };
-    
-    setDiaryItems(prev => [...prev, newItem]);
-    toast.success(`Added ${name} to diary`);
-  };
-
-  // Save diary to nutrition log
-  const saveDiary = async () => {
-    const unsavedItems = diaryItems.filter(item => !item.saved);
-    if (unsavedItems.length === 0) {
-      toast.error('No new items to save');
-      return;
-    }
-
     try {
-      // Group by meal type
-      const mealGroups = {};
-      unsavedItems.forEach(item => {
-        if (!mealGroups[item.mealType]) {
-          mealGroups[item.mealType] = [];
-        }
-        mealGroups[item.mealType].push({
-          product_id: item.productId,
-          name: item.name,
-          quantity: item.quantity,
-          unit: item.unit,
-          calories: item.calories,
-          macros: {
-            protein: item.protein,
-            carbs: item.carbs,
-            fat: item.fat
-          }
-        });
-      });
-
-      const meals = Object.keys(mealGroups).map(mealType => ({
-        type: mealType,
-        foods: mealGroups[mealType]
-      }));
-
       await nutritionService.logNutrition({
         date: selectedDate,
-        meals
+        meals: [
+          {
+            type: 'snack',
+            foods: [
+              {
+                product_id: null,
+                name,
+                quantity,
+                unit: 'grams',
+                calories,
+                macros: { protein, carbs, fat }
+              }
+            ]
+          }
+        ]
       });
-
-      toast.success('Diary saved successfully!');
-      
-      // Reload to sync with database
-      setTimeout(loadNutritionLog, 500);
+      toast.success(`Added ${name} to diary`);
+      await loadNutritionLog();
     } catch (error) {
-      console.error('Error saving diary:', error);
-      toast.error('Failed to save diary');
+      console.error('Error adding custom food:', error);
+      toast.error('Failed to add custom food');
     }
   };
+
+  // Removed manual save; auto-saved on add
 
   // Calculate totals
   const calculateTotals = () => {
@@ -354,14 +344,14 @@ const NutritionSummary = ({ weeklyData, dailyMenus }) => {
 
   const progress = calculateProgress();
   const totals = calculateTotals();
-  const unsavedCount = diaryItems.filter(item => !item.saved).length;
+  // No unsaved concept when auto-saving
 
   return (
     <div className="nutrition-summary">
       {/* Header */}
       <div className="page-header nutrition-page-header">
-        <h1 className="page-title nutrition-page-title">Nutrition Tracking</h1>
-        <p className="page-subtitle nutrition-page-subtitle">
+        <h1 className="page-title nutrition-page-title" style={{ color: '#ffffff' }}>Nutrition Tracking</h1>
+        <p className="page-subtitle nutrition-page-subtitle" style={{ color: '#ffffff' }}>
           Track your daily nutrition and monitor progress toward your goals
         </p>
       </div>
@@ -479,15 +469,8 @@ const NutritionSummary = ({ weeklyData, dailyMenus }) => {
               <div className="diary-header">
                 <h3>🍽️ Food Diary</h3>
                 <div className="diary-actions">
-                  <button className="add-custom-btn" onClick={addCustomFood}>
+                  <button className="ns-btn ns-btn--secondary ns-btn--sm" onClick={addCustomFood}>
                     ➕ Add Custom Food
-                  </button>
-                  <button 
-                    className="save-diary-btn" 
-                    onClick={saveDiary}
-                    disabled={unsavedCount === 0}
-                  >
-                    💾 Save Diary {unsavedCount > 0 && `(${unsavedCount})`}
                   </button>
                 </div>
               </div>
@@ -531,7 +514,7 @@ const NutritionSummary = ({ weeklyData, dailyMenus }) => {
                           <td className="fat">{Math.round(item.fat * 100) / 100}g</td>
                           <td className="actions">
                             <button 
-                              className="remove-btn"
+                              className="ns-btn ns-btn--danger ns-btn--sm"
                               onClick={() => removeFromDiary(item.id)}
                             >
                               🗑️
@@ -582,6 +565,17 @@ const NutritionSummary = ({ weeklyData, dailyMenus }) => {
                       {meal.items && meal.items.length > 0 ? (
                         <div className="meal-items">
                           {meal.items.map((item, itemIndex) => {
+                            const coerceNumber = (value) => {
+                              if (value === null || value === undefined || value === '' || value === 'NaN') return 0;
+                              const parsed = parseFloat(value);
+                              return Number.isNaN(parsed) ? 0 : parsed;
+                            };
+                            const quantity = coerceNumber(item.quantity);
+                            const unit = item.unit || 'grams';
+                            const calories = coerceNumber(item.calories ?? item.nutrition?.calories);
+                            const protein = coerceNumber(item.protein ?? item.nutrition?.protein);
+                            const carbs = coerceNumber(item.carbs ?? item.nutrition?.carbs);
+                            const fat = coerceNumber(item.fat ?? item.nutrition?.fat);
                             // Check if already in diary
                             const isDuplicate = diaryItems.some(diaryItem => {
                               const sameProduct = item.product_id ? 
@@ -597,16 +591,16 @@ const NutritionSummary = ({ weeklyData, dailyMenus }) => {
                                     {item.custom_food_name || item.name}
                                   </div>
                                   <div className="item-nutrition">
-                                    <span className="nutrition-chunk">{item.quantity} {item.unit || 'grams'}</span>
-                                    <span className="nutrition-chunk">{Math.round((item.calories || 0) * 100) / 100} cal</span>
-                                    <span className="nutrition-chunk">P: {Math.round((item.protein || 0) * 100) / 100}g</span>
-                                    <span className="nutrition-chunk">C: {Math.round((item.carbs || 0) * 100) / 100}g</span>
-                                    <span className="nutrition-chunk">F: {Math.round((item.fat || 0) * 100) / 100}g</span>
+                                      <span className="nutrition-chunk">{Math.round(quantity * 100) / 100} {unit}</span>
+                                      <span className="nutrition-chunk">{Math.round(calories * 100) / 100} cal</span>
+                                      <span className="nutrition-chunk">P: {Math.round(protein * 100) / 100}g</span>
+                                      <span className="nutrition-chunk">C: {Math.round(carbs * 100) / 100}g</span>
+                                      <span className="nutrition-chunk">F: {Math.round(fat * 100) / 100}g</span>
                                   </div>
                                 </div>
                                 
                                 <button 
-                                  className={`add-to-diary-btn ${isDuplicate ? 'disabled' : ''}`}
+                                  className={`ns-btn ns-btn--success ns-btn--sm ${isDuplicate ? 'is-disabled' : ''}`}
                                   onClick={() => addToDiary(item, meal.meal_type)}
                                   disabled={isDuplicate}
                                 >
@@ -672,7 +666,7 @@ const NutritionSummary = ({ weeklyData, dailyMenus }) => {
 
           <div className="goals-control-section">
             <button 
-              className="goals-settings-btn"
+              className="ns-btn ns-btn--secondary"
               onClick={() => setShowGoalsInput(!showGoalsInput)}
             >
               <span>🎯</span>
@@ -740,7 +734,7 @@ const NutritionSummary = ({ weeklyData, dailyMenus }) => {
                 </div>
                 <div className="goals-actions">
                   <button 
-                    className="cancel-goals-btn"
+                    className="ns-btn ns-btn--secondary"
                     onClick={() => {
                       setTempGoals(dailyGoals);
                       setShowGoalsInput(false);
@@ -750,7 +744,7 @@ const NutritionSummary = ({ weeklyData, dailyMenus }) => {
                     Cancel
                   </button>
                   <button 
-                    className="save-goals-btn"
+                    className="ns-btn ns-btn--primary"
                     onClick={saveGoals}
                     disabled={loading.goals}
                   >

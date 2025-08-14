@@ -2,7 +2,7 @@ from fastapi import Request
 from fastapi.responses import JSONResponse
 from datetime import datetime
 
-from api.models.responses import ErrorResponse
+from src.api.models.responses import ErrorResponse
 
 async def value_error_handler(request: Request, exc: ValueError):
     return JSONResponse(

@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { nutritionService } from '../services/nutritionService';
+import productService from '../services/productService';
 import { showNotification } from '../utils/menuUtils';
 import { NUTRITION_PRESETS, DEFAULT_FORM_DATA } from '../constants/presets';
 
@@ -132,10 +133,26 @@ export const useMenuGenerator = () => {
       setLoading(true);
       
       // Transform required products into the format expected by backend
+      // IMPORTANT: Use item code (not DB id) as item_id
       let requiredProductsForAPI = null;
       if (formData.requiredProducts && formData.requiredProducts.length > 0) {
+        // Fetch item codes for each product id
+        const idToCodeEntries = await Promise.all(
+          formData.requiredProducts.map(async (productId) => {
+            try {
+              const response = await productService.getProductById(productId);
+              const product = response?.success ? response.product : response;
+              const itemCode = product?.item_code || product?.itemCode || String(productId);
+              return [productId, itemCode];
+            } catch (e) {
+              return [productId, String(productId)];
+            }
+          })
+        );
+        const idToCode = Object.fromEntries(idToCodeEntries);
+
         requiredProductsForAPI = formData.requiredProducts.map(productId => ({
-          item_id: productId,
+          item_id: idToCode[productId],
           portion_grams: formData.requiredProductPortions[productId] || 100 // Default to 100g if no portion specified
         }));
       }

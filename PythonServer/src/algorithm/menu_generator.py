@@ -54,6 +54,8 @@ class MenuGenerator:
     def generate_menu(self, target_nutrition, subcategories=None, num_items=None, attempts=None, required_items_with_portions=None, excluded_allergens=None):
         """Generate multiple balanced menus with subcategory and allergen filtering"""
         
+        # Build info strings with a tiny helper (readability only)
+        filter_info = self._build_filter_info(subcategories, excluded_allergens)
         # Validate required inputs
         if num_items is None:
             raise ValueError("num_items is required - must be provided as input")
@@ -66,19 +68,14 @@ class MenuGenerator:
         else:
             print("📝 No required items provided")
         
-        # Debug: Check filtering parameters
-        filter_info = []
-        if subcategories:
-            filter_info.append(f"subcategories: {subcategories}")
-        if excluded_allergens:
-            filter_info.append(f"excluded allergens: {excluded_allergens}")
+        # Debug: Check filtering parameters (already built above)
         
         if filter_info:
             print(f"Generating menu with {' and '.join(filter_info)}")
         else:
             print("Generating menu with no specific filters")
         
-        print(f"Target: {target_nutrition.calories}cal, {target_nutrition.protein}g protein, {target_nutrition.carbs}g carbs, {target_nutrition.fat}g fat")
+        self._log_menu_target(target_nutrition)
         
         # Get suitable foods using subcategory and allergen filtering
         suitable_foods = self._get_suitable_foods_by_filters(subcategories, excluded_allergens)
@@ -133,7 +130,7 @@ class MenuGenerator:
         max_menus = 3
         
         for attempt in range(attempts):
-            print(f"Attempt {attempt + 1}/{attempts}")
+            self._log_attempt(attempt, attempts)
             
             # Generate menu (remove meal_type parameter)
             menu = self.menu_builder.build_menu(suitable_foods, target_nutrition, num_items, required_items_with_portions)
@@ -225,3 +222,19 @@ class MenuGenerator:
             return [fallback_menu]
         
         return None
+
+    def _build_filter_info(self, subcategories, excluded_allergens):
+        info = []
+        if subcategories:
+            info.append(f"subcategories: {subcategories}")
+        if excluded_allergens:
+            info.append(f"excluded allergens: {excluded_allergens}")
+        return info
+
+    def _log_menu_target(self, target_nutrition):
+        print(
+            f"Target: {target_nutrition.calories}cal, {target_nutrition.protein}g protein, {target_nutrition.carbs}g carbs, {target_nutrition.fat}g fat"
+        )
+
+    def _log_attempt(self, attempt_index, total_attempts):
+        print(f"Attempt {attempt_index + 1}/{total_attempts}")

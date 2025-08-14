@@ -1,7 +1,6 @@
 import React from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useDailyMenuPlannerState } from '../hooks/useDailyMenuPlannerState';
-import CreateMenuModal from '../components/dailyMenu/CreateMenuModal';
 import AddMealModal from '../components/dailyMenu/AddMealModal';
 import NutritionSummary from '../components/dailyMenu/NutritionSummary';
 import WeekNavigation from '../components/dailyMenu/WeekNavigation';
@@ -90,10 +89,9 @@ const DailyMenuPlanner = () => {
             <DayDetail 
               selectedDate={selectedDate}
               selectedMenu={selectedMenu}
-              onCreateMenu={onOpenCreateModal}
+               // Auto-created menus; no manual create action
               onAddMeal={onOpenAddMealModal}
               onDeleteMeal={onDeleteMeal}
-              onAddGeneratedMenu={onAddGeneratedMenu}
             />
           </div>
         )}
@@ -109,13 +107,7 @@ const DailyMenuPlanner = () => {
       </div>
 
       {/* Modals */}
-      {showCreateModal && (
-        <CreateMenuModal
-          selectedDate={selectedDate}
-          onSubmit={onCreateMenu}
-          onClose={onCloseCreateModal}
-        />
-      )}
+      {/* CreateMenuModal removed due to auto-creation */}
 
       {showAddMealModal && (
         <AddMealModal

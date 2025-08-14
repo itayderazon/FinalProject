@@ -61,6 +61,16 @@ def _parse_request_parameters(request: NutritionRequest, config):
     # Use subcategories if provided
     subcategories = request.subcategories if request.subcategories else None
     
+    # If meal_template is provided and subcategories are not, map preset to subcategories
+    if not subcategories and request.meal_template:
+        template_key = request.meal_template.strip().lower()
+        if template_key == 'snacks':
+            template_key = 'snack'
+        presets = getattr(config, 'MEAL_SUBCATEGORY_TEMPLATES', {})
+        if template_key in presets:
+            subcategories = presets[template_key]
+            logger.info(f"Applied meal template '{template_key}' to subcategories: {subcategories}")
+    
     # Get excluded allergens if provided
     excluded_allergens = request.excluded_allergens if request.excluded_allergens else None
     

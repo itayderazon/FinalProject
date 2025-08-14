@@ -66,6 +66,8 @@ CREATE TABLE IF NOT EXISTS products (
     
     -- Nutrition data (flexible JSONB)
     nutrition JSONB DEFAULT '{}',
+    -- Net weight in grams 
+    net_weight_g DECIMAL(10,2),
     
     -- Allergen relationships
     allergen_ids INTEGER[] DEFAULT '{}',
