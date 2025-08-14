@@ -1,38 +1,30 @@
 import React from 'react';
-import { MapPin, Clock, ExternalLink } from 'lucide-react';
+import { ExternalLink } from 'lucide-react';
 
 const PriceDisplay = ({ product, formatPrice }) => {
-  // Store mapping for display names and locations
-
-
-  //TODO: change this shit
-  const storeDisplayInfo = {
-    'Shufersal': { displayName: 'שופרסל', location: 'רחובות' },
-    'Rami Levy': { displayName: 'רמי לוי', location: 'תל אביב' },
-    'Victory': { displayName: 'ויקטורי', location: 'חיפה' },
-    'Tiv Taam': { displayName: 'טיב טעם', location: 'ירושלים' },
-    'Carrefour': { displayName: 'קרפור', location: 'פתח תקווה' },
-    'Yeinot Bitan': { displayName: 'יינות ביתן', location: 'רמת גן' },
-    'Other': { displayName: 'אחר', location: 'מיקום לא ידוע' }
-  };
+  // Show store names directly from DB data (no mapping)
 
   // Extract and format store prices from the product's prices array
   const extractStorePrices = () => {
     if (!product.prices || product.prices.length === 0) return [];
     
     return product.prices.map(priceInfo => {
-      const storeInfo = storeDisplayInfo[priceInfo.supermarket] || {
-        displayName: priceInfo.supermarket,
-        location: 'מיקום לא ידוע'
-      };
+      const storeName = (
+        priceInfo.supermarket ||
+        priceInfo.store ||
+        priceInfo.storeName ||
+        priceInfo.supermarket_name ||
+        priceInfo.chain ||
+        priceInfo.vendor ||
+        'Unknown store'
+      );
       
       return {
-        store: storeInfo.displayName,
+        store: storeName,
         price: priceInfo.price,
-        location: storeInfo.location,
         lastUpdated: priceInfo.lastChecked ? 
           new Date(priceInfo.lastChecked).toLocaleDateString('he-IL') : 'לא ידוע',
-        availability: 'במלאי', // Default since we don't have availability data yet
+        availability: 'במלאי',
         isOnSale: priceInfo.isOnSale || false,
         salePercentage: priceInfo.salePercentage || null,
         originalPrice: priceInfo.originalPrice || null
@@ -173,30 +165,16 @@ const PriceDisplay = ({ product, formatPrice }) => {
                     </div>
                   </div>
 
-                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: '1rem', fontSize: '0.875rem', color: '#6b7280' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
-                      <MapPin style={{ width: '1rem', height: '1rem' }} />
-                      {priceItem.location}
-                    </div>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
-                      <Clock style={{ width: '1rem', height: '1rem' }} />
-                      עודכן {priceItem.lastUpdated}
-                    </div>
-                    <div style={{
-                      color: priceItem.availability === 'במלאי' ? '#059669' : '#dc2626',
-                      fontWeight: '500'
-                    }}>
-                      {priceItem.availability}
-                    </div>
-                    {priceItem.salePercentage && (
+                  {priceItem.salePercentage && (
+                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: '1rem', fontSize: '0.875rem', color: '#6b7280' }}>
                       <div style={{
                         color: '#dc2626',
                         fontWeight: '600'
                       }}>
                         חיסכון {priceItem.salePercentage}%
                       </div>
-                    )}
-                  </div>
+                    </div>
+                  )}
                 </div>
 
                 <button 

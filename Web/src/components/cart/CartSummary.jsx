@@ -206,47 +206,8 @@ const CartSummary = ({ priceComparison, comparingPrices, onComparePrices }) => {
         </div>
       </div>
 
-      {/* Savings Information */}
-      {sortedStores.length > 1 && (
-        <div
-          style={{
-            backgroundColor: '#eff6ff',
-            border: '1px solid #bfdbfe',
-            borderRadius: '0.5rem',
-            padding: '1rem'
-          }}
-        >
-          <div style={{ fontSize: '0.875rem', color: '#1e40af' }}>
-            <strong>
-              חיסכון אפשרי: {formatPrice(sortedStores[sortedStores.length - 1].total - sortedStores[0].total)}
-            </strong>
-          </div>
-          <div style={{ fontSize: '0.75rem', color: '#6b7280', marginTop: '0.25rem' }}>
-            בקנייה ב{sortedStores[0].name} במקום ב{sortedStores[sortedStores.length - 1].name}
-          </div>
-        </div>
-      )}
+      
 
-      {/* Refresh Button */}
-      <button
-        onClick={onComparePrices}
-        disabled={comparingPrices}
-        style={{
-          width: '100%',
-          padding: '0.75rem 1rem',
-          backgroundColor: comparingPrices ? '#9ca3af' : '#6b7280',
-          color: 'white',
-          border: 'none',
-          borderRadius: '0.5rem',
-          fontSize: '0.875rem',
-          fontWeight: '500',
-          cursor: comparingPrices ? 'not-allowed' : 'pointer',
-          transition: 'all 0.2s ease',
-          marginTop: '1rem'
-        }}
-      >
-        {comparingPrices ? 'מעדכן...' : 'עדכן מחירים'}
-      </button>
     </div>
   );
 };

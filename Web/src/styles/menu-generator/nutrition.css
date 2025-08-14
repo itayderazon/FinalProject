@@ -2,19 +2,26 @@
    src/styles/menugenerator/nutrition.css - Nutrition display styles
    ==================== */
 
-.nutrition-summary {
+.menu-generator .menu-card .nutrition-summary {
   padding: 24px;
   background: var(--gray-50);
   border-bottom: 1px solid var(--gray-200);
+  width: 100% !important;
+  max-width: 100% !important; /* Ensure full-width within menu card */
+  margin: 0 !important;
+  box-sizing: border-box;
 }
 
-.nutrition-grid {
+.menu-generator .menu-card .nutrition-grid {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
+  grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: 16px;
+  align-items: stretch; /* Make all cells equal height */
+  width: 100%;
+  grid-auto-rows: 1fr; /* Equal height rows */
 }
 
-.nutrition-item {
+.menu-generator .menu-card .nutrition-item {
   display: flex;
   align-items: center;
   gap: 12px;
@@ -22,9 +29,11 @@
   padding: 16px;
   border-radius: var(--radius-md);
   box-shadow: var(--shadow-sm);
+  height: 100%; /* Stretch item to fill grid cell */
+  width: 100%;
 }
 
-.nutrition-icon {
+.menu-generator .menu-card .nutrition-icon {
   width: 32px;
   height: 32px;
   border-radius: var(--radius-md);
@@ -34,38 +43,38 @@
   font-size: 16px;
 }
 
-.nutrition-icon.calories {
+.menu-generator .menu-card .nutrition-icon.calories {
   background: var(--yellow-100);
   color: var(--yellow-500);
 }
 
-.nutrition-icon.protein {
+.menu-generator .menu-card .nutrition-icon.protein {
   background: var(--blue-100);
   color: var(--blue-500);
 }
 
-.nutrition-icon.carbs {
+.menu-generator .menu-card .nutrition-icon.carbs {
   background: var(--success-border);
   color: var(--primary-green);
 }
 
-.nutrition-icon.fat {
+.menu-generator .menu-card .nutrition-icon.fat {
   background: var(--purple-100);
   color: var(--purple-500);
 }
 
-.nutrition-info {
+.menu-generator .menu-card .nutrition-info {
   flex: 1;
 }
 
-.nutrition-label {
+.menu-generator .menu-card .nutrition-label {
   font-size: 0.75rem;
   color: var(--gray-500);
   margin-bottom: 2px;
   font-weight: 500;
 }
 
-.nutrition-value {
+.menu-generator .menu-card .nutrition-value {
   font-size: 1.125rem;
   font-weight: 600;
   color: var(--gray-900);
@@ -95,13 +104,13 @@
 }
 
 @media (max-width: 1024px) {
-  .nutrition-grid {
+  .menu-generator .menu-card .nutrition-grid {
     grid-template-columns: repeat(2, 1fr);
   }
 }
 
 @media (max-width: 768px) {
-  .nutrition-grid {
+  .menu-generator .menu-card .nutrition-grid {
     grid-template-columns: 1fr;
   }
 }

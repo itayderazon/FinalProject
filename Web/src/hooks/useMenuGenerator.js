@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { nutritionService } from '../services/nutritionService';
+import productService from '../services/productService';
 import { showNotification } from '../utils/menuUtils';
 import { NUTRITION_PRESETS, DEFAULT_FORM_DATA } from '../constants/presets';
 
@@ -134,8 +135,23 @@ export const useMenuGenerator = () => {
       // Transform required products into the format expected by backend
       let requiredProductsForAPI = null;
       if (formData.requiredProducts && formData.requiredProducts.length > 0) {
+        // Fetch item codes for each product id
+        const idToCodeEntries = await Promise.all(
+          formData.requiredProducts.map(async (productId) => {
+            try {
+              const response = await productService.getProductById(productId);
+              const product = response?.success ? response.product : response;
+              const itemCode = product?.item_code || product?.itemCode || String(productId);
+              return [productId, itemCode];
+            } catch (e) {
+              return [productId, String(productId)];
+            }
+          })
+        );
+        const idToCode = Object.fromEntries(idToCodeEntries);
+
         requiredProductsForAPI = formData.requiredProducts.map(productId => ({
-          item_id: productId,
+          item_id: idToCode[productId],
           portion_grams: formData.requiredProductPortions[productId] || 100 // Default to 100g if no portion specified
         }));
       }
@@ -146,6 +162,8 @@ export const useMenuGenerator = () => {
         carbs: formData.carbs, 
         fat: formData.fat,
         include_prices: formData.include_prices,
+        ...(formData.min_price > 0 && { min_price: formData.min_price }),
+        ...(formData.max_price > 0 && { max_price: formData.max_price }),
         ...(formData.meal_template && { meal_template: formData.meal_template }),
         ...(formData.subcategories && formData.subcategories.length > 0 && { subcategories: formData.subcategories }),
         ...(formData.num_items && { num_items: formData.num_items }),

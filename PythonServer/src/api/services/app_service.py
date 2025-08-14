@@ -55,8 +55,12 @@ class AppService:
             meal_rules_factory = MealRulesFactory()
             
             self.menu_generator = MenuGenerator(
-                food_provider, food_classifier, portion_calculator, 
-                meal_rules_factory, config
+                food_provider,
+                food_classifier,
+                portion_calculator,
+                meal_rules_factory,
+                config,
+                price_comparison=self.price_comparison
             )
             
             print("✅ All services initialized successfully")

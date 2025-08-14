@@ -3,7 +3,7 @@
 from .nutrition import NutritionInfo
 
 class Menu:
-    """Responsible ONLY for menu data and basic operations"""
+    """Menu aggregate: holds items and computes totals and simple breakdowns."""
     
     def __init__(self):
         self.items = []
@@ -27,42 +27,21 @@ class Menu:
             total = total.add(item.get_nutrition())
         return total
     
-    def get_categories(self, sql_food_provider):
-        """Get category distribution using SQL provider"""
-        if not sql_food_provider:
-            return {}
-        
-        # Get item codes from the menu
-        item_codes = [item.food.item_code for item in self.items]
-        if not item_codes:
-            return {}
-        
-        try:
-            # Use SQL provider to get category distribution for these specific items
-            stats = sql_food_provider.get_provider_stats()
-            return stats.get('categories', [])
-        except Exception as e:
-            print(f"Error getting categories from SQL provider: {e}")
-            return {}
+    def get_categories(self):
+        """Compute category distribution from current items (no external deps)"""
+        categories = {}
+        for item in self.items:
+            cat = item.food.category
+            categories[cat] = categories.get(cat, 0) + 1
+        return categories
     
-    def get_subcategories(self, sql_food_provider):
-        """Get subcategory distribution using SQL provider"""
-        print(f"Getting subcategories from SQL provider: {sql_food_provider}")
-        if not sql_food_provider:
-            return {}
-        
-        # Get item codes from the menu
-        item_codes = [item.food.item_code for item in self.items]
-        if not item_codes:
-            return {}
-        
-        try:
-            # Use SQL provider to get subcategory distribution for these specific items
-            stats = sql_food_provider.get_provider_stats()
-            return stats.get('subcategories', [])
-        except Exception as e:
-            print(f"Error getting subcategories from SQL provider: {e}")
-            return {}
+    def get_subcategories(self):
+        """Compute subcategory distribution from current items (no external deps)"""
+        subcategories = {}
+        for item in self.items:
+            sub = item.food.subcategory
+            subcategories[sub] = subcategories.get(sub, 0) + 1
+        return subcategories
     
     def get_total_cost(self, price_provider=None):
         """Calculate total cost if price provider is available"""

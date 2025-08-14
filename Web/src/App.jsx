@@ -23,7 +23,7 @@ import Navigation from './components/navigation/Navigation';
 import LoadingSpinner from './components/common/LoadingSpinner';
 
 // Styles
-import './styles/globals.css';
+import './styles/globals.css'; // keep component/layout utilities only; reset handled in main
 
 // Protected Route Component
 const ProtectedRoute = ({ children }) => {

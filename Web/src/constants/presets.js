@@ -31,6 +31,8 @@ export const DEFAULT_FORM_DATA = {
   excluded_allergens: [],
   num_items: 5,
   include_prices: true,
+  min_price: 0,
+  max_price: 0,
   requiredProducts: [],
   requiredProductPortions: {}
 };

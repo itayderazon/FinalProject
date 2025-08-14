@@ -29,6 +29,10 @@ const ProductCard = ({ product, formatPrice, fetchProductImage, getProductImageU
   
   const bestPrice = priceStats ? priceStats.minPrice : null;
   const storeCount = priceStats ? priceStats.storeCount : 0;
+  const bestPriceEntry = (product.prices && product.prices.length > 0 && bestPrice != null)
+    ? product.prices.reduce((min, p) => (p.price < min.price ? p : min), product.prices[0])
+    : null;
+  const bestStoreName = bestPriceEntry ? (bestPriceEntry.supermarket || bestPriceEntry.store || '') : '';
 
   const handleViewPrices = () => {
     setShowPriceModal(true);
@@ -170,13 +174,19 @@ const ProductCard = ({ product, formatPrice, fetchProductImage, getProductImageU
             )}
           </div>
 
-          {/* Price Information */}
+          {/* Price Information */
+          }
           <div className="price-section">
             {bestPrice && (
               <>
                 <div className="price-display">
                   {formatPrice(bestPrice)}
                 </div>
+                {bestStoreName && (
+                  <div style={{ fontSize: '0.75rem', color: '#6b7280' }}>
+                    {bestStoreName}
+                  </div>
+                )}
                 <div style={{ fontSize: '0.75rem', color: '#6b7280' }}>
                   {formatStoreCount(storeCount)}
                 </div>
@@ -197,6 +207,7 @@ const ProductCard = ({ product, formatPrice, fetchProductImage, getProductImageU
                   justifyContent: 'center', 
                   gap: '0.5rem',
                   backgroundColor: isSelected ? '#dc2626' : '#16a34a',
+                  color: 'white',
                   border: 'none',
                   fontSize: '0.875rem'
                 }}
@@ -268,14 +279,15 @@ const ProductCard = ({ product, formatPrice, fetchProductImage, getProductImageU
                     justifyContent: 'center', 
                     gap: '0.5rem',
                     backgroundColor: '#16a34a',
+                    color: 'white',
                     border: 'none',
                     fontSize: '0.875rem'
                   }}
                   onClick={handleAddToMenu}
-                  title="הוסף למנה"
+                  title="Add to meal"
                 >
                   <Plus style={{ width: '1rem', height: '1rem' }} />
-                  הוסף למנה
+                  Add to meal
                 </button>
               </>
             )}

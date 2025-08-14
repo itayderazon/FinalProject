@@ -6,7 +6,7 @@ import sys
 import os
 from contextlib import asynccontextmanager
 
-# Add the PythonServer root to the path (go up 2 levels from src/api/server.py)
+# Add the PythonServer root to the path 
 pythonserver_root = os.path.abspath(os.path.join(os.path.dirname(__file__), '../..'))
 if pythonserver_root not in sys.path:
     sys.path.insert(0, pythonserver_root)
@@ -16,6 +16,8 @@ from src.api.routes.price import price_router
 from src.api.routes.health import health_router
 from src.api.routes.catalog import catalog_router
 from src.api.services.app_service import app_service
+from src.api.middleware.error_handlers import value_error_handler, internal_error_handler
+from src.api.constants import CORS_ALLOWED_ORIGINS
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -40,21 +42,15 @@ app = FastAPI(
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[
-        "http://localhost:3000", 
-        "http://localhost:3001",
-        "http://localhost:5173",  # Vite dev server
-        "http://localhost:5174",  # Vite dev server (alternative)
-        "http://localhost:80",    # Containerized frontend
-        "http://127.0.0.1:80",    # Containerized frontend (alternative)
-        "http://localhost",       # Containerized frontend (without port)
-        "http://127.0.0.1:5173",  # Alternative local dev
-        "http://127.0.0.1:5174"   # Alternative local dev
-    ], 
+    allow_origins=CORS_ALLOWED_ORIGINS, 
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+# Register global exception handlers
+app.add_exception_handler(ValueError, value_error_handler)
+app.add_exception_handler(Exception, internal_error_handler)
 
 # Include routers
 app.include_router(health_router, tags=["health"])

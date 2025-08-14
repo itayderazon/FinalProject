@@ -38,7 +38,7 @@ const WeeklyCalendar = ({
                 </div>
               ) : (
                 <div className="no-menu">
-                  <span>No menu planned</span>
+                  <span></span>
                 </div>
               )}
             </div>

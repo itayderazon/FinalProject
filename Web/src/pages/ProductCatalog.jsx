@@ -197,12 +197,14 @@ const ProductCatalog = () => {
 
         {/* Pagination */}
         {console.log('Pagination Debug:', { pagination, currentPage, totalPages: pagination.totalPages, totalProducts: products.length })}
-        {(pagination.totalPages > 1 || products.length >= 20) && (
+        {(((pagination.totalPages || pagination.total_pages || Math.ceil((pagination.totalItems || products.length) / (pagination.pageSize || 20))) > 1)) && (
           <div style={{ display: 'flex', justifyContent: 'center', marginTop: '2rem' }}>
             <Pagination
               pagination={{
                 ...pagination,
-                totalPages: pagination.totalPages || Math.ceil(products.length / 20)
+                totalPages: pagination.totalPages || pagination.total_pages || Math.ceil((pagination.totalItems || products.length) / (pagination.pageSize || 20)),
+                hasNext: (typeof pagination.hasNext !== 'undefined') ? pagination.hasNext : (products.length === (pagination.pageSize || 20)),
+                hasPrev: (typeof pagination.hasPrev !== 'undefined') ? pagination.hasPrev : (currentPage > 1)
               }}
               currentPage={currentPage}
               setCurrentPage={setCurrentPage}
@@ -210,44 +212,7 @@ const ProductCatalog = () => {
           </div>
         )}
         
-        {/* Debug info - remove after testing */}
-        <div style={{ display: 'flex', justifyContent: 'center', marginTop: '1rem', padding: '0.5rem', backgroundColor: '#f3f4f6', borderRadius: '0.5rem', fontSize: '0.75rem', color: '#6b7280' }}>
-          Products: {products.length} | Current Page: {currentPage} | Total Pages: {pagination.totalPages} | Has Next: {pagination.hasNext} | Has Prev: {pagination.hasPrev}
-        </div>
-        
-        {/* Force show pagination for testing */}
-        <div style={{ display: 'flex', justifyContent: 'center', marginTop: '1rem', padding: '1rem', backgroundColor: '#e5e7eb', borderRadius: '0.5rem' }}>
-          <button 
-            onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
-            style={{
-              padding: '0.5rem 1rem',
-              backgroundColor: '#3b82f6',
-              color: 'white',
-              border: 'none',
-              borderRadius: '0.25rem',
-              marginRight: '0.5rem',
-              cursor: 'pointer'
-            }}
-          >
-            ← Previous
-          </button>
-          <span style={{ padding: '0.5rem 1rem', backgroundColor: 'white', borderRadius: '0.25rem', marginRight: '0.5rem' }}>
-            Page {currentPage}
-          </span>
-          <button 
-            onClick={() => setCurrentPage(currentPage + 1)}
-            style={{
-              padding: '0.5rem 1rem',
-              backgroundColor: '#3b82f6',
-              color: 'white',
-              border: 'none',
-              borderRadius: '0.25rem',
-              cursor: 'pointer'
-            }}
-          >
-            Next →
-          </button>
-        </div>
+    
       </div>
     </div>
   );

@@ -77,61 +77,63 @@ class BreakfastRules(MealRules):
     """Breakfast-specific rules"""
     
     def get_primary_categories(self):
-        return self.config.MEAL_RULES['breakfast']['primary']
+        # Legacy path not used; keep minimal safe behavior
+        return []
     
     def get_secondary_categories(self):
-        return self.config.MEAL_RULES['breakfast']['secondary']
+        return []
     
     def get_forbidden_categories(self):
-        return self.config.MEAL_RULES['breakfast']['forbidden']
+        return []
     
     def get_required_food_types(self):
-        return self.config.MEAL_RULES['breakfast']['required_types']
+        return ['protein']
 
 class LunchRules(MealRules):
     """Lunch-specific rules"""
     
     def get_primary_categories(self):
-        return self.config.MEAL_RULES['lunch']['primary']
+        return []
     
     def get_secondary_categories(self):
-        return self.config.MEAL_RULES['lunch']['secondary']
+        return []
     
     def get_forbidden_categories(self):
-        return self.config.MEAL_RULES['lunch']['forbidden']
+        return []
     
     def get_required_food_types(self):
-        return self.config.MEAL_RULES['lunch']['required_types']
+        return ['protein', 'fiber']
 
 class DinnerRules(MealRules):
     """Dinner-specific rules"""
     
     def get_primary_categories(self):
-        return self.config.MEAL_RULES['dinner']['primary']
+        return []
     
     def get_secondary_categories(self):
-        return self.config.MEAL_RULES['dinner']['secondary']
+        return []
     
     def get_forbidden_categories(self):
-        return self.config.MEAL_RULES['dinner']['forbidden']
+        return []
     
     def get_required_food_types(self):
-        return self.config.MEAL_RULES['dinner']['required_types']
+        return ['protein', 'fiber']
 
 class SnackRules(MealRules):
     """Snack-specific rules"""
     
     def get_primary_categories(self):
-        return self.config.MEAL_RULES['snacks']['primary']
+        # Align on singular key 'snack' for consistency
+        return self.config.MEAL_SUBCATEGORY_TEMPLATES.get('snack', [])
     
     def get_secondary_categories(self):
-        return self.config.MEAL_RULES['snacks']['secondary']
+        return []
     
     def get_forbidden_categories(self):
-        return self.config.MEAL_RULES['snacks']['forbidden']
+        return []
     
     def get_required_food_types(self):
-        return self.config.MEAL_RULES['snacks']['required_types']
+        return ['fiber']
 
 class MealRulesFactory:
     """Factory to create meal rules - easily extensible"""
@@ -143,7 +145,7 @@ class MealRulesFactory:
             'breakfast': BreakfastRules,
             'lunch': LunchRules,
             'dinner': DinnerRules,
-            'snack': SnackRules,  # Support both 'snack' and 'snacks'
+            'snack': SnackRules,
             'snacks': SnackRules
         }
         

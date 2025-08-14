@@ -16,49 +16,18 @@ const MenuCard = ({ menu, index, onSave }) => {
     return `${price.toFixed(2)} ${currency}`;
   };
 
-  // Helper function to get the cheapest supermarket
-  const getCheapestOption = () => {
-    if (!menu.price_comparison || !menu.price_comparison.supermarket_totals) {
-      console.log('No price comparison data available for menu');
-      return null;
-    }
-    
-    console.log('Price comparison data:', menu.price_comparison);
-    
-    const totals = menu.price_comparison.supermarket_totals;
-    let cheapest = null;
-    let minPrice = Infinity;
-    
-    Object.entries(totals).forEach(([name, data]) => {
-      const totalCost = typeof data === 'object' ? data.total_cost : data;
-      if (totalCost < minPrice) {
-        minPrice = totalCost;
-        cheapest = { 
-          name, 
-          total_cost: totalCost,
-          items_found: typeof data === 'object' ? data.items_found : 0,
-          total_items: typeof data === 'object' ? data.total_items : 0,
-          savings: 0 // Will be calculated if needed
-        };
+  // Prefer backend-provided cheapest store (must have all items)
+  const cheapestOption = menu.price_comparison?.cheapest_store
+    ? {
+        name: menu.price_comparison.cheapest_store,
+        total_cost: menu.price_comparison.cheapest_total ?? 0,
+        ...(menu.price_comparison.supermarket_totals &&
+          typeof menu.price_comparison.supermarket_totals[menu.price_comparison.cheapest_store] === 'object'
+          ? menu.price_comparison.supermarket_totals[menu.price_comparison.cheapest_store]
+          : { items_found: 0, total_items: menu.items.length }),
+        savings: 0
       }
-    });
-    
-    // Calculate savings compared to most expensive option
-    if (cheapest) {
-      let maxPrice = 0;
-      Object.entries(totals).forEach(([name, data]) => {
-        const totalCost = typeof data === 'object' ? data.total_cost : data;
-        if (totalCost > maxPrice) {
-          maxPrice = totalCost;
-        }
-      });
-      cheapest.savings = maxPrice - cheapest.total_cost;
-    }
-    
-    return cheapest;
-  };
-
-  const cheapestOption = getCheapestOption();
+    : null;
 
   return (
     <div className="menu-card">

@@ -1,4 +1,4 @@
-# src/algorithm/menu_generator.py - Updated with category filtering
+# src/algorithm/menu_generator.py 
 
 import random
 from .menu_builder import MenuBuilder
@@ -10,7 +10,7 @@ from config import Config
 class MenuGenerator:
     """High-level orchestrator that coordinates menu generation (SRP + DIP)"""
     
-    def __init__(self, food_provider, food_classifier, portion_calculator, meal_rules_factory, config=None):
+    def __init__(self, food_provider, food_classifier, portion_calculator, meal_rules_factory, config=None, price_comparison=None):
         # Dependency Injection - depends on abstractions
         self.food_provider = food_provider
         self.food_classifier = food_classifier
@@ -20,6 +20,7 @@ class MenuGenerator:
         if config is None:
             config = Config()
         self.config = config
+        self.price_comparison = price_comparison
         
         # Compose specialized services (Composition over inheritance)
         self._initialize_services()
@@ -51,9 +52,11 @@ class MenuGenerator:
             self.config
         )
     
-    def generate_menu(self, target_nutrition, subcategories=None, num_items=None, attempts=None, required_items_with_portions=None, excluded_allergens=None):
+    def generate_menu(self, target_nutrition, subcategories=None, num_items=None, attempts=None, required_items_with_portions=None, excluded_allergens=None, min_price=None, max_price=None):
         """Generate multiple balanced menus with subcategory and allergen filtering"""
         
+        # Build info strings with a tiny helper (readability only)
+        filter_info = self._build_filter_info(subcategories, excluded_allergens)
         # Validate required inputs
         if num_items is None:
             raise ValueError("num_items is required - must be provided as input")
@@ -66,19 +69,14 @@ class MenuGenerator:
         else:
             print("📝 No required items provided")
         
-        # Debug: Check filtering parameters
-        filter_info = []
-        if subcategories:
-            filter_info.append(f"subcategories: {subcategories}")
-        if excluded_allergens:
-            filter_info.append(f"excluded allergens: {excluded_allergens}")
+        # Debug: Check filtering parameters (already built above)
         
         if filter_info:
             print(f"Generating menu with {' and '.join(filter_info)}")
         else:
             print("Generating menu with no specific filters")
         
-        print(f"Target: {target_nutrition.calories}cal, {target_nutrition.protein}g protein, {target_nutrition.carbs}g carbs, {target_nutrition.fat}g fat")
+        self._log_menu_target(target_nutrition)
         
         # Get suitable foods using subcategory and allergen filtering
         suitable_foods = self._get_suitable_foods_by_filters(subcategories, excluded_allergens)
@@ -96,7 +94,15 @@ class MenuGenerator:
         print(f"Starting generation with {len(suitable_foods)} suitable foods...")
         
         # Generate menus (remove meal_type since we use subcategories now)
-        best_menus = self._generate_multiple_menus(suitable_foods, target_nutrition, num_items, attempts, required_items_with_portions)
+        best_menus = self._generate_multiple_menus(
+            suitable_foods,
+            target_nutrition,
+            num_items,
+            attempts,
+            required_items_with_portions,
+            min_price=min_price,
+            max_price=max_price
+        )
         
         if best_menus:
             print(f"✅ Found {len(best_menus)} good menus")
@@ -125,7 +131,7 @@ class MenuGenerator:
         )
         return suitable_foods
     
-    def _generate_multiple_menus(self, suitable_foods, target_nutrition, num_items, attempts, required_items_with_portions):
+    def _generate_multiple_menus(self, suitable_foods, target_nutrition, num_items, attempts, required_items_with_portions, min_price=None, max_price=None):
         """Generate multiple menus with fallback to best option if validation fails"""
         best_menus = []
         best_invalid_menu = None
@@ -133,7 +139,7 @@ class MenuGenerator:
         max_menus = 3
         
         for attempt in range(attempts):
-            print(f"Attempt {attempt + 1}/{attempts}")
+            self._log_attempt(attempt, attempts)
             
             # Generate menu (remove meal_type parameter)
             menu = self.menu_builder.build_menu(suitable_foods, target_nutrition, num_items, required_items_with_portions)
@@ -147,6 +153,11 @@ class MenuGenerator:
                 is_valid, validation_msg = self._validate_menu_with_required_items(menu, target_nutrition, required_items_with_portions)
                 
                 if is_valid:
+                    # Optional price-range validation inside algorithm
+                    if (min_price is not None or max_price is not None) and self.price_comparison is not None:
+                        if not self._is_menu_in_price_range(menu, min_price, max_price):
+                            print("❌ Menu failed price range validation")
+                            continue
                     menu.is_fallback = False  # Mark as normal menu
                     best_menus.append(menu)
                     print(f"✅ Valid menu found (attempt {attempt + 1})")
@@ -175,6 +186,53 @@ class MenuGenerator:
             return [best_invalid_menu]
         
         return []
+
+    def _extract_menu_items_for_price(self, menu):
+        """Extract simple items list for price comparison service."""
+        items = []
+        for item in menu.items:
+            try:
+                items.append({
+                    'item_code': str(getattr(item.food, 'item_code', '')),
+                    'portion_grams': float(getattr(item, 'portion_grams', 0)),
+                    'name': getattr(item.food, 'name', 'Item')
+                })
+            except Exception:
+                continue
+        return items
+
+    def _is_menu_in_price_range(self, menu, min_price, max_price):
+        """Check if the menu's cheapest total cost fits within the price range."""
+        try:
+            menu_items = self._extract_menu_items_for_price(menu)
+            if not menu_items:
+                return False
+            price_data = self.price_comparison.compare_menu_prices(menu_items)
+            if not isinstance(price_data, dict):
+                return False
+            cheapest = None
+            if isinstance(price_data.get('cheapest_total'), (int, float)):
+                cheapest = price_data['cheapest_total']
+            else:
+                st = price_data.get('supermarket_totals') or {}
+                costs = []
+                for v in st.values():
+                    if isinstance(v, (int, float)):
+                        costs.append(v)
+                    elif isinstance(v, dict) and isinstance(v.get('total_cost'), (int, float)):
+                        costs.append(v['total_cost'])
+                if costs:
+                    cheapest = min(costs)
+            if cheapest is None:
+                return False
+            if min_price is not None and cheapest < float(min_price):
+                return False
+            if max_price is not None and cheapest > float(max_price):
+                return False
+            return True
+        except Exception as e:
+            print(f"Price range validation failed with error: {e}")
+            return False
     
     def _validate_menu_with_required_items(self, menu, target_nutrition, required_items_with_portions):
         """Validate menu including required items check"""
@@ -225,3 +283,19 @@ class MenuGenerator:
             return [fallback_menu]
         
         return None
+
+    def _build_filter_info(self, subcategories, excluded_allergens):
+        info = []
+        if subcategories:
+            info.append(f"subcategories: {subcategories}")
+        if excluded_allergens:
+            info.append(f"excluded allergens: {excluded_allergens}")
+        return info
+
+    def _log_menu_target(self, target_nutrition):
+        print(
+            f"Target: {target_nutrition.calories}cal, {target_nutrition.protein}g protein, {target_nutrition.carbs}g carbs, {target_nutrition.fat}g fat"
+        )
+
+    def _log_attempt(self, attempt_index, total_attempts):
+        print(f"Attempt {attempt_index + 1}/{total_attempts}")

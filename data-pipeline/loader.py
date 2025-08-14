@@ -338,6 +338,24 @@ class DynamicDataLoader:
                     if 'sodium' in item:
                         nutrition['sodium'] = float(item['sodium'])
                     
+                    # Parse net size/weight (normalize to grams)
+                    net_weight_g = None
+                    raw_net = None
+                    if 'net_weight' in item and item['net_weight'] is not None:
+                        raw_net = item['net_weight']
+                    elif 'net_size' in item and item['net_size'] is not None:
+                        raw_net = item['net_size']
+                    
+                    if raw_net is not None:
+                        try:
+                            net_val = float(raw_net)
+                            # If provided as kilograms (e.g., 0.25), convert to grams
+                            if net_val > 0 and net_val < 1:
+                                net_val = net_val * 1000.0
+                            net_weight_g = net_val
+                        except (ValueError, TypeError):
+                            net_weight_g = None
+                    
                     # Get category and subcategory IDs
                     category_id = None
                     subcategory_id = None
@@ -369,16 +387,17 @@ class DynamicDataLoader:
                                 else:
                                     logger.warning(f"Allergen not found in database: {allergen_name}")
                     
-                    # Insert product with allergen_ids (supermarket_count will be updated later)
+                    # Insert/Update product with net_weight_g and allergen_ids (supermarket_count will be updated later)
                     cursor.execute("""
-                        INSERT INTO products (item_code, name, category_id, subcategory_id, nutrition, allergen_ids, supermarket_count)
-                        VALUES (%(item_code)s, %(name)s, %(category_id)s, %(subcategory_id)s, %(nutrition)s, %(allergen_ids)s, 0)
+                        INSERT INTO products (item_code, name, category_id, subcategory_id, nutrition, allergen_ids, supermarket_count, net_weight_g)
+                        VALUES (%(item_code)s, %(name)s, %(category_id)s, %(subcategory_id)s, %(nutrition)s, %(allergen_ids)s, 0, %(net_weight_g)s)
                         ON CONFLICT (item_code) DO UPDATE SET
                             name = EXCLUDED.name,
                             category_id = EXCLUDED.category_id,
                             subcategory_id = EXCLUDED.subcategory_id,
                             nutrition = EXCLUDED.nutrition,
                             allergen_ids = EXCLUDED.allergen_ids,
+                            net_weight_g = COALESCE(EXCLUDED.net_weight_g, products.net_weight_g),
                             updated_at = NOW()
                     """, {
                         'item_code': item.get('item_code'),
@@ -386,7 +405,8 @@ class DynamicDataLoader:
                         'category_id': category_id,
                         'subcategory_id': subcategory_id,
                         'nutrition': json.dumps(nutrition),
-                        'allergen_ids': allergen_ids
+                        'allergen_ids': allergen_ids,
+                        'net_weight_g': net_weight_g
                     })
                     
                     processed += 1
@@ -414,10 +434,12 @@ class DynamicDataLoader:
         """
         logger.info("💰 Phase 4: Loading price data...")
         
-        # Find price data files
-        price_files = []
-        for pattern in ["*price*.json", "*combined*.json"]:
-            price_files.extend(data_path.rglob(pattern))
+        # Find price data files (deduplicated across overlapping patterns)
+        price_files = sorted({
+            p.resolve()
+            for pattern in ["*price*.json", "*combined*.json"]
+            for p in data_path.rglob(pattern)
+        })
         
         for price_file in price_files:
             if 'nutrition' not in price_file.name.lower():  # Skip nutrition files

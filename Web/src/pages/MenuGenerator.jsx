@@ -49,10 +49,10 @@ const MenuGenerator = () => {
         <div className="menu-header">
           <h1 className="menu-title">
             <span>🍳</span>
-            Menu Generator
+            Meal Generator
           </h1>
           <p className="menu-description">
-            Generate personalized meal plans based on your nutrition goals
+            Generate personalized meals based on your nutrition goals
             {formData.requiredProducts && formData.requiredProducts.length > 0 && 
               ` with ${formData.requiredProducts.length} required product${formData.requiredProducts.length > 1 ? 's' : ''}`
             }
@@ -80,7 +80,7 @@ const MenuGenerator = () => {
             onClick={() => setActiveTab('saved')}
           >
             <span>💾</span>
-            Saved Menus ({savedMenus.length})
+            Saved Meals ({savedMenus.length})
           </button>
         </div>
 
@@ -121,7 +121,7 @@ const MenuGenerator = () => {
         {activeTab === 'saved' && (
           <div className="saved-menus-section">
               <h3 className="saved-menus-title">
-                💾 My Saved Menus ({savedMenus.length})
+                💾 My Saved Meals ({savedMenus.length})
               </h3>
               <button
                 onClick={loadSavedMenus}

@@ -13,18 +13,37 @@ class SqlFoodProvider:
         self.foods_cache = None
         self.cache_timestamp = 0
         print("🗃️ SQL Food Provider initialized")
+        # Determine net size/weight column; prefer net_weight_g, then net_size; alias as net_size
+        self.net_size_select = "NULL::numeric AS net_size"
+        try:
+            col_row = self.db.execute_single(
+                """
+                SELECT column_name
+                FROM information_schema.columns
+                WHERE table_name = 'products' AND column_name IN ('net_weight_g','net_size')
+                ORDER BY CASE column_name WHEN 'net_weight_g' THEN 0 WHEN 'net_size' THEN 1 ELSE 2 END
+                LIMIT 1
+                """
+            )
+            if col_row and 'column_name' in col_row:
+                if col_row['column_name'] == 'net_weight_g':
+                    self.net_size_select = "p.net_weight_g AS net_size"
+                elif col_row['column_name'] == 'net_size':
+                    self.net_size_select = "p.net_size AS net_size"
+        except Exception:
+            self.net_size_select = "NULL::numeric AS net_size"
     
     def should_refresh_cache(self):
-        """Check if cache needs refresh"""
+        """Check if cache needs refresh (time-based TTL)"""
         current_time = time.time()
         return (self.foods_cache is None or 
                 current_time - self.cache_timestamp > self.cache_ttl)
     
     def refresh_cache(self):
-        """Refresh the foods cache"""
+        """Refresh the foods cache by loading eligible products from DB"""
         print("📊 Refreshing foods cache from PostgreSQL...")
         
-        query = """
+        query = f"""
         SELECT 
             p.item_code,
             p.name,
@@ -32,8 +51,9 @@ class SqlFoodProvider:
             sc.name_he as subcategory,
             p.nutrition,
             COALESCE((p.nutrition->>'sodium')::numeric, 0) as sodium,
-            COALESCE(p.allergen_ids, '{}') as allergen_ids,
-            p.supermarket_count
+            COALESCE(p.allergen_ids, '{{}}') as allergen_ids,
+            p.supermarket_count,
+            {self.net_size_select}
         FROM products p
         LEFT JOIN categories c ON p.category_id = c.id
         LEFT JOIN subcategories sc ON p.subcategory_id = sc.id
@@ -66,7 +86,7 @@ class SqlFoodProvider:
                 self.foods_cache = []
     
     def create_food_from_row(self, row):
-        """Create Food object from database row"""
+        """Create Food object from a DB row; returns None if invalid"""
         nutrition_data = row['nutrition']
         if not nutrition_data:
             return None
@@ -108,11 +128,12 @@ class SqlFoodProvider:
             nutrition_per_100g=nutrition,
             sodium=float(row['sodium']),
             allergen_ids=allergen_ids,
-            supermarket_count=int(row.get('supermarket_count', 0))
+            supermarket_count=int(row.get('supermarket_count', 0)),
+            net_size=row.get('net_size')
         )
     
     def get_all_foods(self):
-        """Get all foods with caching"""
+        """Get all foods with caching (refreshes by TTL)"""
         if self.should_refresh_cache():
             self.refresh_cache()
         
@@ -120,7 +141,7 @@ class SqlFoodProvider:
     
     def get_food_by_code(self, item_code):
         """Get a specific food by its item code"""
-        query = """
+        query = f"""
         SELECT 
             p.item_code,
             p.name,
@@ -128,8 +149,9 @@ class SqlFoodProvider:
             sc.name_he as subcategory,
             p.nutrition,
             COALESCE((p.nutrition->>'sodium')::numeric, 0) as sodium,
-            COALESCE(p.allergen_ids, '{}') as allergen_ids,
-            p.supermarket_count
+            COALESCE(p.allergen_ids, '{{}}') as allergen_ids,
+            p.supermarket_count,
+            {self.net_size_select}
         FROM products p
         LEFT JOIN categories c ON p.category_id = c.id
         LEFT JOIN subcategories sc ON p.subcategory_id = sc.id
@@ -162,11 +184,12 @@ class SqlFoodProvider:
             p.nutrition,
             COALESCE((p.nutrition->>'sodium')::numeric, 0) as sodium,
             COALESCE(p.allergen_ids, '{{}}') as allergen_ids,
-            p.supermarket_count
+            p.supermarket_count,
+            {self.net_size_select}
         FROM products p
         LEFT JOIN categories c ON p.category_id = c.id
         LEFT JOIN subcategories sc ON p.subcategory_id = sc.id
-        WHERE p.id IN ({placeholders})
+        WHERE p.item_code IN ({placeholders})
         AND p.is_active = true
         ORDER BY p.supermarket_count DESC, p.name
         """
@@ -186,11 +209,14 @@ class SqlFoodProvider:
         except Exception as e:
             print(f"Error getting foods by item codes: {e}")
             return []
-    
-    def get_filtered_foods(self, max_calories_per_100g=600, included_subcategories=None, excluded_allergens=None):
-        """Get foods filtered by criteria including allergen exclusions"""
+
+    def get_foods_by_subcategories(self, subcategories, limit=None):
+        """Get foods filtered by specific subcategories"""
+        if not subcategories:
+            return []
         
-        base_query = """
+        placeholders = ','.join(['%s'] * len(subcategories))
+        query = f"""
         SELECT 
             p.item_code,
             p.name,
@@ -198,8 +224,45 @@ class SqlFoodProvider:
             sc.name_he as subcategory,
             p.nutrition,
             COALESCE((p.nutrition->>'sodium')::numeric, 0) as sodium,
-            COALESCE(p.allergen_ids, '{}') as allergen_ids,
-            p.supermarket_count
+            COALESCE(p.allergen_ids, '{{}}') as allergen_ids,
+            p.supermarket_count,
+            {self.net_size_select}
+        FROM products p
+        LEFT JOIN categories c ON p.category_id = c.id
+        LEFT JOIN subcategories sc ON p.subcategory_id = sc.id
+        WHERE p.can_include_in_menu = true
+        AND p.is_active = true
+        AND (p.nutrition->>'calories')::numeric > 0
+        AND sc.name_he IN ({placeholders})
+        ORDER BY p.supermarket_count DESC, p.name
+        {f'LIMIT {int(limit)}' if limit else ''}
+        """
+        try:
+            rows = self.db.execute_query(query, subcategories)
+            foods = []
+            for row in rows:
+                food = self.create_food_from_row(row)
+                if food:
+                    foods.append(food)
+            return foods
+        except Exception as e:
+            print(f"Error getting foods by subcategories: {e}")
+            return []
+    
+    def get_filtered_foods(self, max_calories_per_100g=600, included_subcategories=None, excluded_allergens=None):
+        """Get foods filtered by criteria including allergen exclusions"""
+        
+        base_query = f"""
+        SELECT 
+            p.item_code,
+            p.name,
+            c.name_he as category,
+            sc.name_he as subcategory,
+            p.nutrition,
+            COALESCE((p.nutrition->>'sodium')::numeric, 0) as sodium,
+            COALESCE(p.allergen_ids, '{{}}') as allergen_ids,
+            p.supermarket_count,
+            {self.net_size_select}
         FROM products p
         LEFT JOIN categories c ON p.category_id = c.id
         LEFT JOIN subcategories sc ON p.subcategory_id = sc.id
@@ -243,7 +306,7 @@ class SqlFoodProvider:
         if not query_text or len(query_text.strip()) < 2:
             return []
         
-        query = """
+        query = f"""
         SELECT 
             p.item_code,
             p.name,
@@ -251,8 +314,9 @@ class SqlFoodProvider:
             sc.name_he as subcategory,
             p.nutrition,
             COALESCE((p.nutrition->>'sodium')::numeric, 0) as sodium,
-            COALESCE(p.allergen_ids, '{}') as allergen_ids,
-            p.supermarket_count
+            COALESCE(p.allergen_ids, '{{}}') as allergen_ids,
+            p.supermarket_count,
+            {self.net_size_select}
         FROM products p
         LEFT JOIN categories c ON p.category_id = c.id
         LEFT JOIN subcategories sc ON p.subcategory_id = sc.id
@@ -424,7 +488,8 @@ class SqlFoodProvider:
             c.name_he as category,
             sc.name_he as subcategory,
             p.nutrition,
-            COALESCE((p.nutrition->>'sodium')::numeric, 0) as sodium
+            COALESCE((p.nutrition->>'sodium')::numeric, 0) as sodium,
+            {self.net_size_select}
         FROM products p
         LEFT JOIN categories c ON p.category_id = c.id
         LEFT JOIN subcategories sc ON p.subcategory_id = sc.id
@@ -451,17 +516,18 @@ class SqlFoodProvider:
             print(f"Error getting foods by categories: {e}")
             return []
 
-    def get_foods_with_high_protein(self, min_protein=15, meal_type=None):
-        """Get foods with high protein content using database query"""
+    def get_foods_with_high_protein(self, min_protein=15, included_subcategories=None, meal_type=None):
+        """Get foods with high protein content using database query with optional subcategory filtering"""
         
-        query = """
+        base_query = f"""
         SELECT 
             p.item_code,
             p.name,
             c.name_he as category,
             sc.name_he as subcategory,
             p.nutrition,
-            COALESCE((p.nutrition->>'sodium')::numeric, 0) as sodium
+            COALESCE((p.nutrition->>'sodium')::numeric, 0) as sodium,
+            {self.net_size_select}
         FROM products p
         LEFT JOIN categories c ON p.category_id = c.id
         LEFT JOIN subcategories sc ON p.subcategory_id = sc.id
@@ -469,11 +535,18 @@ class SqlFoodProvider:
         AND p.is_active = true
         AND (p.nutrition->>'calories')::numeric > 0
         AND (p.nutrition->>'protein')::numeric >= %s
-        ORDER BY (p.nutrition->>'protein')::numeric DESC
         """
+        params = [min_protein]
+        
+        if included_subcategories:
+            placeholders = ','.join(['%s'] * len(included_subcategories))
+            base_query += f" AND sc.name_he IN ({placeholders})"
+            params.extend(included_subcategories)
+        
+        base_query += " ORDER BY (p.nutrition->>'protein')::numeric DESC"
         
         try:
-            rows = self.db.execute_query(query, [min_protein])
+            rows = self.db.execute_query(base_query, params)
             foods = []
             
             for row in rows:
@@ -601,10 +674,15 @@ class SqlPriceComparison:
                     # Removed is_on_sale and sale_percentage since they don't exist
                 }
             
-            # Calculate totals
+            # Calculate totals and availability counts
             supermarket_totals = {}
+            total_items_in_menu = len(menu_items)
             for sm in self.supermarkets:
-                supermarket_totals[sm] = 0.0
+                supermarket_totals[sm] = {
+                    'total_cost': 0.0,
+                    'items_found': 0,
+                    'total_items': total_items_in_menu
+                }
             
             item_breakdown = []
             
@@ -621,7 +699,8 @@ class SqlPriceComparison:
                         price_per_100g = item_prices[supermarket]['price']
                         item_cost = (portion_grams / 100.0) * price_per_100g
                         item_costs[supermarket] = round(item_cost, 2)
-                        supermarket_totals[supermarket] += item_cost
+                        supermarket_totals[supermarket]['total_cost'] += item_cost
+                        supermarket_totals[supermarket]['items_found'] += 1
                     else:
                         item_costs[supermarket] = None
                 
@@ -632,14 +711,32 @@ class SqlPriceComparison:
                     'prices_per_supermarket': item_costs
                 })
             
-            # Round totals
+            # Round totals and compute missing items
             for sm in self.supermarkets:
-                supermarket_totals[sm] = round(supermarket_totals[sm], 2)
+                supermarket_totals[sm]['total_cost'] = round(supermarket_totals[sm]['total_cost'], 2)
+                supermarket_totals[sm]['missing_items'] = supermarket_totals[sm]['total_items'] - supermarket_totals[sm]['items_found']
+
+            # Determine cheapest store among those with full coverage
+            eligible_supermarkets = [
+                sm for sm in self.supermarkets
+                if supermarket_totals[sm]['total_items'] > 0 and supermarket_totals[sm]['missing_items'] == 0
+            ]
+
+            cheapest_store = None
+            cheapest_total = None
+            if eligible_supermarkets:
+                cheapest_store = min(
+                    eligible_supermarkets,
+                    key=lambda sm: supermarket_totals[sm]['total_cost']
+                )
+                cheapest_total = supermarket_totals[cheapest_store]['total_cost']
             
             return {
                 'supermarket_totals': supermarket_totals,
                 'item_breakdown': item_breakdown,
-                'available_supermarkets': self.supermarkets
+                'available_supermarkets': self.supermarkets,
+                'cheapest_store': cheapest_store,
+                'cheapest_total': cheapest_total
             }
             
         except Exception as e:
