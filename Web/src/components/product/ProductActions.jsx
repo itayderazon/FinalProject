@@ -74,10 +74,10 @@ const ProductActions = ({
         <button
           onClick={handleAddToMenu}
           className="action-btn add-to-menu"
-          title="Add to menu generator"
+          title="Add to meal"
         >
           <Plus size={16} />
-          Menu
+          Add to meal
         </button>
 
         <button

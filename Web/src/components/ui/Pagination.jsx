@@ -2,9 +2,31 @@ import React from 'react';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 
 const Pagination = ({ pagination, currentPage, setCurrentPage }) => {
-  const { totalPages = 1, hasNext = false, hasPrev = false } = pagination || {};
-  
-  console.log('Pagination Component Props:', { pagination, currentPage, totalPages, hasNext, hasPrev });
+  const normalized = pagination || {};
+  const totalPages = Number(
+    normalized.totalPages ??
+    normalized.total_pages ??
+    normalized.pages ??
+    1
+  );
+  const pageFromApi = Number(normalized.page ?? normalized.currentPage ?? currentPage ?? 1);
+  const hasNext = Boolean(
+    normalized.hasNext ??
+    normalized.has_next ??
+    normalized.hasNextPage ??
+    normalized.has_next_page ??
+    (pageFromApi < totalPages)
+  );
+  const hasPrev = Boolean(
+    normalized.hasPrev ??
+    normalized.has_prev ??
+    normalized.hasPrevPage ??
+    normalized.has_prev_page ??
+    (pageFromApi > 1)
+  );
+
+  const canGoPrev = hasPrev || currentPage > 1;
+  const canGoNext = hasNext || currentPage < totalPages;
 
   const buttonStyle = {
     padding: '0.5rem 0.75rem',
@@ -78,10 +100,11 @@ const Pagination = ({ pagination, currentPage, setCurrentPage }) => {
       <div style={{ display: 'flex', gap: '0.25rem', alignItems: 'center' }}>
         {/* Previous button */}
         <button
-          onClick={() => setCurrentPage(currentPage - 1)}
-          disabled={currentPage === 1}
-          style={currentPage === 1 ? disabledButtonStyle : buttonStyle}
+          onClick={() => canGoPrev && setCurrentPage(Math.max(1, currentPage - 1))}
+          disabled={!canGoPrev}
+          style={!canGoPrev ? disabledButtonStyle : buttonStyle}
           title="Previous page"
+          aria-label="Previous page"
         >
           <ChevronLeft style={{ width: '1rem', height: '1rem' }} />
           <span>Previous</span>
@@ -103,12 +126,18 @@ const Pagination = ({ pagination, currentPage, setCurrentPage }) => {
           </React.Fragment>
         ))}
 
+        {/* Page indicator */}
+        <span style={{ padding: '0.5rem', color: '#6b7280' }}>
+          Page {currentPage} of {Math.max(1, totalPages)}
+        </span>
+
         {/* Next button */}
         <button
-          onClick={() => setCurrentPage(currentPage + 1)}
-          disabled={currentPage === totalPages}
-          style={currentPage === totalPages ? disabledButtonStyle : buttonStyle}
-          title="Next page"
+          onClick={() => canGoNext && setCurrentPage(Math.min(totalPages, currentPage + 1))}
+          disabled={!canGoNext}
+          style={!canGoNext ? disabledButtonStyle : activeButtonStyle}
+          title="Next"
+          aria-label="Next"
         >
           <span>Next</span>
           <ChevronRight style={{ width: '1rem', height: '1rem' }} />

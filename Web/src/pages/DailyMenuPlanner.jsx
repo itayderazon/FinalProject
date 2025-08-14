@@ -2,6 +2,7 @@ import React from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useDailyMenuPlannerState } from '../hooks/useDailyMenuPlannerState';
 import AddMealModal from '../components/dailyMenu/AddMealModal';
+import SavedMenusModal from '../components/dailyMenu/SavedMenusModal';
 import NutritionSummary from '../components/dailyMenu/NutritionSummary';
 import WeekNavigation from '../components/dailyMenu/WeekNavigation';
 import WeeklyCalendar from '../components/dailyMenu/WeeklyCalendar';
@@ -36,6 +37,10 @@ const DailyMenuPlanner = () => {
     onAddMeal,
     onDeleteMeal,
     onAddGeneratedMenu,
+    showSavedMenusModal,
+    savedMealType,
+    onCloseSavedMenusModal,
+    onSelectSavedMenu,
     
     // Modal handlers
     onOpenCreateModal,
@@ -92,6 +97,7 @@ const DailyMenuPlanner = () => {
                // Auto-created menus; no manual create action
               onAddMeal={onOpenAddMealModal}
               onDeleteMeal={onDeleteMeal}
+              onAddGeneratedMenu={onAddGeneratedMenu}
             />
           </div>
         )}
@@ -114,6 +120,14 @@ const DailyMenuPlanner = () => {
           mealType={selectedMealType}
           onSubmit={onAddMeal}
           onClose={onCloseAddMealModal}
+        />
+      )}
+
+      {showSavedMenusModal && (
+        <SavedMenusModal
+          mealType={savedMealType}
+          onSelectMenu={onSelectSavedMenu}
+          onClose={onCloseSavedMenusModal}
         />
       )}
     </div>

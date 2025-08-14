@@ -4,6 +4,7 @@ const DailyMenuCard = ({
   menu, 
   onAddMeal, 
   onDeleteMeal, 
+  onAddGeneratedMenu,
   showActions = true 
 }) => {
 
@@ -35,6 +36,10 @@ const DailyMenuCard = ({
       carbs: Math.round(safeValue(nutrition.carbs) * 10) / 10,
       fat: Math.round(safeValue(nutrition.fat) * 10) / 10
     };
+  };
+
+  const openSaved = (type) => {
+    if (onAddGeneratedMenu) onAddGeneratedMenu(type);
   };
 
   return (
@@ -75,13 +80,22 @@ const DailyMenuCard = ({
                 </h4>
                 {showActions && (
                   <div className="meal-actions">
-                    <button
-                      className="add-meal-btn"
-                      onClick={() => onAddMeal(type)}
-                      title="Add manual meal"
-                    >
-                      <span>+</span>
-                    </button>
+                    <div style={{ display: 'flex', gap: '0.5rem' }}>
+                      <button
+                        className="add-meal-btn"
+                        onClick={() => onAddMeal(type)}
+                        title="Add manual meal"
+                      >
+                        <span>+</span>
+                      </button>
+                      <button
+                        className="add-meal-btn"
+                        onClick={() => openSaved(type)}
+                        title="Add from saved menus"
+                      >
+                        💾
+                      </button>
+                    </div>
                     {/* Generate menu action removed */}
                   </div>
                 )}
@@ -172,9 +186,9 @@ const DailyMenuCard = ({
                         <span> or </span>
                         <button
                           className="add-generated-link"
-                          onClick={() => handleAddGeneratedMenu(type)}
+                          onClick={() => openSaved(type)}
                         >
-                          add generated menu
+                          add from saved
                         </button>
                       </div>
                     )}
@@ -186,7 +200,7 @@ const DailyMenuCard = ({
         })}
       </div>
 
-      {/* Generate menu modal removed */}
+      {/* Saved menus modal handled by parent */}
     </div>
   );
 };

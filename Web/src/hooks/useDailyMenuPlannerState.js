@@ -34,6 +34,7 @@ export const useDailyMenuPlannerState = () => {
     weeklyNutrition,
     createMenu,
     addMeal,
+    addGeneratedMenu,
     deleteMeal,
     getDayMenu
   } = menuData;
@@ -48,6 +49,10 @@ export const useDailyMenuPlannerState = () => {
     openAddMealModal,
     closeAddMealModal
   } = modalState;
+
+  // Saved menus modal
+  const [showSavedMenusModal, setShowSavedMenusModal] = useState(false);
+  const [savedMealType, setSavedMealType] = useState('breakfast');
 
   // Event handlers
   const handleCreateMenu = async (menuData) => {
@@ -68,6 +73,29 @@ export const useDailyMenuPlannerState = () => {
       console.error('Error adding meal:', error);
       throw error;
     }
+  };
+
+  // Open/close saved menus modal
+  const openSavedMenusModal = (mealType) => {
+    setSavedMealType(mealType || 'breakfast');
+    setShowSavedMenusModal(true);
+  };
+  const closeSavedMenusModal = () => setShowSavedMenusModal(false);
+
+  // Add menu from saved list
+  const handleSelectSavedMenu = async (menu) => {
+    // Convert saved menu to generated menu format
+    const convertedMenu = {
+      name: menu.name,
+      total_nutrition: menu.total_nutrition,
+      items: (menu.items || []).map(item => ({
+        name: item.name,
+        portion_grams: item.portion_grams,
+        nutrition: item.nutrition
+      }))
+    };
+    await addGeneratedMenu(savedMealType, convertedMenu);
+    closeSavedMenusModal();
   };
 
   // Handle tab change with URL persistence
@@ -98,6 +126,8 @@ export const useDailyMenuPlannerState = () => {
     showCreateModal,
     showAddMealModal,
     selectedMealType,
+    showSavedMenusModal,
+    savedMealType,
     
     // Handlers
     onTabChange: handleTabChange,
@@ -106,12 +136,15 @@ export const useDailyMenuPlannerState = () => {
     onCreateMenu: handleCreateMenu,
     onAddMeal: handleAddMeal,
     onDeleteMeal: deleteMeal,
+    onAddGeneratedMenu: openSavedMenusModal,
     
     // Modal handlers
     onOpenCreateModal: openCreateModal,
     onCloseCreateModal: closeCreateModal,
     onOpenAddMealModal: openAddMealModal,
     onCloseAddMealModal: closeAddMealModal,
+    onCloseSavedMenusModal: closeSavedMenusModal,
+    onSelectSavedMenu: handleSelectSavedMenu,
     
     // Utility functions
     getDayMenu

@@ -197,12 +197,14 @@ const ProductCatalog = () => {
 
         {/* Pagination */}
         {console.log('Pagination Debug:', { pagination, currentPage, totalPages: pagination.totalPages, totalProducts: products.length })}
-        {(pagination.totalPages > 1 || products.length >= 20) && (
+        {(((pagination.totalPages || pagination.total_pages || Math.ceil((pagination.totalItems || products.length) / (pagination.pageSize || 20))) > 1)) && (
           <div style={{ display: 'flex', justifyContent: 'center', marginTop: '2rem' }}>
             <Pagination
               pagination={{
                 ...pagination,
-                totalPages: pagination.totalPages || Math.ceil(products.length / 20)
+                totalPages: pagination.totalPages || pagination.total_pages || Math.ceil((pagination.totalItems || products.length) / (pagination.pageSize || 20)),
+                hasNext: (typeof pagination.hasNext !== 'undefined') ? pagination.hasNext : (products.length === (pagination.pageSize || 20)),
+                hasPrev: (typeof pagination.hasPrev !== 'undefined') ? pagination.hasPrev : (currentPage > 1)
               }}
               currentPage={currentPage}
               setCurrentPage={setCurrentPage}

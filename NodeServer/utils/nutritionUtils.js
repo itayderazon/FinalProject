@@ -28,6 +28,8 @@ class NutritionUtils {
       subcategories: requestBody.subcategories || null,
       num_items: requestBody.num_items ? parseInt(requestBody.num_items) : null,
       include_prices: requestBody.include_prices === true || requestBody.include_prices === 'true',
+      min_price: requestBody.min_price !== undefined && requestBody.min_price !== null ? parseFloat(requestBody.min_price) : null,
+      max_price: requestBody.max_price !== undefined && requestBody.max_price !== null ? parseFloat(requestBody.max_price) : null,
       requiredProducts: requestBody.requiredProducts || null,
       excluded_allergens: requestBody.excluded_allergens || null
     };

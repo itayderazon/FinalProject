@@ -26,6 +26,12 @@ def _log_nutrition_request(request: NutritionRequest):
     logger.info(f"🚫 Excluded Allergens: {request.excluded_allergens}")
     logger.info(f"📝 Number of Items: {request.num_items}")
     logger.info(f"💰 Include Prices: {request.include_prices}")
+    # Optional price range
+    try:
+        logger.info(f"💸 Min Price: {getattr(request, 'min_price', None)}")
+        logger.info(f"💸 Max Price: {getattr(request, 'max_price', None)}")
+    except Exception:
+        pass
     logger.info(f"🎯 Required Products: {request.requiredProducts}")
     
     if request.requiredProducts:
@@ -86,7 +92,7 @@ def _parse_request_parameters(request: NutritionRequest, config):
         'excluded_allergens': excluded_allergens
     }
 
-def _generate_menu_with_params(target_nutrition, subcategories, num_items, attempts, required_items_with_portions, excluded_allergens=None):
+def _generate_menu_with_params(target_nutrition, subcategories, num_items, attempts, required_items_with_portions, excluded_allergens=None, min_price=None, max_price=None):
     """Generate menu using the menu generator service"""
     if not app_service.menu_generator:
         raise HTTPException(
@@ -100,7 +106,9 @@ def _generate_menu_with_params(target_nutrition, subcategories, num_items, attem
         num_items=num_items,
         attempts=attempts,
         required_items_with_portions=required_items_with_portions,
-        excluded_allergens=excluded_allergens
+        excluded_allergens=excluded_allergens,
+        min_price=min_price,
+        max_price=max_price
     )
     
     if not menus:
@@ -180,7 +188,9 @@ async def calculate_nutrition(request: NutritionRequest):
             num_items=params['num_items'],
             attempts=config.API_DEFAULT_ATTEMPTS,
             required_items_with_portions=params['required_items_with_portions'],
-            excluded_allergens=params['excluded_allergens']
+            excluded_allergens=params['excluded_allergens'],
+            min_price=getattr(request, 'min_price', None),
+            max_price=getattr(request, 'max_price', None)
         )
         
         # Step 4: Format response

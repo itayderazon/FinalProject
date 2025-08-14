@@ -7,6 +7,10 @@ const ProductListItem = ({ product, formatPrice, fetchProductImage, getProductIm
   const [imageUrl, setImageUrl] = useState(null);
   const [imageLoading, setImageLoading] = useState(true);
   const bestPrice = product.priceStats ? product.priceStats.minPrice : null;
+  const bestPriceEntry = (product.prices && product.prices.length > 0 && bestPrice != null)
+    ? product.prices.reduce((min, p) => (p.price < min.price ? p : min), product.prices[0])
+    : null;
+  const bestStoreName = bestPriceEntry ? (bestPriceEntry.supermarket || bestPriceEntry.store || '') : '';
 
   // Fetch image when component mounts
   useEffect(() => {
@@ -148,6 +152,11 @@ const ProductListItem = ({ product, formatPrice, fetchProductImage, getProductIm
               <div style={{ fontSize: '1.5rem', fontWeight: '700', color: '#059669', direction: 'ltr' }}>
                 {formatPrice(bestPrice)}
               </div>
+              {bestStoreName && (
+                <div style={{ fontSize: '0.75rem', color: '#6b7280' }}>
+                  {bestStoreName}
+                </div>
+              )}
               <div style={{ fontSize: '0.75rem', color: '#6b7280' }}>
                 {formatStoreCount(product.prices?.length || 0)}
               </div>

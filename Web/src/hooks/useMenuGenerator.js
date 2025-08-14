@@ -133,7 +133,6 @@ export const useMenuGenerator = () => {
       setLoading(true);
       
       // Transform required products into the format expected by backend
-      // IMPORTANT: Use item code (not DB id) as item_id
       let requiredProductsForAPI = null;
       if (formData.requiredProducts && formData.requiredProducts.length > 0) {
         // Fetch item codes for each product id
@@ -163,6 +162,8 @@ export const useMenuGenerator = () => {
         carbs: formData.carbs, 
         fat: formData.fat,
         include_prices: formData.include_prices,
+        ...(formData.min_price > 0 && { min_price: formData.min_price }),
+        ...(formData.max_price > 0 && { max_price: formData.max_price }),
         ...(formData.meal_template && { meal_template: formData.meal_template }),
         ...(formData.subcategories && formData.subcategories.length > 0 && { subcategories: formData.subcategories }),
         ...(formData.num_items && { num_items: formData.num_items }),

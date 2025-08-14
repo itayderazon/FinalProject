@@ -91,7 +91,7 @@ export const useMenuGenerator = () => {
     
     setLoading(true);
     try {
-      const response = await nutritionService.generateMenu(menuData);
+    const response = await nutritionService.generateMenu(menuData);
       const responseData = response?.data || response;
       
       if (responseData && responseData.success === true && responseData.menus && Array.isArray(responseData.menus) && responseData.menus.length > 0) {

@@ -209,22 +209,41 @@ const MenuForm = ({
         <div className="range-value">{formData.num_items} items</div>
       </div>
 
-      <div className="form-group">
-        <label className="form-label checkbox-label">
+      {/* Price Range (NIS) */}
+      <div className="macro-inputs">
+        <div className="form-group">
+          <label className="form-label">
+            <span>🪙</span>
+            Min price (₪)
+          </label>
           <input
-            type="checkbox"
-            name="include_prices"
-            checked={formData.include_prices || false}
+            type="number"
+            name="min_price"
+            value={formData.min_price}
             onChange={handleInputChange}
-            className="form-checkbox"
+            className="form-input"
+            min="0"
+            step="0.5"
           />
-          <span className="checkbox-icon">💰</span>
-          Include Price Comparison
-          <span className="checkbox-description">
-            Compare prices across different supermarkets
-          </span>
-        </label>
+        </div>
+
+        <div className="form-group">
+          <label className="form-label">
+            <span>💵</span>
+            Max price (₪)
+          </label>
+          <input
+            type="number"
+            name="max_price"
+            value={formData.max_price}
+            onChange={handleInputChange}
+            className="form-input"
+            min="0"
+            step="0.5"
+          />
+        </div>
       </div>
+
 
       <div className="generate-actions">
         <button

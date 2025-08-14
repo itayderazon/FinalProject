@@ -26,6 +26,9 @@ class NutritionRequest(BaseModel):
     
     num_items: Optional[int] = Field(None, gt=0, le=20)
     include_prices: Optional[bool] = Field(False)
+    # Optional price range in NIS
+    min_price: Optional[float] = Field(None, ge=0)
+    max_price: Optional[float] = Field(None, ge=0)
     
     class Config:
         populate_by_name = True

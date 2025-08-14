@@ -6,7 +6,8 @@ const DayDetail = ({
   selectedDate, 
   selectedMenu, 
   onAddMeal, 
-  onDeleteMeal
+  onDeleteMeal,
+  onAddGeneratedMenu
 }) => {
   return (
     <div className="selected-day-detail">
@@ -20,6 +21,7 @@ const DayDetail = ({
           menu={selectedMenu}
           onAddMeal={onAddMeal}
           onDeleteMeal={onDeleteMeal}
+          onAddGeneratedMenu={onAddGeneratedMenu}
           showActions={true}
         />
       ) : (
