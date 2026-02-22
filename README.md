@@ -254,17 +254,3 @@ cd database && npm run reset-db
 - React Frontend: Default port 5173
 - PostgreSQL: Default port 5432
 
-## 📄 **License**
-
-This project is licensed under the MIT License - see the LICENSE file for details.
-
-## 👥 **Team**
-
-Built with ❤️ by the RecommendationAlgo team.
-
-## 📞 **Support**
-
-For support and questions:
-- Create an issue in the repository
-- Check the documentation in `/docs`
-- Review API documentation at `/api/docs` (when server is running)
